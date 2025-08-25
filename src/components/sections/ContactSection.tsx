@@ -3,16 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MapPin, Phone, Linkedin, Github, Twitter, Send } from "lucide-react";
+import { Mail, MapPin, Phone, Linkedin, Github, Send } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { sendEmail, EmailTemplateData } from "@/lib/emailjs";
+
+// Custom X (Twitter) Icon Component - like the one under your photo
+const XIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 const contactMethods = [
   {
     icon: Mail,
     title: "Email",
     value: "smadiped@asu.edu",
-    href: "mailto:smadiped@asu.edu"
+    href: "#"
   },
   {
     icon: Phone,
@@ -24,7 +37,7 @@ const contactMethods = [
     icon: MapPin,
     title: "Location",
     value: "Tempe, AZ",
-    href: "#"
+    href: "https://maps.google.com/?q=Tempe,AZ"
   }
 ];
 
@@ -42,10 +55,10 @@ const socialLinks = [
     color: "hover:text-gray-800 dark:hover:text-gray-200"
   },
   {
-    icon: Twitter,
+    icon: XIcon,
     name: "X",
     href: "https://x.com/suman_madipeddi",
-    color: "hover:text-blue-500"
+    color: "hover:text-black dark:hover:text-white hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black hover:scale-110"
   }
 ];
 
@@ -59,6 +72,92 @@ export function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Handle email link click
+  const handleEmailClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const email = "smadiped@asu.edu";
+    const subject = "Portfolio Inquiry";
+    
+    // Open Gmail directly in browser (more reliable than mailto)
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}`;
+    
+    try {
+      // Open Gmail compose in new tab
+      const gmailWindow = window.open(gmailUrl, '_blank');
+      
+      if (gmailWindow) {
+        // Success - Gmail opened
+        toast({
+          title: "Gmail opened!",
+          description: `Ready to send email to ${email}`,
+        });
+      } else {
+        // Popup blocked - fallback to clipboard
+        throw new Error('Popup blocked');
+      }
+      
+    } catch (error) {
+      console.error('Gmail link error:', error);
+      
+      // Fallback: copy email to clipboard
+      navigator.clipboard.writeText(email);
+      toast({
+        title: "Email copied!",
+        description: `Email address copied to clipboard: ${email}`,
+      });
+    }
+  };
+  
+  // Handle phone link click
+  const handlePhoneClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      window.location.href = "tel:+16025659192";
+    } catch (error) {
+      console.error('Phone link error:', error);
+      navigator.clipboard.writeText("+1 (602) 565-9192");
+      toast({
+        title: "Phone number copied!",
+        description: "Phone number copied to clipboard: +1 (602) 565-9192",
+      });
+    }
+  };
+
+  // Handle location link click
+  const handleLocationClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      // Open Google Maps immediately without delay
+      const mapsUrl = "https://maps.google.com/?q=Tempe,AZ";
+      const mapsWindow = window.open(mapsUrl, '_blank');
+      
+      if (mapsWindow) {
+        // Success - maps opened
+        toast({
+          title: "Google Maps opened!",
+          description: "Your location is now displayed",
+        });
+      } else {
+        // Popup blocked - fallback to clipboard
+        throw new Error('Popup blocked');
+      }
+    } catch (error) {
+      console.error('Location link error:', error);
+      // Fallback: copy address to clipboard
+      navigator.clipboard.writeText("Tempe, AZ");
+      toast({
+        title: "Address copied!",
+        description: "Address copied to clipboard: Tempe, AZ",
+      });
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -71,15 +170,36 @@ export function ContactSection() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Prepare email data
+      const emailData: EmailTemplateData = {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        to_email: 'smadiped@asu.edu', // Your email address
+      };
+
+      // Send email using EmailJS
+      const result = await sendEmail(emailData);
+
+      if (result.status === 200) {
+        toast({
+          title: "Message sent successfully!",
+          description: "Thank you for your message. I'll get back to you soon.",
+        });
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      }
+    } catch (error) {
+      console.error('EmailJS Error:', error);
       toast({
-        title: "Message sent successfully!",
-        description: "Thank you for your message. I'll get back to you soon.",
+        title: "Failed to send message",
+        description: "Something went wrong. Please try again or contact me directly.",
+        variant: "destructive",
       });
-      setFormData({ name: "", email: "", subject: "", message: "" });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -183,7 +303,11 @@ export function ContactSection() {
                       <a
                         key={method.title}
                         href={method.href}
-                        className="flex items-center space-x-4 text-muted-foreground hover:text-accent transition-colors duration-200 group"
+                        onClick={method.title === "Email" ? handleEmailClick : 
+                                method.title === "Phone" ? handlePhoneClick : 
+                                method.title === "Location" ? handleLocationClick : undefined}
+                        className="flex items-center space-x-4 text-muted-foreground hover:text-accent transition-colors duration-200 group cursor-pointer"
+                        {...(method.title === "Email" && { target: "_self" })}
                       >
                         <div className="p-3 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
                           <method.icon className="h-5 w-5 text-accent" />

@@ -3,18 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Github } from "lucide-react";
 import dashboardImage from "@/assets/dashboard.png";
+import voiceAgentImage from "@/assets/voiceagent_dashboard.png";
 
 const projects = [
   {
     title: "Voice AI Agent",
     description: "Call the leads on the Go-high level CRM to qualify the leads and schedule the appointments",
-    media: {
-      type: "video",
-      url: "https://www.loom.com/embed/9789dce2a003495585dd9547a5e0425d", // Correct Loom embed URL
-      thumbnail: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80"
-    },
-    technologies: ["React", "Node.js", "PostgreSQL", "Stripe"],
-    liveUrl: "https://voice-ai-agent-demo.com", // Add your actual live demo URL here
+    image:voiceAgentImage, // Updated to a working image
+    technologies: ["React", "Typescript", "Twilio", "OpenAI","GoHighLevel CRM","Deepgram", "PostgreSQL", "Docker", "Sesame"],
+    liveUrl: "https://www.loom.com/embed/9789dce2a003495585dd9547a5e0425d", // Add your actual live demo URL here
     githubUrl: "https://github.com/SumanMadipeddi/Setter.AI",
     featured: true
   },
@@ -54,7 +51,7 @@ const projects = [
   },
   {
     title: "Voice Assistant",
-    description: "A voice assistant built for Summerization of the live meetings",
+    description: "A voice assistant built for Summarization of the live meetings",
     image: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=600&q=80", // Updated to a working image
     technologies: ["llama3", "FAISS","Python", "RestFul APIs"],
     liveUrl: "", // No live demo
@@ -71,10 +68,10 @@ export function ProjectsSection() {
           {/* Section Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-              Featured <span className="gradient-text">Projects</span>
+              Experience & <span className="gradient-text">Projects</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A showcase of my recent work, highlighting different technologies and creative solutions.
+              My recent work, highlighting different technologies and innovative solutions.
             </p>
           </div>
 

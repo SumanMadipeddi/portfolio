@@ -56,7 +56,7 @@ export function AboutSection() {
                   <h3 className="text-2xl font-semibold mb-4">My Journey</h3>
                   <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <p className="text-justify">
-                      Every innovation starts with curiosity—and mine was a fascination with how intelligence could be engineered. That curiosity led me to AI, ML, robotics. where I've spent years turning complex ideas into real-world solutions.
+                      Every innovation starts with curiosity and mine was a fascination with how intelligence could be engineered. That curiosity led me to AI, ML, robotics. where I've spent years turning complex ideas into real-world solutions.
                     </p>
                     <p className="text-justify">
                       I've worked with startups and building RAG-powered assistants and recommendation engines to architecting cloud-native AI platforms and developing mobile apps. I've worked at the intersection of research and production.

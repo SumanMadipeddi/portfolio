@@ -36,15 +36,14 @@ export function HeroSection() {
           {/* Content */}
           <div className={`space-y-10 ${isVisible ? "animate-fade-up" : "opacity-0"}`}>
             <div className="space-y-4">
-              <p className="text-accent font-medium text-lg">
-                Welcome to my portfolio
-              </p>
+              
               <h1 className="text-4xl lg:text-7xl font-bold leading-tight">
                 Hi, I'm{" "}
                 <span className="gradient-text">
                   Suman Madipeddi
                 </span>
               </h1>
+
               <p className="text-lg lg:text-2xl text-muted-foreground font-light">
                 AI Engineer & Software Engineer Machine Learning
               </p>
