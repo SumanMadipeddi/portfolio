@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Github } from "lucide-react";
 import dashboardImage from "@/assets/dashboard.png";
 import voiceAgentImage from "@/assets/voiceagent_dashboard.png";
+import cryptoStreamImage from "@/assets/crypto_stream.png";
+import textVideoImage from "@/assets/text_video.png";
 
 const projects = [
   {
@@ -17,6 +19,16 @@ const projects = [
   },
 
   {
+    title: "Multimodal text to Image and Video creation",
+    description: "A multimodal text to video creation application",
+    image:textVideoImage, // Updated to a working image
+    technologies: ["Difussion Models", "HuggingFace","CUDA","GPUs","Node.js","Next.js", "Typescript","ffmpeg", "GPT-4o"],
+    liveUrl: "https://drive.google.com/file/d/1X8cXniViIfXW9-sWRY8oSNeT84pZ7XQ3/view?usp=sharing", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/text-video",
+    featured: true
+  },
+
+  {
     title: "Jobsync AI",
     description: "A Job Search Assistant that uses AI to help you tailor your resume, cover letter, generates project ideas to do and drafts cold emails",
     image: dashboardImage, 
@@ -24,6 +36,16 @@ const projects = [
     technologies: ["LangChain", "Gemini", "grok", "FAISS", "Chromadb", "Python", "Streamlit"],
     liveUrl: "https://jobsyncai-sm.streamlit.app/",
     githubUrl: "https://github.com/SumanMadipeddi/JobSyncAI",
+    featured: true
+  },
+
+  {
+    title: "Realtime Crypoto Stream",
+    description: "A realtime crypto stream application that uses the Playwright Web Scraping to get the realtme crypto prices and charts",
+    image:cryptoStreamImage, // Updated to a working image
+    technologies: ["React & Next.js", "Node.js","Express.js", "Typescript", "Playwright", "Web Scraping & Automation", "WebSocket","Tailwind CSS"],
+    liveUrl: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/CryptoStream",
     featured: true
   },
 

@@ -10,12 +10,12 @@ const educationData = [
     location: "Tempe, AZ",
     duration: "2023 - 2025",
     logo: asuLogo,
-    description: "Specialized program focusing on advanced robotics, autonomous systems, and intelligent automation technologies.",
+    description: "Specializing in AI and Machine Learning, Computer Vision, Generative AI, Reinforcement Learning and Perception in Robotics",
     highlights: [
-      "Machine Learning & AI",
+      "AI and Machine Learning",
       "Computer Vision",
       "Generative AI",
-      "Robotics"
+      "Perception in Robotics"
     ],
     gpa: "3.8/4.0",
     status: "Completed"
