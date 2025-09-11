@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, MapPin, Phone, Linkedin, Github, Send } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { sendEmail, EmailTemplateData } from "@/lib/emailjs";
 
 // Custom X (Twitter) Icon Component - like the one under your photo

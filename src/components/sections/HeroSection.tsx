@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, Download, ExternalLink, Linkedin, Github } from "lucide-react";
 import { useEffect, useState } from "react";
 import profileImage from "@/assets/profile-hero.jpg";
+import { downloadResume } from "@/lib/resume";
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -55,7 +56,7 @@ export function HeroSection() {
 
             <div className="flex flex-wrap gap-4">
               <Button 
-                onClick={() => scrollToSection("#projects")}
+                onClick={() => scrollToSection("#experience")}
                 className="btn-hero text-lg px-8 py-6"
               >
                 View My Work
@@ -64,13 +65,7 @@ export function HeroSection() {
               <Button 
                 variant="outline"
                 className="btn-ghost-premium text-lg px-8 py-6"
-                onClick={() => {
-                  // Create a temporary link to download CV
-                  const link = document.createElement('a');
-                  link.href = '/resume/SumanMadipeddi_CV.pdf'; // Using the resume folder
-                  link.download = 'SumanMadipeddi_CV.pdf';
-                  link.click();
-                }}
+                onClick={downloadResume}
               >
                 Download CV
                 <Download className="ml-2 h-5 w-5" />

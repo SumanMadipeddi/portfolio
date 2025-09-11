@@ -73,8 +73,8 @@ export function SkillsSection() {
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-              Skills & <span className="gradient-text">Expertise</span>
+            <h2 className="text-4xl lg:text-5xl font-bold gradient-text mb-6">
+              Skills & Expertise
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               A comprehensive overview of my technical skills, certifications & achievements.
