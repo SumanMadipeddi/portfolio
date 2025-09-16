@@ -10,6 +10,7 @@ export interface ResumeResponse {
   data?: {
     downloadUrl: string;
     lastUpdated: string;
+    filename: string;
   };
 }
 
@@ -44,34 +45,36 @@ export const updateResumeOnServer = async (fileId: string, passcode: string): Pr
     };
   }
 
-  // In production, use server-side API
-  if (ENV_CONFIG.IS_PRODUCTION) {
-    try {
-      const response = await fetch(`${API_BASE}/resume`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileId, passcode }),
-      });
+  // Always use server-side API to update JSONBin
+  try {
+    const response = await fetch(`${API_BASE}/resume`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileId, passcode }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // Save to localStorage for immediate local testing
-      if (result.success && result.data?.downloadUrl) {
-        localStorage.setItem('resumeUrl', result.data.downloadUrl);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Production API error:', error);
-      // Fallback to client-side update
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
 
-  // Client-side verification and update (development or fallback)
+    const result = await response.json();
+    
+    // Save to localStorage for immediate local testing
+    if (result.success && result.data?.downloadUrl) {
+      localStorage.setItem('resumeUrl', result.data.downloadUrl);
+      localStorage.setItem('resumeLastUpdated', result.data.lastUpdated);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Server API error:', error);
+    // Fallback to direct JSONBin update
+    return await updateJSONBinDirectly(fileId, passcode);
+  }
+}
+
+// Direct JSONBin update function
+async function updateJSONBinDirectly(fileId: string, passcode: string): Promise<ResumeResponse> {
   if (passcode !== ADMIN_PASSCODE) {
     return {
       success: false,
@@ -79,18 +82,46 @@ export const updateResumeOnServer = async (fileId: string, passcode: string): Pr
     };
   }
 
-  // Convert file ID to direct download URL
-  const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-  
-  // Save to localStorage
-  localStorage.setItem('resumeUrl', directUrl);
-  
-  return {
-    success: true,
-    message: 'Resume updated successfully',
-    data: {
-      downloadUrl: directUrl,
+  try {
+    // Update JSONBin directly
+    const STORAGE_URL = 'https://api.jsonbin.io/v3/b/68c90385d0ea881f407f8393';
+    const STORAGE_KEY = '$2a$10$yKUUJi95xhXA7hAukjkrCOE2bCBzWf15lXfGE/bz1VW8KrnoeBRDy';
+    
+    const updatedData = {
+      downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,
       lastUpdated: new Date().toISOString().split('T')[0],
-    },
-  };
+      filename: "resume_suman_madipeddi.pdf"
+    };
+
+    const response = await fetch(STORAGE_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': STORAGE_KEY
+      },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      
+      // Save to localStorage for immediate local testing
+      localStorage.setItem('resumeUrl', updatedData.downloadUrl);
+      localStorage.setItem('resumeLastUpdated', updatedData.lastUpdated);
+      
+      return {
+        success: true,
+        message: 'Resume updated permanently in JSONBin!',
+        data: result.record,
+      };
+    } else {
+      throw new Error(`JSONBin update failed: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('JSONBin update error:', error);
+    return {
+      success: false,
+      message: 'Failed to update resume permanently.',
+    };
+  }
 };

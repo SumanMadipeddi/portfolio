@@ -80,7 +80,7 @@ export default function Admin() {
       const result = await updateResumeOnServer(fileId, passcode);
       
       if (result.success) {
-        setMessage('✅ Resume updated successfully! The download button will now use the new resume.');
+        setMessage('✅ Resume updated successfully! Changes are now live for all users.');
         localStorage.setItem('resumeUrl', result.data?.downloadUrl || '');
         const info = await getResumeInfo();
         setResumeInfo(info);

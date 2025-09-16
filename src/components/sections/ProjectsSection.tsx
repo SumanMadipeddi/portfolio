@@ -30,7 +30,7 @@ const projects = [
 
   {
     title: "Jobsync AI",
-    description: "A Job Search Assistant that uses AI to help you tailor your resume, cover letter, generates project ideas to do and drafts cold emails",
+    description: "A Job Search Assistant that uses AI to help you tailor your resume, cover letter, generates project ideas and drafts cold emails",
     image: dashboardImage, 
     // Updated to use the new image
     technologies: ["LangChain", "Gemini", "grok", "FAISS", "Chromadb", "Python", "Streamlit"],
@@ -40,8 +40,8 @@ const projects = [
   },
 
   {
-    title: "Realtime Crypoto Stream",
-    description: "A realtime crypto stream application that uses the Playwright Web Scraping to get the realtme crypto prices and charts",
+    title: "Realtime Crypto Stream",
+    description: "A realtime crypto stream application that uses the Playwright Web Scraping to get the realtime crypto prices and charts",
     image:cryptoStreamImage, // Updated to a working image
     technologies: ["React & Next.js", "Node.js","Express.js", "Typescript", "Playwright", "Web Scraping & Automation", "WebSocket","Tailwind CSS"],
     liveUrl: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link", // Add your actual live demo URL here
