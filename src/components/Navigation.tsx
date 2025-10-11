@@ -15,6 +15,7 @@ const navItems = [
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,6 +49,7 @@ export function Navigation() {
         block: "start",
       });
     }
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -56,13 +58,16 @@ export function Navigation() {
         ? "glass shadow-medium backdrop-blur-xl" 
         : "bg-transparent"
     }`}>
-      <div className="container mx-auto px-6 py-5">
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-5">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold gradient-text">
+          {/* <div className="text-lg sm:text-xl md:text-2xl font-bold gradient-text">
+            Portfolio */}
+            <div className="text-2xl font-bold gradient-text">
             Suman Madipeddi
           </div>
           
-          <div className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <button
                 key={item.name}
@@ -81,16 +86,55 @@ export function Navigation() {
             ))}
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
             <Button 
               onClick={() => scrollToSection("#contact")}
-              className="btn-hero hidden md:inline-flex"
+              className="btn-hero hidden sm:inline-flex text-sm px-4 py-2"
             >
               Let's Talk
             </Button>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 rounded-md hover:bg-secondary transition-colors duration-200"
+            >
+              <div className="w-5 h-5 flex flex-col justify-center space-y-1">
+                <span className={`block h-0.5 bg-foreground transition-all duration-200 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+                <span className={`block h-0.5 bg-foreground transition-all duration-200 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
+                <span className={`block h-0.5 bg-foreground transition-all duration-200 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
+              </div>
+            </button>
           </div>
         </div>
+        
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden mt-4 py-4 border-t border-border">
+            <div className="flex flex-col space-y-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => scrollToSection(item.href)}
+                  className={`py-3 px-4 text-left font-medium transition-colors duration-200 rounded-md ${
+                    activeSection === item.href.substring(1)
+                      ? "text-accent bg-accent/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+              <Button 
+                onClick={() => scrollToSection("#contact")}
+                className="btn-hero mt-4 mx-4 text-center"
+              >
+                Let's Talk
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

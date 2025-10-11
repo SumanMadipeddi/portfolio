@@ -10,11 +10,11 @@ const experiences = [
     position: "AI and LLMs Engineer",
     duration: "01/2025 - Present",
     achievements: [
-      "Designed and deployed a RAG-based conversational AI system (Vertex AI, RLHF) with multimodal inputs, achieving 90% intent accuracy, and built an LLM-based recommendation engine leveraging geospatial + behavioral data for real-time chore-preneurs",
-      "Modernized UI/UX across iOS/Android by leading React Native, Swift, and TypeScript development within a microservices architecture; orchestrated deployment with Kubernetes, ensuring scalable, zero-downtime rollouts",
-      "Improved performance and engagement by reducing latency 40%, introducing broadcast + interactive messaging, and driving measurable gains in onboarding 25% and user engagement 30%"
+    "Designed and fine-tuned LLaMA-3.1-8B-Instruct with LoRA and QLoRA quantization on proprietary company data for in-house inference using Ollama and future-proof AI capabilities, while building a RAG-based conversational chatbot for customers and recommendation engine using Linear Regression leveraging geospatial and behavioral data for real-time chores matching",
+    "Led end-to-end modernization of UI/UX on iOS and Android, development of mobile application using React Native, TypeScript and Swift in a microservices architecture and deploying seamlessly with Kubernetes for scalable, production-grade reliability.",
+    "Improved performance and engagement on Product Launch by reducing latency 40%, introducing broadcast + interactive messaging, and driving measurable gains in onboarding 25% and user engagement 30%",
     ],
-    technologies: ["React", "Express.js","Typescript", "Machine Learning", "Vertex AI", "RAG", "RLHF","React Native", "Swift","PostgreSQL", "Kubernetes", "Microservices"]
+    technologies: ["Fine-Tuning", "LoRA", "QLoRA","Ollama","vLLM","React", "Express.js","Typescript", "Machine Learning", "Vertex AI", "RAG", "RLHF","AWS", "GCP","React Native", "Swift","PostgreSQL", "Kubernetes", "Microservices"]
   },
   {
     company: "Inventors Foundation",

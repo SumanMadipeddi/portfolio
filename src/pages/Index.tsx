@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main>
+      <main className="pt-16 sm:pt-15">
         <HeroSection />
         <AboutSection />
         <ExperienceSection />
@@ -22,13 +22,13 @@ const Index = () => {
       </main>
       
       {/* Footer */}
-      <footer className="py-8 bg-secondary/30 border-t border-border">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground">
+      <footer className="py-6 sm:py-8 bg-secondary/30 border-t border-border">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+            <p className="text-sm sm:text-base text-muted-foreground text-center sm:text-left">
               © 2025 Portfolio. All rights reserved.
             </p>
-            <p className="text-sm text-muted-foreground mt-2 md:mt-0">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Thanks for visiting!
             </p>
           </div>

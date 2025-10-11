@@ -209,6 +209,22 @@
   .transition-smooth { transition: var(--transition-smooth); }
   .transition-spring { transition: var(--transition-spring); }
   .transition-bounce { transition: var(--transition-bounce); }
+  
+  /* Mobile-specific utilities */
+  .safe-area-inset-top { padding-top: env(safe-area-inset-top); }
+  .safe-area-inset-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-inset-left { padding-left: env(safe-area-inset-left); }
+  .safe-area-inset-right { padding-right: env(safe-area-inset-right); }
+  
+  /* Text selection */
+  .select-none { user-select: none; }
+  .select-text { user-select: text; }
+  .select-all { user-select: all; }
+  
+  /* Touch improvements */
+  .touch-manipulation { touch-action: manipulation; }
+  .touch-pan-x { touch-action: pan-x; }
+  .touch-pan-y { touch-action: pan-y; }
 }
 
 @keyframes fade-up {
