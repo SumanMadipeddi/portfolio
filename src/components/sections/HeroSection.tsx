@@ -33,7 +33,7 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
           {/* Content */}
           <div className={`space-y-6 md:space-y-8 lg:space-y-10 text-center md:text-left ${isVisible ? "animate-fade-up" : "opacity-0"}`}>
             <div className="space-y-3 md:space-y-4">
@@ -45,13 +45,13 @@ export function HeroSection() {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground font-light">
-                AI Engineer & Software Engineer ML
+              <p className="text-base sm:text-lg md:text-xl lg:text-3xl text-muted-foreground font-light">
+                AI/ML Software Engineer
               </p>
             </div>
             
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto md:mx-0">
-            AI Engineer with 2+ years of experience designing scalable systems, LLM-based solutions, AI Agents and automation pipelines.
+            AI Engineer with 2+ years of experience building AI Agents, Fine tuning LLM based solutions, automation pipelines and designing scalable systems.
             </p>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center md:justify-start">

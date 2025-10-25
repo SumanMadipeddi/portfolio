@@ -4,9 +4,18 @@ import { Badge } from "@/components/ui/badge";
 
 const experiences = [
   {
+    company: "Stealth AI Startup",
+    location: "San Francisco, United States",
+    position: "AI/ML Software Engineer",
+    duration: "10/2025 - Present",
+    achievements: [ "Building computer vision models, automation, full stack development and Fine tuning LLMs"
+    ],
+    technologies: ["Computer Vision","Machine Learning", "React", "Express.js","Typescript","Fine-Tuning", "LoRA", "QLoRA","vLLM",,"GCP","React Native", "PostgreSQL"]
+  },
+  {
     company: "Minor Chores",
     link: "https://www.minorchores.com/",
-    location: "USA",
+    location: "United States",
     position: "AI and LLMs Engineer",
     duration: "01/2025 - Present",
     achievements: [
@@ -19,14 +28,12 @@ const experiences = [
   {
     company: "Inventors Foundation",
     link: "https://inventorsfoundation.org/",
-    location: "San Jose, CA, USA",
+    location: "San Jose, United States",
     position: "AI Engineer - Patent Automation & Video Intelligence",
     duration: "06/2025 - 09/2025",
     achievements: [
         "Automated patent content operations: Replaced 20+ hours of weekly manual effort by designing and deploying a full-stack automation pipeline (FastAPI backend, React frontend, USPTO API integration).",
-
         "Engineered AI-driven content generation: Applied OCR for text/drawing extraction and leveraged GPT-4 to produce clear patent summaries; automated branded video creation with Kapwing, including voiceovers and embedded visuals.",
-        
         "Delivered measurable business impact: Reduced turnaround time from days to hours, significantly improved workflow efficiency, and increased client adoption and satisfaction across partner law firms.",
     ],
     technologies: ["Node.js", "React", "USPTO APIs", "OCR", "GPT-4", "ElevenLabs", "Kapwing", "Veo3", "google Vids","Python", "JavaScript", "Typescript"]

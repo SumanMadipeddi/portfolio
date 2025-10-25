@@ -5,8 +5,8 @@ import { Brain, Code, Database, Rocket, Users } from "lucide-react";
 const highlights = [
   {
     icon: Brain,
-    title: "AI Engineer",
-    description: "Architecting scalable AI solutions, from LLM-powered systems to RAG pipelines and voice agents."
+    title: "AI/ML Software Engineering",
+    description: "Building AI Agents with MCP and Fine tuning LLMs, architecting scalable LLM-powered systems to RAG pipelines, voice agents and computer vision models"
   },
   {
     icon: Database,
@@ -44,7 +44,7 @@ export function AboutSection() {
               About <span className="gradient-text">Me</span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-            AI Engineer specializing in building scalable, intelligent systems, AI Agents and automation pipelines. Passionate about AGI research and building JARVIS.
+            AI Engineer specializing in building scalable, intelligent systems, AI Agents. Research into AGI and Emotional intelligence and building JARVIS
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export function AboutSection() {
                       Every innovation starts with curiosity and mine was a fascination with how intelligence could be engineered. That curiosity led me to AI, ML, robotics. where I've spent years turning complex ideas into real-world solutions.
                     </p>
                     <p className="text-left sm:text-justify text-sm sm:text-base">
-                      I've worked with startups and building RAG-powered assistants and recommendation engines to architecting cloud-native AI platforms and developing mobile apps. I've worked at the intersection of research and production.
+                      I've worked with 2 startups and building AI architected software solutions,RAG-powered assistants and recommendation engines developing mobile apps. I've worked with cross functional teams at the intersection of research and production.
                     </p>
                     <p className="text-left sm:text-justify text-sm sm:text-base">
                       When I'm not building intelligent systems, I explore cutting-edge research in AGI and reinforcement learning, experiment with emerging technologies, and share insights through collaboration

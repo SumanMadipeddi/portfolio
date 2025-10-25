@@ -13,19 +13,19 @@ const skillCategories = [
   {
     title: "Frontend Development",
     icon: Code,
-    skills: ["Python", "React/Next.js", "TypeScript", "JavaScript", "d3.js","Webpack","Figma"]
+    skills: ["Python","React/Next.js", "TypeScript", "JavaScript", "d3.js","Webpack","Figma"]
   },
 
   {
     title: "Backend Development", 
     icon: Database,
-    skills: ["Node.js", "Python", "PostgreSQL", "GraphQL", "Express.js", "Django", "MongoDB", "REST APIs", "JWT", "Socket.io"]
+    skills: ["Node.js", "Python", "PostgreSQL", "GraphQL", "Express.js", "Django", "MongoDB", "REST APIs", ,"SQLite", "JWT"]
   },
 
   {
     title: "Cloud & DevOps",
     icon: Cloud,
-    skills: ["AWS", "GCP (Vertex AI, Firestore)", "Docker", "CI/CD", "Kubernetes", "Terraform", "Jenkins", "Git, GitHub Actions", "Linux","Serverless"]
+    skills: ["AWS", "GCP (Vertex AI, Firestore)", "Docker", "CI/CD", "Kubernetes", "Terraform", "Git, GitHub Actions", "Linux"]
   }
 ];
 
