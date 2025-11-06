@@ -8,15 +8,16 @@ import cryptoStreamImage from "@/assets/crypto_stream.png";
 import textVideoImage from "@/assets/text_video.png";
 import objectSegmentationImage from "@/assets/ObjectSegmentation.jpg";
 import fineTuningImage from "@/assets/finetuning.jpg";
+import ragVoice from "@/assets/rag_voice_agent.png"
 
 const projects = [
   {
-    title: "Voice AI Agent",
-    description: "Call the leads on the Go-high level CRM to qualify the leads and schedule the appointments",
-    image:voiceAgentImage, // Updated to a working image
-    technologies: ["React", "Typescript", "Twilio", "OpenAI","GoHighLevel CRM","Deepgram", "PostgreSQL", "Docker", "Sesame"],
-    liveUrl: "https://www.loom.com/embed/9789dce2a003495585dd9547a5e0425d", // Add your actual live demo URL here
-    githubUrl: "https://github.com/SumanMadipeddi/Setter.AI",
+    title: "RAG Multi Agent Voice AI",
+    description: "RAG Enabled multi agent voice assistant with pinecone vector DB, tool calls and mcp servers using LiveKit",
+    image:ragVoice, // Updated to a working image
+    technologies: ["LiveKit","Langchain","Pinecone","RAG", "React", "Typescript", "Deepgram", "OpenAI", "Docker"],
+    liveUrl: "https://www.loom.com/share/c7950b8eda37434893fb03e091a89ebe", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/voice-agent",
     featured: true
   },
 
@@ -29,6 +30,18 @@ const projects = [
     githubUrl: "https://github.com/SumanMadipeddi/vllm-finetuned-inference-serving",
     featured: true
   },
+
+  {
+    title: "Voice AI Agent",
+    description: "Call the leads on the Go-high level CRM to qualify the leads and schedule the appointments",
+    image:voiceAgentImage, // Updated to a working image
+    technologies: ["React", "Typescript", "Twilio", "OpenAI","GoHighLevel CRM","Deepgram", "PostgreSQL", "Docker", "Sesame"],
+    liveUrl: "https://www.loom.com/embed/9789dce2a003495585dd9547a5e0425d", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/Setter.AI",
+    featured: true
+  },
+
+  
 
   {
     title: "Multimodal text to Image and Video creation",
@@ -69,23 +82,6 @@ const projects = [
     liveUrl: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link", // Add your actual live demo URL here
     githubUrl: "https://github.com/SumanMadipeddi/CryptoStream",
     featured: true
-  },
-  {
-    title: "Gesture Recognition",
-    description: "Collaborative task management application with real-time updates, team workflows, and progress tracking.",
-    technologies: ["Next.js", "TypeScript", "Prisma", "WebSocket"],
-    liveUrl: "https://your-gesture-demo.com", // Replace with actual live demo URL
-    githubUrl: "https://github.com/SumanMadipeddi/Mars-crater-visualization",
-    featured: false
-  },
-  {
-    title: "Voice Assistant",
-    description: "A voice assistant built for Summarization of the live meetings",
-    image: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=600&q=80", // Updated to a working image
-    technologies: ["llama3", "FAISS","Python", "RestFul APIs"],
-    liveUrl: "", // No live demo
-    githubUrl: "https://github.com/SumanMadipeddi/Voice-Assistant",  
-    featured: false
   }
 ];
 

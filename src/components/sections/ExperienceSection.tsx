@@ -8,7 +8,7 @@ const experiences = [
     location: "San Francisco, United States",
     position: "AI/ML Software Engineer",
     duration: "10/2025 - Present",
-    achievements: [ "Building computer vision models, automation, full stack development and Fine tuning LLMs"
+    achievements: [ "Building a full stack automation with Multi Agents, Fine tuning LLMs, Deepseek-OCR and other CV models"
     ],
     technologies: ["Computer Vision","Machine Learning", "React", "Express.js","Typescript","Fine-Tuning", "LoRA", "QLoRA","vLLM",,"GCP","React Native", "PostgreSQL"]
   },

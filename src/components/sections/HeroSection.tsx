@@ -51,7 +51,7 @@ export function HeroSection() {
             </div>
             
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto md:mx-0">
-            AI Engineer with 2+ years of experience building AI Agents, Fine tuning LLM based solutions, automation pipelines and designing scalable systems.
+            AI Engineer 2 years of experience in building Multi Agents, Fine tuning LLMs and scalable full stack applications.
             </p>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center md:justify-start">
