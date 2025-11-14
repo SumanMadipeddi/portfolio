@@ -44,7 +44,7 @@ export function AboutSection() {
               About <span className="gradient-text">Me</span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-            AI Engineer specializing in building scalable, intelligent systems, AI Agents. Research into AGI and Emotional intelligence and building JARVIS
+            AI/ML Software Engineer specializing in building scalable, intelligent systems, AI Agents. Research into AGI and Emotional intelligence and building JARVIS
             </p>
           </div>
 
