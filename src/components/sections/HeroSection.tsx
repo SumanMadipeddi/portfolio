@@ -120,7 +120,7 @@ export function HeroSection() {
         {/* Scroll Indicator */}
         <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
           <button
-            onClick={() => scrollToSection("#about")}
+            onClick={() => scrollToSection("#projects")}
             className="p-2 sm:p-3 rounded-full glass hover:shadow-glow transition-all duration-300"
           >
             <ArrowDown className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />

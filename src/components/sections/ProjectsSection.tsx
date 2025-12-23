@@ -9,8 +9,28 @@ import textVideoImage from "@/assets/text_video.png";
 import objectSegmentationImage from "@/assets/ObjectSegmentation.jpg";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import ragVoice from "@/assets/rag_voice_agent.png"
+import graphRAG from "@/assets/graphRAG.png"
+import mobileQA from "@/assets/mobileQA.png"
 
 const projects = [
+  {
+    title: "GraphRAG multi agent",
+    description: "A GraphRAG system extracts knowledge graphs from PDF documents using LangGraph mult agent. Graph visualization, chat querying, Supabase storage",
+    image:graphRAG, // Updated to a working image
+    technologies: ["LangGraph","Langchain","graphRAG", "Supabase", "Typescript", "EXpressJS", "NextJS"],
+    liveUrl: "https://drive.google.com/file/d/1yu_3kWcr04DUCoJ8W04dtCgAta9hCPHp/view?usp=drive_link", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/graphRAG-Agent",
+    featured: true
+  },
+  {
+    title: "MobileQA multi agent for automated testing",
+    description: "Multi-agent system for automated mobile QA testing using LLMs, ADB, and vision-grounded execution with Simular Agent S3",
+    image:mobileQA, // Updated to a working image
+    technologies: ["Simular agent-S3","Langchain", "VLM", "CUA", ,"Android Studio", "Python", "LLM Orchestration"],
+    liveUrl: "https://drive.google.com/file/d/1vqaf3gtaYZeliB1yow5v4HuSNcNp-OAA/view?usp=sharing", // Add your actual live demo URL here
+    githubUrl: "https://github.com/SumanMadipeddi/mobile-QA-Agent",
+    featured: true
+  },
   {
     title: "RAG Multi Agent Voice AI",
     description: "RAG Enabled multi agent voice assistant with pinecone vector DB, tool calls and mcp servers using LiveKit",
@@ -96,7 +116,7 @@ export function ProjectsSection() {
               <span className="gradient-text">Projects</span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-              My recent work, highlighting different technologies and innovative solutions.
+            Multi-Agent Orchestration, Computer Vision, AI Engineering and Full stack
             </p>
           </div>
 
