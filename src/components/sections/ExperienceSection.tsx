@@ -9,8 +9,8 @@ const experiences = [
     position: "AI/ML Software Engineer",
     duration: "10/2025 - Present",
     achievements: [ 
-      "Architected and deployed full-stack document automation system (FastAPI, React, TypeScript) integrating multi-agent orchestration (LLM planning, retrieval, tool-use) and DeepSeek-OCR for complex document workflows.",
-      "Achieved 91% extraction accuracy on unstructured documents by reducing processing time by 85% to minutes per documents.",
+      "Architected and deployed full-stack document automation system by multi-agent orchestration (planning, retrieval, tool-use).",
+      "Achieved 91% extraction accuracy with DeepSeek-OCR, built diffusion model pipeline to generate video from USPTO patents.",
       "Built reinforcement learning training pipeline using SWE-Bench to optimize multi-step reasoning agents, improving task completion rate from 40% to 70% across 100+ test scenarios."
     ],
     technologies: ["Computer Vision","Machine Learning", "FastAPI", "React", "Express.js","Typescript", "DeepSeek-OCR", "vLLM","GCP", "PostgreSQL", "RL"]
@@ -22,25 +22,12 @@ const experiences = [
     position: "AI and LLMs Engineer",
     duration: "08/2024 - Present",
     achievements: [
-    "Designed and Fine-tuned LLaMA-3.1-8B with LoRA (rank-16) and 4-bit quantization on 4K+ proprietary examples, reducing inference costs by 78% while maintaining 89% accuracy. Deployed with vLLM achieving 120ms P95 latency.",
-    "Developed production RAG chatbot with Vertex AI and Pinecone Vector DB serving 3K+ queries/month with reducing API costs. Built geospatial recommendation engine with location, chores, improving task assignment accuracy by 86%.",
-    "Led development of React Native app (iOS + Android) with Express.js backend, implementing real-time messaging (Telnyx), payment processing (Stripe), and push notifications. Shipped to 2K+ users across 2 major releases.",
-    "Improved performance and engagement on Product Launch by reducing latency 40%. Drove 25% increase in onboarding and 30% boost in customer retention through UI/UX improvements and personalized messaging.",
+    "Designed and Fine-tuned LLaMA-3.1-8B with PEFT LoRA (rank-16) and 4-bit quantization on 4K+ proprietary examples, reducing inference costs by 78% while maintaining 89% accuracy, deployed with vLLM achieving 120ms P95 latency.",
+    "Developed RAG chatbot with Vertex AI, Pinecone Vector DB serving over 3000 queries per month achieving reducing API costs. Built recommendation system using location, task characteristics, improving task assignment accuracy by 86%.",
+    "Led the development of React app (iOS and Android) deployed on AWS ECS Fargate, auto scalable zero downtime and real-time messaging, payment integration, and push notifications, shipped to 1000+ users in 2 releases.",
+    "Analyzed customer retention data, boosting engagement by 30% and reducing latency by 40% in the first product launch.",
     ],
     technologies: ["Fine-Tuning", "LoRA", "QLoRA","Ollama","vLLM","React", "Express.js","Typescript", "Machine Learning", "Vertex AI", "RAG","AWS", "GCP","React Native", "Swift","PostgreSQL", "Kubernetes", "Microservices"]
-  },
-  {
-    company: "Inventors Foundation",
-    link: "https://inventorsfoundation.org/",
-    location: "San Jose, United States",
-    position: "AI Engineer - Patent Automation & Video Intelligence",
-    duration: "06/2025 - 09/2025",
-    achievements: [
-        "Automated patent content workflows by developing a full-stack pipeline (FastAPI, React, USPTO API), replacing manual effort.",
-        "Engineered multi-stage content, text/drawing extraction using OCR and GPT-4 for video generation with Kapwing.",
-        " Deployed system processing 50+ patents with 94% client satisfaction and reducing content production from 3 days to 1 hour.",
-    ],
-    technologies: ["Node.js", "React", "USPTO APIs", "OCR", "GPT-4", "ElevenLabs", "Kapwing", "Veo3", "google Vids","Python", "JavaScript", "Typescript"]
   }
 ];
 
