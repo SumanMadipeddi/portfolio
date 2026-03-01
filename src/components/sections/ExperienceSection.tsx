@@ -8,22 +8,22 @@ const experiences = [
     location: "San Francisco, United States",
     position: "AI/ML Software Engineer",
     duration: "10/2025 - Present",
-    achievements: [ 
-      "Architected and deployed full-stack document automation system by multi-agent orchestration (planning, retrieval, tool-use).",
-      "Achieved 91% extraction accuracy with DeepSeek-OCR, built diffusion model pipeline to generate video from USPTO patents.",
-      "Built reinforcement learning training pipeline using SWE-Bench to optimize multi-step reasoning agents, improving task completion rate from 40% to 70% across 100+ test scenarios."
+    achievements: [
+"Architected multi agent orchestration document intelligence converts unstructured PDF into knowledge graph with LangGraph.",
+"Engineered a pipeline using Unstructured and multimodal LLMs to extract text, tables, images and generate schema aware Cypher queries, evaluating agents, 100 pdfs, producing 10k+ nodes and relationships with visual embeddings.",
+"Achieved 96% extraction accuracy and built an intent based retrieval copilot for troubleshooting workflows to diagnose."
     ],
-    technologies: ["Computer Vision","Machine Learning", "FastAPI", "React", "Express.js","Typescript", "DeepSeek-OCR", "vLLM","GCP", "PostgreSQL", "RL"]
+    technologies: ["Agentic AI", "Document Intelligence", "Neo4j", "Pinecone", "Computer Vision", "FastAPI", "React","Typescript", "DeepSeek-OCR", "GCP", "PostgreSQL", "RL"]
   },
   {
     company: "Minor Chores",
     link: "https://www.minorchores.com/",
     location: "United States",
-    position: "AI and LLMs Engineer",
-    duration: "08/2024 - Present",
+    position: "Founding Engineer",
+    duration: "08/2024 - 10/2025",
     achievements: [
-    "Designed and Fine-tuned LLaMA-3.1-8B with PEFT LoRA (rank-16) and 4-bit quantization on 4K+ proprietary examples, reducing inference costs by 78% while maintaining 89% accuracy, deployed with vLLM achieving 120ms P95 latency.",
-    "Developed RAG chatbot with Vertex AI, Pinecone Vector DB serving over 3000 queries per month achieving reducing API costs. Built recommendation system using location, task characteristics, improving task assignment accuracy by 86%.",
+    "Designed and Fine-tuned LLaMA-3.1-8B with PEFT LoRA (rank-16) and INT8/FP8, 4-bit quantization on 4K+ proprietary examples, reducing inference costs by 78% while maintaining 89% accuracy, deployed with vLLM achieving 120ms P95 latency.",
+    "Architected and shipped RAG chatbot with Vertex AI, Pinecone Vector DB serving over 3000 queries per month. Built ML recommendation model retrieving real-time users by SQL queries, and location, chores, improving task accuracy by 86%. ",
     "Led the development of React app (iOS and Android) deployed on AWS ECS Fargate, auto scalable zero downtime and real-time messaging, payment integration, and push notifications, shipped to 1000+ users in 2 releases.",
     "Analyzed customer retention data, boosting engagement by 30% and reducing latency by 40% in the first product launch.",
     ],

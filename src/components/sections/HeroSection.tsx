@@ -46,7 +46,7 @@ export function HeroSection() {
               </h1>
 
               <p className="text-base sm:text-lg md:text-xl lg:text-3xl text-muted-foreground font-light">
-                AI/ML Software Engineer
+                Founding Engineer
               </p>
             </div>
             
