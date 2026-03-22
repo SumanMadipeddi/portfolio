@@ -7,6 +7,7 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
+import { downloadResume } from "@/lib/resume";
 
 type Theme = "light" | "dark";
 type ChatRole = "user" | "assistant";
@@ -1162,10 +1163,15 @@ const Index = () => {
           <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
             View my work
           </button>
-          <a className="btn-secondary btn-download" href="/resume/SumanMadipeddi_CV.pdf" download>
+          <button
+            className="btn-secondary btn-download"
+            onClick={() => {
+              void downloadResume();
+            }}
+          >
             <Download size={15} className="download-icon-anim" />
             Download Resume
-          </a>
+          </button>
         </div>
 
         <div className="hero-stats">

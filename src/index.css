@@ -99,6 +99,12 @@
   --font: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
   --nav-bg: rgba(255, 255, 255, 0.72);
   --nav-bg-scrolled: rgba(255, 255, 255, 0.88);
+  /* Glassmorphism controls (light) */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 28px rgba(31, 38, 135, 0.12);
+  --glass-blur: 16px;
+  --glass-saturate: 165%;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
@@ -125,6 +131,12 @@
   --purple: #bf5af2;
   --nav-bg: rgba(0, 0, 0, 0.72);
   --nav-bg-scrolled: rgba(0, 0, 0, 0.88);
+  /* Glassmorphism controls (dark) */
+  --glass-bg: rgba(18, 20, 28, 0.14);
+  --glass-bg-strong: rgba(26, 30, 40, 0.24);
+  --glass-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  --glass-blur: 16px;
+  --glass-saturate: 145%;
 }
 
 .v2 *,
@@ -582,13 +594,16 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
+  border: none;
   border-radius: 24px;
   padding: 32px;
   transition: border-color 0.3s, background 0.3s, transform 0.3s;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 
 .v2 .card::before {
@@ -604,8 +619,17 @@ body.cursor-hover .v2 .cursor-ring {
 
 .v2 .card:hover::before { opacity: 1; }
 
+.v2 .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.01));
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.06;
+}
+
 .v2 .card:hover {
-  border-color: var(--border-hover);
   transform: translateY(-2px);
 }
 
@@ -754,28 +778,25 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .project-card {
-  background: linear-gradient(165deg, rgba(246, 250, 255, 0.58), rgba(238, 245, 255, 0.42));
-  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
+  border: none;
   border-radius: 20px;
   padding: 18px 22px 24px;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(12px) saturate(130%);
-  -webkit-backdrop-filter: blur(12px) saturate(130%);
-}
-
-.dark .v2 .project-card {
-  background: linear-gradient(165deg, rgba(20, 27, 37, 0.62), rgba(14, 18, 26, 0.46));
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 
 .v2 .project-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(41, 151, 255, 0.07), transparent 45%, rgba(191, 90, 242, 0.06));
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.02));
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.08;
 }
 
 .v2 .project-card::after {
@@ -783,7 +804,6 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .project-card:hover {
-  border-color: var(--border-hover);
   transform: translateY(-4px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
 }
@@ -799,19 +819,19 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .card-glass-impact {
-  background: linear-gradient(160deg, rgba(223, 241, 255, 0.62), rgba(232, 243, 255, 0.38));
+  background: linear-gradient(160deg, rgba(41, 151, 255, 0.16), rgba(255, 255, 255, 0.04));
 }
 
 .v2 .card-glass-scale {
-  background: linear-gradient(160deg, rgba(239, 228, 255, 0.52), rgba(245, 239, 255, 0.34));
+  background: linear-gradient(160deg, rgba(191, 90, 242, 0.14), rgba(255, 255, 255, 0.04));
 }
 
 .dark .v2 .card-glass-impact {
-  background: linear-gradient(160deg, rgba(26, 41, 64, 0.6), rgba(16, 22, 34, 0.4));
+  background: linear-gradient(160deg, rgba(41, 151, 255, 0.2), rgba(20, 26, 38, 0.14));
 }
 
 .dark .v2 .card-glass-scale {
-  background: linear-gradient(160deg, rgba(40, 27, 58, 0.54), rgba(20, 16, 28, 0.38));
+  background: linear-gradient(160deg, rgba(191, 90, 242, 0.2), rgba(28, 22, 36, 0.14));
 }
 
 .v2 .project-media-wrap {
@@ -939,7 +959,7 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .contact-main-card {
-  background: linear-gradient(170deg, var(--bg1), var(--bg2));
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
 }
 
 .v2 .contact-side-card {
@@ -1515,11 +1535,11 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .card-about-main {
-  background: linear-gradient(160deg, #f4f7fc 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
 }
 
 .dark .v2 .card-about-main {
-  background: linear-gradient(160deg, #0d1117 0%, #0a0a0a 100%);
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
 }
 
 @keyframes v2-fade-up {
