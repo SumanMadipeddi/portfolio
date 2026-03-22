@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Sun, X } from "lucide-react";
+import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Square, Sun, X } from "lucide-react";
 import profileImage from "@/assets/profile-hero.jpg";
 import graphRagImage from "@/assets/graphRAG.png";
 import mobileQaImage from "@/assets/mobileQA.png";
@@ -153,10 +153,49 @@ const stats = [
   { value: 2, suffix: "+", label: "Years in AI/ML" },
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
   { value: 9, suffix: "+", label: "AI systems shipped" },
-  { value: 2, suffix: "", label: "Founding/early roles" },
+  // { value: 2, suffix: "", label: "Founding/early roles" },
   { value: 1,   suffix: "M+", label: "Production AI queries" },
   // { value: 3, suffix: "K+", label: "Monthly AI queries" },
 ];
+
+// const productionDepth = [
+//   {
+//     icon: "◈",
+//     title: "Observability & Tracing",
+//     desc: "LangSmith, OpenTelemetry, custom latency dashboards. Every agent decision is logged, traced, and debuggable in production.",
+//     accent: "blue",
+//   },
+//   {
+//     icon: "◈",
+//     title: "Agentic Evals",
+//     desc: "Built eval harnesses for multi-step agent pipelines — measuring task completion, hallucination rate, tool-call accuracy across 1M+ traces.",
+//     accent: "purple",
+//   },
+//   {
+//     icon: "◈",
+//     title: "SDK & API Delivery",
+//     desc: "Shipped Python SDK + CURL-ready REST APIs to 100K+ users. Versioned endpoints, rate limiting, async job handling, structured error responses.",
+//     accent: "green",
+//   },
+//   {
+//     icon: "◈",
+//     title: "Inference Optimization",
+//     desc: "vLLM serving, quantization (GPTQ/AWQ), batching strategies. Reduced p99 latency by 10x on fine-tuned LLaMA deployments.",
+//     accent: "amber",
+//   },
+//   {
+//     icon: "◈",
+//     title: "RAG at Scale",
+//     desc: "Hybrid search, re-ranking, contextual compression, query routing. Pinecone + Weaviate. Eval-driven iteration on retrieval quality metrics.",
+//     accent: "blue",
+//   },
+//   {
+//     icon: "◈",
+//     title: "Multi-Agent Systems",
+//     desc: "LangGraph state machines, tool-use agents, planning + reflection loops. Shipped to production with human-in-the-loop fallback and retry logic.",
+//     accent: "purple",
+//   },
+// ];
 
 const isBrowser = typeof window !== "undefined";
 
@@ -176,6 +215,9 @@ const Index = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceToast, setVoiceToast] = useState("");
+  const [voiceLiveText, setVoiceLiveText] = useState("");
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
   const [avatarImageError, setAvatarImageError] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -194,6 +236,20 @@ const Index = () => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const autoStopTimerRef = useRef<number | null>(null);
+  const vadAnimationRef = useRef<number | null>(null);
+  const vadAudioContextRef = useRef<AudioContext | null>(null);
+  const vadAnalyserRef = useRef<AnalyserNode | null>(null);
+  const vadSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const vadStartTimeRef = useRef<number>(0);
+  const vadLastSpeechTimeRef = useRef<number>(0);
+  const speechRecognitionRef = useRef<any>(null);
+  const voiceLiveTextRef = useRef("");
+  const lastVoiceReplyRef = useRef("");
+  const aiAudioRef = useRef<HTMLAudioElement | null>(null);
+  const chatHistoryRef = useRef<ChatItem[]>([]);
+  const voiceSessionActiveRef = useRef(false);
+  const cancelCurrentVoiceTurnRef = useRef(false);
+  const isProcessingVoiceRef = useRef(false);
 
   const chatHistory = useMemo(
     () =>
@@ -203,6 +259,14 @@ const Index = () => {
       })),
     [chatMessages],
   );
+
+  useEffect(() => {
+    voiceLiveTextRef.current = voiceLiveText;
+  }, [voiceLiveText]);
+
+  useEffect(() => {
+    chatHistoryRef.current = chatMessages;
+  }, [chatMessages]);
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -375,8 +439,8 @@ const Index = () => {
     let mx = width / 2;
     let my = height / 2;
 
-    const PARTICLE_COUNT = 160;
-    const CONNECTION_DIST = 140;
+    const PARTICLE_COUNT = 300;
+    const CONNECTION_DIST = 130;
     const MOUSE_RADIUS = 180;
     const MOUSE_STRENGTH = 1.4;
     const PARTICLE_SPEED = 0.45;
@@ -514,12 +578,19 @@ const Index = () => {
       if (autoStopTimerRef.current) {
         window.clearTimeout(autoStopTimerRef.current);
       }
+      stopLiveRecognition();
+      stopVAD();
+      if (aiAudioRef.current) {
+        aiAudioRef.current.pause();
+        aiAudioRef.current = null;
+      }
       mediaRecorderRef.current = null;
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
       mediaStreamRef.current = null;
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
+      setIsAiSpeaking(false);
     };
   }, []);
 
@@ -562,7 +633,7 @@ const Index = () => {
     try {
       const endpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) || "/api/chat";
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+      const timeoutId = window.setTimeout(() => controller.abort(), 30000);
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -626,20 +697,158 @@ const Index = () => {
       window.clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
     }
+    stopLiveRecognition();
+    stopVAD();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
     }
   };
 
-  const toggleVoice = async () => {
+  const stopAiSpeech = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (aiAudioRef.current) {
+      aiAudioRef.current.pause();
+      aiAudioRef.current = null;
+    }
+    setIsAiSpeaking(false);
+  };
+
+  const stopLiveRecognition = () => {
+    const recognition = speechRecognitionRef.current;
+    if (!recognition) return;
+    try {
+      recognition.stop();
+    } catch {
+      // no-op
+    }
+    speechRecognitionRef.current = null;
+  };
+
+  const startLiveRecognition = () => {
+    const SpeechRecognitionCtor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) return;
+
+    stopLiveRecognition();
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = "en-US";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        transcript += event.results[i][0]?.transcript || "";
+      }
+      setVoiceLiveText(transcript.trim());
+    };
+
+    recognition.onerror = () => {
+      // Keep recording flow alive even if transcript preview fails
+    };
+
+    recognition.onend = () => {
+      if (speechRecognitionRef.current === recognition) {
+        speechRecognitionRef.current = null;
+      }
+    };
+
+    speechRecognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopVAD = () => {
+    if (vadAnimationRef.current) {
+      window.cancelAnimationFrame(vadAnimationRef.current);
+      vadAnimationRef.current = null;
+    }
+    if (vadSourceRef.current) {
+      try {
+        vadSourceRef.current.disconnect();
+      } catch {
+        // no-op
+      }
+      vadSourceRef.current = null;
+    }
+    if (vadAnalyserRef.current) {
+      try {
+        vadAnalyserRef.current.disconnect();
+      } catch {
+        // no-op
+      }
+      vadAnalyserRef.current = null;
+    }
+    if (vadAudioContextRef.current) {
+      void vadAudioContextRef.current.close();
+      vadAudioContextRef.current = null;
+    }
+  };
+
+  const startVAD = (stream: MediaStream, recorder: MediaRecorder) => {
+    stopVAD();
+    const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextCtor) return;
+
+    const context = new AudioContextCtor();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.85;
+    const source = context.createMediaStreamSource(stream);
+    source.connect(analyser);
+
+    vadAudioContextRef.current = context;
+    vadAnalyserRef.current = analyser;
+    vadSourceRef.current = source;
+    vadStartTimeRef.current = Date.now();
+    vadLastSpeechTimeRef.current = Date.now();
+
+    const buffer = new Uint8Array(analyser.fftSize);
+    const MIN_RECORDING_MS = 900;
+    const SILENCE_MS = 1200;
+    const THRESHOLD_RMS = 0.03;
+
+    const tick = () => {
+      if (recorder.state !== "recording") {
+        stopVAD();
+        return;
+      }
+
+      analyser.getByteTimeDomainData(buffer);
+      let sumSquares = 0;
+      for (let i = 0; i < buffer.length; i += 1) {
+        const sample = (buffer[i] - 128) / 128;
+        sumSquares += sample * sample;
+      }
+      const rms = Math.sqrt(sumSquares / buffer.length);
+      const now = Date.now();
+
+      if (rms > THRESHOLD_RMS) {
+        vadLastSpeechTimeRef.current = now;
+      }
+
+      const elapsed = now - vadStartTimeRef.current;
+      const silentFor = now - vadLastSpeechTimeRef.current;
+      if (elapsed >= MIN_RECORDING_MS && silentFor >= SILENCE_MS) {
+        recorder.stop();
+        stopVAD();
+        return;
+      }
+
+      vadAnimationRef.current = window.requestAnimationFrame(tick);
+    };
+
+    vadAnimationRef.current = window.requestAnimationFrame(tick);
+  };
+
+  const startVoiceTurn = async () => {
+    if (!voiceSessionActiveRef.current) return;
+    if (mediaRecorderRef.current?.state === "recording" || isProcessingVoiceRef.current) return;
+
     if (!navigator.mediaDevices?.getUserMedia) {
       setVoiceToast("Voice recording is not supported in this browser");
       window.setTimeout(() => setVoiceToast(""), 2800);
-      return;
-    }
-
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      stopRecording();
       return;
     }
 
@@ -665,7 +874,10 @@ const Index = () => {
 
       recorder.onstart = () => {
         setIsListening(true);
+        setVoiceLiveText("");
         setVoiceToast("Listening... tap again to stop");
+        startLiveRecognition();
+        startVAD(stream, recorder);
       };
 
       recorder.ondataavailable = (event) => {
@@ -676,13 +888,26 @@ const Index = () => {
 
       recorder.onerror = () => {
         setIsListening(false);
+        stopLiveRecognition();
+        stopVAD();
+        setVoiceLiveText("");
         setVoiceToast("Voice capture failed");
         window.setTimeout(() => setVoiceToast(""), 1600);
       };
 
       recorder.onstop = async () => {
         setIsListening(false);
+        stopLiveRecognition();
+        stopVAD();
+
+        if (cancelCurrentVoiceTurnRef.current || !voiceSessionActiveRef.current) {
+          mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+          mediaStreamRef.current = null;
+          audioChunksRef.current = [];
+          return;
+        }
         setVoiceToast("Processing voice...");
+        isProcessingVoiceRef.current = true;
 
         mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
         mediaStreamRef.current = null;
@@ -713,6 +938,13 @@ const Index = () => {
           setIsChatOpen(true);
           setIsThinking(true);
 
+          const liveTranscript = voiceLiveTextRef.current.trim();
+          if (liveTranscript) {
+            setShowSuggestions(false);
+            setChatMessages((prev) => [...prev, { role: "user", content: liveTranscript }]);
+          }
+          setVoiceLiveText("");
+
           const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
           const response = await fetch(voiceEndpoint, {
             method: "POST",
@@ -720,7 +952,7 @@ const Index = () => {
             body: JSON.stringify({
               audioBase64: base64,
               mimeType: blobType,
-              history: chatHistory,
+              history: chatHistoryRef.current,
               systemPrompt: SYSTEM_PROMPT,
             }),
           });
@@ -734,6 +966,12 @@ const Index = () => {
           if (!reply) {
             throw new Error("Empty voice reply");
           }
+          if (reply === lastVoiceReplyRef.current) {
+            setVoiceToast("Duplicate response ignored");
+            window.setTimeout(() => setVoiceToast(""), 800);
+            return;
+          }
+          lastVoiceReplyRef.current = reply;
 
           setShowSuggestions(false);
           setChatMessages((prev) => [
@@ -741,16 +979,44 @@ const Index = () => {
             { role: "assistant", content: reply },
           ]);
 
-          if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(reply);
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
+          const audioBase64 = String(data?.audioBase64 || "").trim();
+          const audioMimeType = String(data?.audioMimeType || "audio/wav").trim();
+          const usedGoogleVoice = Boolean(data?.usedGoogleVoice);
+          let playedGeminiAudio = false;
+          if (audioBase64 && audioMimeType.startsWith("audio/")) {
+            try {
+              if (aiAudioRef.current) {
+                aiAudioRef.current.pause();
+                aiAudioRef.current = null;
+              }
+              const audio = new Audio(`data:${audioMimeType};base64,${audioBase64}`);
+              aiAudioRef.current = audio;
+              audio.onplay = () => setIsAiSpeaking(true);
+              await audio.play();
+              await new Promise<void>((resolve) => {
+                audio.onended = () => {
+                  setIsAiSpeaking(false);
+                  aiAudioRef.current = null;
+                  resolve();
+                };
+                audio.onerror = () => {
+                  setIsAiSpeaking(false);
+                  aiAudioRef.current = null;
+                  resolve();
+                };
+              });
+              playedGeminiAudio = true;
+            } catch {
+              // no-op
+            }
           }
 
-          setVoiceToast("Done");
-          window.setTimeout(() => setVoiceToast(""), 900);
+          if (playedGeminiAudio || usedGoogleVoice) {
+            setVoiceToast(`Done (Google voice: ${String(data?.voice || "default")})`);
+          } else {
+            setVoiceToast("Done (text only; no Google audio returned)");
+          }
+          window.setTimeout(() => setVoiceToast(""), 1400);
         } catch (error) {
           const errorMessage =
             error instanceof Error && error.message
@@ -763,7 +1029,14 @@ const Index = () => {
           setVoiceToast("Voice request failed");
           window.setTimeout(() => setVoiceToast(""), 1400);
         } finally {
+          setVoiceLiveText("");
           setIsThinking(false);
+          isProcessingVoiceRef.current = false;
+          if (voiceSessionActiveRef.current && !cancelCurrentVoiceTurnRef.current) {
+            window.setTimeout(() => {
+              void startVoiceTurn();
+            }, 220);
+          }
         }
       };
 
@@ -773,10 +1046,53 @@ const Index = () => {
       }, 10000);
     } catch {
       setIsListening(false);
+      stopLiveRecognition();
+      stopVAD();
+      setVoiceLiveText("");
       setVoiceToast("Microphone permission denied");
       window.setTimeout(() => setVoiceToast(""), 1800);
     }
   };
+
+  const stopVoiceSession = (toast = "Voice stopped") => {
+    voiceSessionActiveRef.current = false;
+    setIsVoiceSessionActive(false);
+    cancelCurrentVoiceTurnRef.current = true;
+    audioChunksRef.current = [];
+    stopRecording();
+    stopAiSpeech();
+    setIsListening(false);
+    setVoiceLiveText("");
+    setVoiceToast(toast);
+    window.setTimeout(() => setVoiceToast(""), 1200);
+  };
+
+  const toggleVoice = async () => {
+    if (voiceSessionActiveRef.current || isListening || isAiSpeaking || isThinking) {
+      stopVoiceSession();
+      return;
+    }
+
+    cancelCurrentVoiceTurnRef.current = false;
+    voiceSessionActiveRef.current = true;
+    setIsVoiceSessionActive(true);
+    setIsChatOpen(true);
+    setVoiceToast("Voice started");
+    window.setTimeout(() => setVoiceToast(""), 900);
+    await startVoiceTurn();
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (voiceSessionActiveRef.current || mediaRecorderRef.current?.state === "recording" || isAiSpeaking || aiAudioRef.current) {
+        stopVoiceSession();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isAiSpeaking]);
 
   const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -901,7 +1217,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="card card-span-3 reveal" style={{ background: "linear-gradient(160deg,rgba(41,151,255,0.10),transparent)" }}>
+          <div className="card card-span-3 reveal card-glass-impact">
             <div className="card-tag">Impact</div>
             <div className="big-num">
               100<span className="unit">k+</span>
@@ -909,7 +1225,7 @@ const Index = () => {
             <div className="card-body">Monthly AI query volume handled</div>
           </div>
 
-          <div className="card card-span-3 reveal reveal-delay-1" style={{ background: "linear-gradient(160deg,rgba(191,90,242,0.10),transparent)" }}>
+          <div className="card card-span-3 reveal reveal-delay-1 card-glass-scale">
             <div className="card-tag">Scale</div>
             <div className="big-num">
               10<span className="unit">x</span>
@@ -926,6 +1242,56 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Production Depth — what separates seniors from juniors */}
+        {/* <div className="card card-span-12 reveal" style={{ marginTop: 16 }}>
+          <div className="card-tag">Production Engineering Depth</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 16,
+              marginTop: 16
+            }}
+          >
+            {productionDepth.map((item) => (
+              <div
+                key={item.title}
+                style={{
+                  padding: "16px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  transition: "border-color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--accent)",
+                    marginBottom: 6,
+                    letterSpacing: "-0.2px"
+                  }}
+                >
+                  {item.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "var(--text2)",
+                    lineHeight: 1.6,
+                    fontWeight: 300
+                  }}
+                >
+                  {item.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div> */}
       </section>
 
       <section id="experience">
@@ -1098,6 +1464,11 @@ const Index = () => {
                 {msg.content}
               </div>
             ))}
+            {isListening && voiceLiveText && (
+              <div className="msg msg-user msg-live">
+                {voiceLiveText}
+              </div>
+            )}
             {isThinking && (
               <div className="typing-indicator" id="typingIndicator">
                 <div className="typing-dot" />
@@ -1127,6 +1498,14 @@ const Index = () => {
                 if (e.key === "Enter") sendMessage();
               }}
             />
+            <button
+              className={`chat-voice-toggle ${isVoiceSessionActive ? "active" : ""} ${isListening ? "listening" : ""}`}
+              onClick={toggleVoice}
+              title={isVoiceSessionActive ? "Stop voice" : "Start voice"}
+              aria-label={isVoiceSessionActive ? "Stop voice session" : "Start voice session"}
+            >
+              {isVoiceSessionActive ? <Square size={14} /> : <Mic size={15} />}
+            </button>
             <button className="chat-send" onClick={() => sendMessage()}>
               <Send size={16} />
             </button>
@@ -1148,8 +1527,13 @@ const Index = () => {
         </button>
       </div>
 
-      <button className={`voice-btn ${isListening ? "listening" : ""}`} id="voiceBtn" onClick={toggleVoice} title="Voice search">
-        <Mic size={22} />
+      <button
+        className={`voice-btn ${isListening ? "listening" : ""}`}
+        id="voiceBtn"
+        onClick={toggleVoice}
+        title={isVoiceSessionActive ? "Tap to stop voice session" : "Tap to start voice session"}
+      >
+        {isVoiceSessionActive ? <Square size={20} /> : <Mic size={22} />}
       </button>
       <div className={`voice-toast ${voiceToast ? "show" : ""}`} id="voiceToast">{voiceToast}</div>
     </div>

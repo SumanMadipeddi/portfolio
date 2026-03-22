@@ -8,7 +8,6 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const envPath = path.join(rootDir, ".env");
 const aiDataPath = path.join(rootDir, "data", "ai-data.txt");
-const port = Number(process.env.LOCAL_API_PORT || 3001);
 
 const loadEnvFromFile = () => {
   if (!fs.existsSync(envPath)) return;
@@ -83,28 +82,92 @@ const loadDataContext = () => {
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
+const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 12000);
+const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || "Aoede";
+const DEFAULT_GEMINI_VOICE_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025";
+const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
+const normalizeModelName = (raw) =>
+  String(raw || "")
+    .trim()
+    .replace(/^models\//, "")
+    .replace(/:generateContent$/, "");
+
+const pcm16ToWavBase64 = (pcmBase64, sampleRate = 24000, channels = 1) => {
+  const pcm = Buffer.from(pcmBase64, "base64");
+  const bytesPerSample = 2;
+  const blockAlign = channels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = pcm.length;
+  const wavHeader = Buffer.alloc(44);
+
+  wavHeader.write("RIFF", 0);
+  wavHeader.writeUInt32LE(36 + dataSize, 4);
+  wavHeader.write("WAVE", 8);
+  wavHeader.write("fmt ", 12);
+  wavHeader.writeUInt32LE(16, 16);
+  wavHeader.writeUInt16LE(1, 20);
+  wavHeader.writeUInt16LE(channels, 22);
+  wavHeader.writeUInt32LE(sampleRate, 24);
+  wavHeader.writeUInt32LE(byteRate, 28);
+  wavHeader.writeUInt16LE(blockAlign, 32);
+  wavHeader.writeUInt16LE(16, 34);
+  wavHeader.write("data", 36);
+  wavHeader.writeUInt32LE(dataSize, 40);
+
+  return Buffer.concat([wavHeader, pcm]).toString("base64");
+};
+
+const normalizeGeminiAudio = ({ audioBase64, audioMimeType }) => {
+  if (!audioBase64) return { audioBase64: "", audioMimeType: "" };
+  const mime = String(audioMimeType || "").toLowerCase();
+  if (mime.includes("audio/l16") || mime.includes("audio/pcm")) {
+    const rateMatch = mime.match(/rate=(\d+)/);
+    const sampleRate = rateMatch ? Number(rateMatch[1]) : 24000;
+    return {
+      audioBase64: pcm16ToWavBase64(audioBase64, Number.isFinite(sampleRate) ? sampleRate : 24000),
+      audioMimeType: "audio/wav",
+    };
+  }
+  return {
+    audioBase64,
+    audioMimeType: audioMimeType || "audio/wav",
+  };
+};
 
 const callGemini = async ({ apiKey, model, systemPrompt, history, message }) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
   const contents = [...history, { role: "user", content: message }].map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        generationConfig: {
-          maxOutputTokens: 600,
-          temperature: 0.6,
-        },
-      }),
-    },
-  );
+  let response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents,
+          generationConfig: {
+            maxOutputTokens: 400,
+            temperature: 0.6,
+          },
+        }),
+      },
+    );
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Gemini timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const body = await response.text();
@@ -117,40 +180,7 @@ const callGemini = async ({ apiKey, model, systemPrompt, history, message }) => 
   return { reply, provider: "gemini", model };
 };
 
-const callClaude = async ({ apiKey, model, systemPrompt, history, message }) => {
-  const messages = [...history, { role: "user", content: message }].map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 600,
-      temperature: 0.6,
-      system: systemPrompt,
-      messages,
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Claude error ${response.status}: ${body.slice(0, 240)}`);
-  }
-
-  const data = await response.json();
-  const reply = data?.content?.find((c) => c?.type === "text")?.text?.trim();
-  if (!reply) throw new Error("Claude returned an empty response.");
-  return { reply, provider: "claude", model };
-};
-
-const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase64, mimeType }) => {
+const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase64, mimeType, voiceName }) => {
   const contents = [
     ...history.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -160,36 +190,93 @@ const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase
       role: "user",
       parts: [
         { inlineData: { mimeType, data: audioBase64 } },
-        { text: "Please respond to what you heard in this recording. Keep it concise and useful." },
+        { text: "Answer the user's request directly. Do not narrate what you heard. Never begin with phrases like 'I heard someone say'." },
       ],
     },
   ];
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        generationConfig: { maxOutputTokens: 700, temperature: 0.55 },
-      }),
-    },
-  );
+  const requestGemini = async (withAudio) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+    try {
+      return await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents,
+            generationConfig: withAudio
+              ? {
+                  maxOutputTokens: 700,
+                  temperature: 0.55,
+                  responseModalities: ["TEXT", "AUDIO"],
+                  speechConfig: {
+                    voiceConfig: {
+                      prebuiltVoiceConfig: {
+                        voiceName,
+                      },
+                    },
+                  },
+                }
+              : {
+                  maxOutputTokens: 700,
+                  temperature: 0.55,
+                },
+          }),
+        },
+      );
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error(`Gemini voice timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
 
+  let response = await requestGemini(true);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
+    if (response.status === 400 && body.includes("only supports text output")) {
+      response = await requestGemini(false);
+      if (!response.ok) {
+        const retryBody = await response.text();
+        throw new Error(`Gemini voice error ${response.status}: ${retryBody.slice(0, 240)}`);
+      }
+    } else {
+      throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
+    }
   }
 
   const data = await response.json();
-  const reply = data?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("\n").trim();
+  const parts = Array.isArray(data?.candidates?.[0]?.content?.parts)
+    ? data.candidates[0].content.parts
+    : [];
+  const reply = parts
+    .map((p) => p?.text || "")
+    .join("\n")
+    .trim();
   if (!reply) throw new Error("Gemini voice returned an empty response.");
-  return { reply, provider: "gemini", model };
+  const inlineData = parts.find((p) => p?.inlineData)?.inlineData;
+  const normalizedAudio = normalizeGeminiAudio({
+    audioBase64: inlineData?.data ? String(inlineData.data) : "",
+    audioMimeType: inlineData?.mimeType ? String(inlineData.mimeType) : "",
+  });
+  return {
+    reply,
+    provider: "gemini",
+    model,
+    audioBase64: normalizedAudio.audioBase64,
+    audioMimeType: normalizedAudio.audioMimeType,
+  };
 };
 
 loadEnvFromFile();
+const port = Number(process.env.LOCAL_API_PORT || 3001);
 
 const server = http.createServer(async (req, res) => {
   if (!req.url) return json(res, 404, { error: "Not found" });
@@ -215,51 +302,15 @@ const server = http.createServer(async (req, res) => {
       const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
 
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-      const claudeKey = process.env.CLAUDE_API_KEY || "";
-      const geminiModel = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-      const claudeModel = process.env.CLAUDE_MODEL || "claude-3-5-sonnet-20241022";
-      const primary = (process.env.LLM_PRIMARY || "gemini").toLowerCase();
+      const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-      if (!geminiKey && !claudeKey) {
+      if (!geminiKey) {
         return json(res, 500, {
-          error: "No LLM API keys configured. Add GEMINI_API_KEY and/or CLAUDE_API_KEY in .env.",
+          error: "No Gemini API key configured. Add GEMINI_API_KEY in .env.",
         });
       }
-
-      const attempts =
-        primary === "claude"
-          ? [
-              () => {
-                if (!claudeKey) throw new Error("Claude key missing");
-                return callClaude({ apiKey: claudeKey, model: claudeModel, systemPrompt: mergedPrompt, history, message });
-              },
-              () => {
-                if (!geminiKey) throw new Error("Gemini key missing");
-                return callGemini({ apiKey: geminiKey, model: geminiModel, systemPrompt: mergedPrompt, history, message });
-              },
-            ]
-          : [
-              () => {
-                if (!geminiKey) throw new Error("Gemini key missing");
-                return callGemini({ apiKey: geminiKey, model: geminiModel, systemPrompt: mergedPrompt, history, message });
-              },
-              () => {
-                if (!claudeKey) throw new Error("Claude key missing");
-                return callClaude({ apiKey: claudeKey, model: claudeModel, systemPrompt: mergedPrompt, history, message });
-              },
-            ];
-
-      let lastError = "Unknown LLM error";
-      for (const attempt of attempts) {
-        try {
-          const result = await attempt();
-          return json(res, 200, result);
-        } catch (error) {
-          lastError = error instanceof Error ? error.message : String(error);
-        }
-      }
-
-      return json(res, 502, { error: `All configured providers failed. Last error: ${lastError}` });
+      const result = await callGemini({ apiKey: geminiKey, model: geminiModel, systemPrompt: mergedPrompt, history, message });
+      return json(res, 200, result);
     }
 
     if (req.url === "/api/voice" && req.method === "POST") {
@@ -274,18 +325,48 @@ const server = http.createServer(async (req, res) => {
       const history = normalizeHistory(body?.history, 10);
       const requestPrompt = String(body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
       const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
-      const geminiModel = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+      const configuredVoiceModel = normalizeModelName(
+        process.env.GEMINI_VOICE_MODEL || DEFAULT_GEMINI_VOICE_MODEL,
+      );
+      const fallbackVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
+      let geminiModel = configuredVoiceModel;
 
-      const result = await callGeminiVoice({
+      let result = await callGeminiVoice({
         apiKey: geminiKey,
         model: geminiModel,
         systemPrompt: mergedPrompt,
         history,
         audioBase64,
         mimeType,
+        voiceName: DEFAULT_GEMINI_VOICE,
       });
+      if (!result.audioBase64 && geminiModel !== fallbackVoiceModel) {
+        const fallbackResult = await callGeminiVoice({
+          apiKey: geminiKey,
+          model: fallbackVoiceModel,
+          systemPrompt: mergedPrompt,
+          history,
+          audioBase64,
+          mimeType,
+          voiceName: DEFAULT_GEMINI_VOICE,
+        });
+        if (fallbackResult.audioBase64) {
+          result = fallbackResult;
+          geminiModel = fallbackVoiceModel;
+        }
+      }
+      if (STRICT_GOOGLE_VOICE && !result.audioBase64) {
+        return json(res, 500, {
+          error:
+            "Google voice audio was not returned by Gemini. Try another GEMINI_VOICE or model.",
+        });
+      }
 
-      return json(res, 200, result);
+      return json(res, 200, {
+        ...result,
+        voice: DEFAULT_GEMINI_VOICE,
+        usedGoogleVoice: Boolean(result.audioBase64),
+      });
     }
 
     return json(res, 404, { error: "Not found" });
@@ -297,4 +378,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, () => {
   console.log(`[local-api] listening on http://localhost:${port}`);
 });
-

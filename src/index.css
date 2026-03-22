@@ -754,13 +754,28 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .project-card {
-  background: var(--bg2);
+  background: linear-gradient(165deg, rgba(246, 250, 255, 0.58), rgba(238, 245, 255, 0.42));
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 18px 22px 24px;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+}
+
+.dark .v2 .project-card {
+  background: linear-gradient(165deg, rgba(20, 27, 37, 0.62), rgba(14, 18, 26, 0.46));
+}
+
+.v2 .project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(41, 151, 255, 0.07), transparent 45%, rgba(191, 90, 242, 0.06));
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 .v2 .project-card::after {
@@ -775,6 +790,28 @@ body.cursor-hover .v2 .cursor-ring {
 
 .dark .v2 .project-card:hover {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.v2 .card-glass-impact,
+.v2 .card-glass-scale {
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+}
+
+.v2 .card-glass-impact {
+  background: linear-gradient(160deg, rgba(223, 241, 255, 0.62), rgba(232, 243, 255, 0.38));
+}
+
+.v2 .card-glass-scale {
+  background: linear-gradient(160deg, rgba(239, 228, 255, 0.52), rgba(245, 239, 255, 0.34));
+}
+
+.dark .v2 .card-glass-impact {
+  background: linear-gradient(160deg, rgba(26, 41, 64, 0.6), rgba(16, 22, 34, 0.4));
+}
+
+.dark .v2 .card-glass-scale {
+  background: linear-gradient(160deg, rgba(40, 27, 58, 0.54), rgba(20, 16, 28, 0.38));
 }
 
 .v2 .project-media-wrap {
@@ -1199,6 +1236,11 @@ body.cursor-hover .v2 .cursor-ring {
   align-self: flex-end;
 }
 
+.v2 .msg-live {
+  opacity: 0.78;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
 .v2 .typing-indicator {
   display: flex;
   gap: 4px;
@@ -1294,6 +1336,38 @@ body.cursor-hover .v2 .cursor-ring {
 .v2 .chat-send:hover {
   background: #0a84ff;
   transform: scale(1.05);
+}
+
+.v2 .chat-voice-toggle {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  color: var(--text2);
+}
+
+.v2 .chat-voice-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.v2 .chat-voice-toggle.active {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: rgba(191, 90, 242, 0.12);
+}
+
+.v2 .chat-voice-toggle.listening {
+  animation: v2-voice-pulse 1s ease-in-out infinite;
 }
 
 .v2 .voice-btn {
