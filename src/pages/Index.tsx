@@ -1,5 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Square, Sun, X } from "lucide-react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Sun, X } from "lucide-react";
 import profileImage from "@/assets/profile-hero.jpg";
 import graphRagImage from "@/assets/graphRAG.png";
 import mobileQaImage from "@/assets/mobileQA.png";
@@ -7,7 +7,6 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
-import { downloadResume } from "@/lib/resume";
 
 type Theme = "light" | "dark";
 type ChatRole = "user" | "assistant";
@@ -141,15 +140,6 @@ const techStack = [
   "TypeScript",
 ];
 
-const skillBars = [
-  { label: "Agent Orchestration & LLM Systems", value: 96 },
-  { label: "Observability · Tracing · Agentic Evals", value: 93 },
-  { label: "RAG and Vector Search", value: 93 },
-  { label: "MLOps · Fine-tuning · Inference Serving", value: 87 },
-  { label: "Cloud Infrastructure (AWS · Docker · K8s)", value: 84 },
-  // { label: "Full-Stack Development", value: 84 },
-];
-
 const stats = [
   { value: 2, suffix: "+", label: "Years in AI/ML" },
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
@@ -198,6 +188,72 @@ const stats = [
 //   },
 // ];
 
+type TerminalSkillLine = {
+  prompt: ">" | "#";
+  text: string;
+};
+
+const terminalSkillLines: TerminalSkillLine[] = [
+  { prompt: ">", text: "Booting production skill profile..." },
+  { prompt: ">", text: "Agent orchestration and LLM systems  [online]" },
+  { prompt: ">", text: "Observability, tracing, agentic evals [ready]" },
+  { prompt: ">", text: "RAG and vector search at scale        [ready]" },
+  { prompt: ">", text: "MLOps, fine-tuning, inference serving [ready]" },
+  { prompt: ">", text: "Cloud infra (AWS, Docker, K8s)        [ready]" },
+  { prompt: "#", text: "Core skills loaded." },
+];
+
+const ABOUT_WORDS_TOP = ["build and", "ship and", "scale and"];
+const ABOUT_WORDS_BOTTOM = ["think", "execute", "improve"];
+const EXPERIENCE_WORDS_TOP = ["built", "scaled", "shipped"];
+const EXPERIENCE_WORDS_BOTTOM = ["that matter", "for users", "in production"];
+const WORK_WORDS = ["built", "shipped", "deployed"];
+const CONTACT_WORDS = ["something", "AI products", "great"];
+
+const useCyclingWord = (
+  words: string[],
+  options?: { charMs?: number; deleteMs?: number; holdMs?: number; pauseMs?: number },
+) => {
+  const { charMs = 60, deleteMs = 30, holdMs = 1800, pauseMs = 300 } = options || {};
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (!words.length) return;
+    let idx = 0;
+    let charIdx = 0;
+    let deleting = false;
+    let timer: number | undefined;
+
+    const tick = () => {
+      const word = words[idx];
+      if (!deleting) {
+        setText(word.slice(0, ++charIdx));
+        if (charIdx >= word.length) {
+          deleting = true;
+          timer = window.setTimeout(tick, holdMs);
+          return;
+        }
+      } else {
+        setText(word.slice(0, --charIdx));
+        if (charIdx <= 0) {
+          deleting = false;
+          idx = (idx + 1) % words.length;
+          timer = window.setTimeout(tick, pauseMs);
+          return;
+        }
+      }
+      timer = window.setTimeout(tick, deleting ? deleteMs : charMs);
+    };
+
+    timer = window.setTimeout(tick, 500);
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [words, charMs, deleteMs, holdMs, pauseMs]);
+
+  return text;
+};
+
 const isBrowser = typeof window !== "undefined";
 
 const Index = () => {
@@ -218,7 +274,6 @@ const Index = () => {
   const [voiceToast, setVoiceToast] = useState("");
   const [voiceLiveText, setVoiceLiveText] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-  const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
   const [avatarImageError, setAvatarImageError] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -226,6 +281,8 @@ const Index = () => {
     subject: "",
     message: "",
   });
+  const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
+  const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
 
   const cursorDotRef = useRef<HTMLDivElement | null>(null);
   const cursorRingRef = useRef<HTMLDivElement | null>(null);
@@ -233,24 +290,21 @@ const Index = () => {
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
   const chatBubbleRef = useRef<HTMLButtonElement | null>(null);
+  const heroTerminalRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const autoStopTimerRef = useRef<number | null>(null);
-  const vadAnimationRef = useRef<number | null>(null);
-  const vadAudioContextRef = useRef<AudioContext | null>(null);
-  const vadAnalyserRef = useRef<AnalyserNode | null>(null);
-  const vadSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const vadStartTimeRef = useRef<number>(0);
-  const vadLastSpeechTimeRef = useRef<number>(0);
   const speechRecognitionRef = useRef<any>(null);
   const voiceLiveTextRef = useRef("");
   const lastVoiceReplyRef = useRef("");
-  const aiAudioRef = useRef<HTMLAudioElement | null>(null);
-  const chatHistoryRef = useRef<ChatItem[]>([]);
-  const voiceSessionActiveRef = useRef(false);
-  const cancelCurrentVoiceTurnRef = useRef(false);
-  const isProcessingVoiceRef = useRef(false);
+
+  const aboutWordTop = useCyclingWord(ABOUT_WORDS_TOP);
+  const aboutWordBottom = useCyclingWord(ABOUT_WORDS_BOTTOM);
+  const experienceWordTop = useCyclingWord(EXPERIENCE_WORDS_TOP);
+  const experienceWordBottom = useCyclingWord(EXPERIENCE_WORDS_BOTTOM);
+  const workWord = useCyclingWord(WORK_WORDS);
+  const contactWord = useCyclingWord(CONTACT_WORDS);
 
   const chatHistory = useMemo(
     () =>
@@ -261,13 +315,98 @@ const Index = () => {
     [chatMessages],
   );
 
+  const keySoundRef = useRef<HTMLAudioElement | null>(null);
+  const lastTypeSoundAtRef = useRef(0);
+  const terminalVisibleRef = useRef(true);
+
+  useEffect(() => {
+    const a = new Audio("/sounds/key-clic.mp3");
+    a.volume = 0.1; // 0.0 - 1.0
+    a.preload = "auto";
+    keySoundRef.current = a;
+  }, []);
+
+  const playTypeSound = useCallback(() => {
+    if (!terminalVisibleRef.current) return;
+    const base = keySoundRef.current;
+    if (!base) return;
+
+    const now = performance.now();
+    if (now - lastTypeSoundAtRef.current < 22) return; // throttle
+    lastTypeSoundAtRef.current = now;
+
+    const click = base.cloneNode() as HTMLAudioElement;
+    click.volume = base.volume;
+    void click.play().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!isBrowser || !heroTerminalRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.25);
+        terminalVisibleRef.current = visible;
+      },
+      { threshold: [0, 0.25, 0.5, 1] },
+    );
+
+    observer.observe(heroTerminalRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isBrowser) return;
+    let cancelled = false;
+
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, ms);
+      });
+
+    const run = async () => {
+      while (!cancelled) {
+        setTypedSkillLines([]);
+        for (let i = 0; i < terminalSkillLines.length; i += 1) {
+          if (cancelled) return;
+          while (!cancelled && !terminalVisibleRef.current) {
+            await sleep(120);
+          }
+          if (cancelled) return;
+          setActiveSkillLineIndex(i);
+          setTypedSkillLines((prev) => [...prev, ""]);
+          let typed = "";
+          for (const char of terminalSkillLines[i].text) {
+            if (cancelled) return;
+            while (!cancelled && !terminalVisibleRef.current) {
+              await sleep(120);
+            }
+            if (cancelled) return;
+            typed += char;
+            setTypedSkillLines((prev) => {
+              const next = [...prev];
+              next[i] = typed;
+              return next;
+            });
+            playTypeSound();
+            await sleep(20);
+          }
+          await sleep(120);
+        }
+        setActiveSkillLineIndex(-1);
+        await sleep(2300);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [playTypeSound]);
+
   useEffect(() => {
     voiceLiveTextRef.current = voiceLiveText;
   }, [voiceLiveText]);
-
-  useEffect(() => {
-    chatHistoryRef.current = chatMessages;
-  }, [chatMessages]);
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -383,8 +522,8 @@ const Index = () => {
     };
 
     const animate = () => {
-      rx += (mx - rx) * 0.12;
-      ry += (my - ry) * 0.12;
+      rx += (mx - rx) * 0.25;
+      ry += (my - ry) * 0.25;
       ring.style.left = `${rx}px`;
       ring.style.top = `${ry}px`;
       raf = window.requestAnimationFrame(animate);
@@ -579,19 +718,12 @@ const Index = () => {
       if (autoStopTimerRef.current) {
         window.clearTimeout(autoStopTimerRef.current);
       }
-      stopLiveRecognition();
-      stopVAD();
-      if (aiAudioRef.current) {
-        aiAudioRef.current.pause();
-        aiAudioRef.current = null;
-      }
       mediaRecorderRef.current = null;
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
       mediaStreamRef.current = null;
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
-      setIsAiSpeaking(false);
     };
   }, []);
 
@@ -698,158 +830,20 @@ const Index = () => {
       window.clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
     }
-    stopLiveRecognition();
-    stopVAD();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
     }
   };
 
-  const stopAiSpeech = () => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
-    if (aiAudioRef.current) {
-      aiAudioRef.current.pause();
-      aiAudioRef.current = null;
-    }
-    setIsAiSpeaking(false);
-  };
-
-  const stopLiveRecognition = () => {
-    const recognition = speechRecognitionRef.current;
-    if (!recognition) return;
-    try {
-      recognition.stop();
-    } catch {
-      // no-op
-    }
-    speechRecognitionRef.current = null;
-  };
-
-  const startLiveRecognition = () => {
-    const SpeechRecognitionCtor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) return;
-
-    stopLiveRecognition();
-    const recognition = new SpeechRecognitionCtor();
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.onresult = (event: any) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        transcript += event.results[i][0]?.transcript || "";
-      }
-      setVoiceLiveText(transcript.trim());
-    };
-
-    recognition.onerror = () => {
-      // Keep recording flow alive even if transcript preview fails
-    };
-
-    recognition.onend = () => {
-      if (speechRecognitionRef.current === recognition) {
-        speechRecognitionRef.current = null;
-      }
-    };
-
-    speechRecognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const stopVAD = () => {
-    if (vadAnimationRef.current) {
-      window.cancelAnimationFrame(vadAnimationRef.current);
-      vadAnimationRef.current = null;
-    }
-    if (vadSourceRef.current) {
-      try {
-        vadSourceRef.current.disconnect();
-      } catch {
-        // no-op
-      }
-      vadSourceRef.current = null;
-    }
-    if (vadAnalyserRef.current) {
-      try {
-        vadAnalyserRef.current.disconnect();
-      } catch {
-        // no-op
-      }
-      vadAnalyserRef.current = null;
-    }
-    if (vadAudioContextRef.current) {
-      void vadAudioContextRef.current.close();
-      vadAudioContextRef.current = null;
-    }
-  };
-
-  const startVAD = (stream: MediaStream, recorder: MediaRecorder) => {
-    stopVAD();
-    const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextCtor) return;
-
-    const context = new AudioContextCtor();
-    const analyser = context.createAnalyser();
-    analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.85;
-    const source = context.createMediaStreamSource(stream);
-    source.connect(analyser);
-
-    vadAudioContextRef.current = context;
-    vadAnalyserRef.current = analyser;
-    vadSourceRef.current = source;
-    vadStartTimeRef.current = Date.now();
-    vadLastSpeechTimeRef.current = Date.now();
-
-    const buffer = new Uint8Array(analyser.fftSize);
-    const MIN_RECORDING_MS = 900;
-    const SILENCE_MS = 1200;
-    const THRESHOLD_RMS = 0.03;
-
-    const tick = () => {
-      if (recorder.state !== "recording") {
-        stopVAD();
-        return;
-      }
-
-      analyser.getByteTimeDomainData(buffer);
-      let sumSquares = 0;
-      for (let i = 0; i < buffer.length; i += 1) {
-        const sample = (buffer[i] - 128) / 128;
-        sumSquares += sample * sample;
-      }
-      const rms = Math.sqrt(sumSquares / buffer.length);
-      const now = Date.now();
-
-      if (rms > THRESHOLD_RMS) {
-        vadLastSpeechTimeRef.current = now;
-      }
-
-      const elapsed = now - vadStartTimeRef.current;
-      const silentFor = now - vadLastSpeechTimeRef.current;
-      if (elapsed >= MIN_RECORDING_MS && silentFor >= SILENCE_MS) {
-        recorder.stop();
-        stopVAD();
-        return;
-      }
-
-      vadAnimationRef.current = window.requestAnimationFrame(tick);
-    };
-
-    vadAnimationRef.current = window.requestAnimationFrame(tick);
-  };
-
-  const startVoiceTurn = async () => {
-    if (!voiceSessionActiveRef.current) return;
-    if (mediaRecorderRef.current?.state === "recording" || isProcessingVoiceRef.current) return;
-
+  const toggleVoice = async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setVoiceToast("Voice recording is not supported in this browser");
       window.setTimeout(() => setVoiceToast(""), 2800);
+      return;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      stopRecording();
       return;
     }
 
@@ -875,10 +869,7 @@ const Index = () => {
 
       recorder.onstart = () => {
         setIsListening(true);
-        setVoiceLiveText("");
         setVoiceToast("Listening... tap again to stop");
-        startLiveRecognition();
-        startVAD(stream, recorder);
       };
 
       recorder.ondataavailable = (event) => {
@@ -889,26 +880,13 @@ const Index = () => {
 
       recorder.onerror = () => {
         setIsListening(false);
-        stopLiveRecognition();
-        stopVAD();
-        setVoiceLiveText("");
         setVoiceToast("Voice capture failed");
         window.setTimeout(() => setVoiceToast(""), 1600);
       };
 
       recorder.onstop = async () => {
         setIsListening(false);
-        stopLiveRecognition();
-        stopVAD();
-
-        if (cancelCurrentVoiceTurnRef.current || !voiceSessionActiveRef.current) {
-          mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
-          mediaStreamRef.current = null;
-          audioChunksRef.current = [];
-          return;
-        }
         setVoiceToast("Processing voice...");
-        isProcessingVoiceRef.current = true;
 
         mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
         mediaStreamRef.current = null;
@@ -939,13 +917,6 @@ const Index = () => {
           setIsChatOpen(true);
           setIsThinking(true);
 
-          const liveTranscript = voiceLiveTextRef.current.trim();
-          if (liveTranscript) {
-            setShowSuggestions(false);
-            setChatMessages((prev) => [...prev, { role: "user", content: liveTranscript }]);
-          }
-          setVoiceLiveText("");
-
           const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
           const response = await fetch(voiceEndpoint, {
             method: "POST",
@@ -953,7 +924,7 @@ const Index = () => {
             body: JSON.stringify({
               audioBase64: base64,
               mimeType: blobType,
-              history: chatHistoryRef.current,
+              history: chatHistory,
               systemPrompt: SYSTEM_PROMPT,
             }),
           });
@@ -967,12 +938,6 @@ const Index = () => {
           if (!reply) {
             throw new Error("Empty voice reply");
           }
-          if (reply === lastVoiceReplyRef.current) {
-            setVoiceToast("Duplicate response ignored");
-            window.setTimeout(() => setVoiceToast(""), 800);
-            return;
-          }
-          lastVoiceReplyRef.current = reply;
 
           setShowSuggestions(false);
           setChatMessages((prev) => [
@@ -980,44 +945,16 @@ const Index = () => {
             { role: "assistant", content: reply },
           ]);
 
-          const audioBase64 = String(data?.audioBase64 || "").trim();
-          const audioMimeType = String(data?.audioMimeType || "audio/wav").trim();
-          const usedGoogleVoice = Boolean(data?.usedGoogleVoice);
-          let playedGeminiAudio = false;
-          if (audioBase64 && audioMimeType.startsWith("audio/")) {
-            try {
-              if (aiAudioRef.current) {
-                aiAudioRef.current.pause();
-                aiAudioRef.current = null;
-              }
-              const audio = new Audio(`data:${audioMimeType};base64,${audioBase64}`);
-              aiAudioRef.current = audio;
-              audio.onplay = () => setIsAiSpeaking(true);
-              await audio.play();
-              await new Promise<void>((resolve) => {
-                audio.onended = () => {
-                  setIsAiSpeaking(false);
-                  aiAudioRef.current = null;
-                  resolve();
-                };
-                audio.onerror = () => {
-                  setIsAiSpeaking(false);
-                  aiAudioRef.current = null;
-                  resolve();
-                };
-              });
-              playedGeminiAudio = true;
-            } catch {
-              // no-op
-            }
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(reply);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
           }
 
-          if (playedGeminiAudio || usedGoogleVoice) {
-            setVoiceToast(`Done (Google voice: ${String(data?.voice || "default")})`);
-          } else {
-            setVoiceToast("Done (text only; no Google audio returned)");
-          }
-          window.setTimeout(() => setVoiceToast(""), 1400);
+          setVoiceToast("Done");
+          window.setTimeout(() => setVoiceToast(""), 900);
         } catch (error) {
           const errorMessage =
             error instanceof Error && error.message
@@ -1030,14 +967,7 @@ const Index = () => {
           setVoiceToast("Voice request failed");
           window.setTimeout(() => setVoiceToast(""), 1400);
         } finally {
-          setVoiceLiveText("");
           setIsThinking(false);
-          isProcessingVoiceRef.current = false;
-          if (voiceSessionActiveRef.current && !cancelCurrentVoiceTurnRef.current) {
-            window.setTimeout(() => {
-              void startVoiceTurn();
-            }, 220);
-          }
         }
       };
 
@@ -1047,53 +977,10 @@ const Index = () => {
       }, 10000);
     } catch {
       setIsListening(false);
-      stopLiveRecognition();
-      stopVAD();
-      setVoiceLiveText("");
       setVoiceToast("Microphone permission denied");
       window.setTimeout(() => setVoiceToast(""), 1800);
     }
   };
-
-  const stopVoiceSession = (toast = "Voice stopped") => {
-    voiceSessionActiveRef.current = false;
-    setIsVoiceSessionActive(false);
-    cancelCurrentVoiceTurnRef.current = true;
-    audioChunksRef.current = [];
-    stopRecording();
-    stopAiSpeech();
-    setIsListening(false);
-    setVoiceLiveText("");
-    setVoiceToast(toast);
-    window.setTimeout(() => setVoiceToast(""), 1200);
-  };
-
-  const toggleVoice = async () => {
-    if (voiceSessionActiveRef.current || isListening || isAiSpeaking || isThinking) {
-      stopVoiceSession();
-      return;
-    }
-
-    cancelCurrentVoiceTurnRef.current = false;
-    voiceSessionActiveRef.current = true;
-    setIsVoiceSessionActive(true);
-    setIsChatOpen(true);
-    setVoiceToast("Voice started");
-    window.setTimeout(() => setVoiceToast(""), 900);
-    await startVoiceTurn();
-  };
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (voiceSessionActiveRef.current || mediaRecorderRef.current?.state === "recording" || isAiSpeaking || aiAudioRef.current) {
-        stopVoiceSession();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isAiSpeaking]);
 
   const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1144,59 +1031,83 @@ const Index = () => {
       </nav>
 
       <section id="hero">
-        <div className="hero-eyebrow">AI / ML Engineer - Founding AI Engineer</div>
-        <h1 className="hero-name">
-          Suman
-          <br />
-          <span className="gradient-text">Madipeddi</span>
-        </h1>
-        <div className="hero-title">
-          Building <strong>AI systems</strong> that think,
-          <br />
-          learn, and scale.
-        </div>
-        <p className="hero-desc">
-          Founding Engineer specializing in LLM pipelines, autonomous agents, and production-grade ML systems. I turn ambitious AI ideas into shipped products.
-        </p>
-        <div className="avail-chip">Available for opportunities</div>
-        <div className="hero-actions">
-          <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
-            View my work
-          </button>
-          <button
-            className="btn-secondary btn-download"
-            onClick={() => {
-              void downloadResume();
-            }}
-          >
-            <Download size={15} className="download-icon-anim" />
-            Download Resume
-          </button>
-        </div>
-
-        <div className="hero-stats">
-          {stats.map((stat) => (
-            <div className="stat" key={stat.label}>
-              <div className="stat-num">
-                <span className="count-up" data-target={stat.value}>0</span>
-                {stat.suffix}
-              </div>
-              <div className="stat-label">{stat.label}</div>
+        <div className="hero-layout">
+          <div className="hero-main">
+            <div className="hero-eyebrow">AI / ML Engineer - Founding AI Engineer</div>
+            <h1 className="hero-name">
+              Suman
+              <br />
+              <span className="gradient-text">Madipeddi</span>
+            </h1>
+            <div className="hero-title">
+              Building <strong>AI systems</strong> that think,
+              <br />
+              learn, and scale.
             </div>
-          ))}
+            <p className="hero-desc">
+              Founding AI Engineer specializing in LLM pipelines, autonomous agents, and production-grade ML systems. I turn ambitious AI ideas into shipped products.
+            </p>
+            <div className="avail-chip">Available for opportunities</div>
+            <div className="hero-actions">
+              <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
+                View my work
+              </button>
+              <a className="btn-secondary btn-download" href="/resume/SumanMadipeddi_CV.pdf" download>
+                <Download size={15} className="download-icon-anim" />
+                Download Resume
+              </a>
+            </div>
+
+            <div className="hero-stats">
+              {stats.map((stat) => (
+                <div className="stat" key={stat.label}>
+                  <div className="stat-num">
+                    <span className="count-up" data-target={stat.value}>0</span>
+                    {stat.suffix}
+                  </div>
+                  <div className="stat-label">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <aside className="hero-side">
+            <div className="hero-terminal" ref={heroTerminalRef}>
+              <div className="hero-terminal-bar">
+                <div className="t-dot" style={{ background: "#ff5f57" }} />
+                <div className="t-dot" style={{ background: "#ffbd2e" }} />
+                <div className="t-dot" style={{ background: "#28c840" }} />
+                <span className="t-title">suman@core-skills</span>
+              </div>
+              <div className="hero-terminal-body">
+                {typedSkillLines.map((line, idx) => {
+                  const prompt = terminalSkillLines[idx]?.prompt || ">";
+                  return (
+                    <div className="t-line show" key={`skill-line-${idx}`}>
+                      <span className={prompt === "#" ? "t-p-ok" : "t-p"}>{prompt}</span>
+                      <span className={`t-txt ${idx === activeSkillLineIndex ? "active" : ""}`}>
+                        {line}
+                        {idx === activeSkillLineIndex && <span className="t-cur" />}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
       <section id="about" style={{ minHeight: "auto", paddingBottom: 0 }}>
         <div className="section-eyebrow reveal">About</div>
         <h2 className="section-title reveal">
-          What I <span className="dim">build and</span>
+          What I <span className="dim tw-inline">{aboutWordTop}<span className="hero-tw-cursor" /></span>
           <br />
-          how I <span className="dim">think</span>
+          how I <span className="dim tw-inline">{aboutWordBottom}<span className="hero-tw-cursor" /></span>
         </h2>
 
         <div className="bento">
-          <div className="card card-span-7 card-about-main reveal">
+          <div className="card card-span-12 card-about-main reveal">
             <div className="card-tag">Background</div>
             <div className="card-title">Founding Engineer and AI Systems Architect</div>
             <div className="card-body" style={{ marginTop: 16 }}>
@@ -1207,23 +1118,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="card card-span-5 reveal reveal-delay-1">
-            <div className="card-tag">Core Skills</div>
-            <div className="skill-list">
-              {skillBars.map((skill) => (
-                <div className="skill-item" key={skill.label}>
-                  <div className="skill-name">
-                    <span>{skill.label}</span>
-                  </div>
-                  <div className="skill-track">
-                    <div className="skill-fill" style={{ width: `${skill.value}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card card-span-3 reveal card-glass-impact">
+          <div className="card card-span-3 reveal" style={{ background: "linear-gradient(160deg,rgba(41,151,255,0.10),transparent)" }}>
             <div className="card-tag">Impact</div>
             <div className="big-num">
               100<span className="unit">k+</span>
@@ -1231,7 +1126,7 @@ const Index = () => {
             <div className="card-body">Monthly AI query volume handled</div>
           </div>
 
-          <div className="card card-span-3 reveal reveal-delay-1 card-glass-scale">
+          <div className="card card-span-3 reveal reveal-delay-1" style={{ background: "linear-gradient(160deg,rgba(191,90,242,0.10),transparent)" }}>
             <div className="card-tag">Scale</div>
             <div className="big-num">
               10<span className="unit">x</span>
@@ -1303,9 +1198,9 @@ const Index = () => {
       <section id="experience">
         <div className="section-eyebrow reveal">Experience</div>
         <h2 className="section-title reveal">
-          Where I&apos;ve <span className="dim">built</span>
+          Where I&apos;ve <span className="dim tw-inline">{experienceWordTop}<span className="hero-tw-cursor" /></span>
           <br />
-          things <span className="dim">that matter</span>
+          things <span className="dim tw-inline tw-wide">{experienceWordBottom}<span className="hero-tw-cursor" /></span>
         </h2>
 
         <div className="card card-span-12 reveal" style={{ padding: "8px 32px" }}>
@@ -1327,7 +1222,7 @@ const Index = () => {
       <section id="projects">
         <div className="section-eyebrow reveal">Work</div>
         <h2 className="section-title reveal">
-          Things I&apos;ve <span className="dim">built</span>
+          Things I&apos;ve <span className="dim tw-inline">{workWord}<span className="hero-tw-cursor" /></span>
         </h2>
 
         <div className="project-grid">
@@ -1374,7 +1269,7 @@ const Index = () => {
       <section id="contact" style={{ minHeight: "auto" }}>
         <div className="section-eyebrow reveal">Contact</div>
         <h2 className="section-title reveal">
-          Let&apos;s build <span className="dim">something</span>
+          Let&apos;s build <span className="dim tw-inline">{contactWord}<span className="hero-tw-cursor" /></span>
         </h2>
 
         <div className="bento contact-bento">
@@ -1470,11 +1365,6 @@ const Index = () => {
                 {msg.content}
               </div>
             ))}
-            {isListening && voiceLiveText && (
-              <div className="msg msg-user msg-live">
-                {voiceLiveText}
-              </div>
-            )}
             {isThinking && (
               <div className="typing-indicator" id="typingIndicator">
                 <div className="typing-dot" />
@@ -1504,14 +1394,6 @@ const Index = () => {
                 if (e.key === "Enter") sendMessage();
               }}
             />
-            <button
-              className={`chat-voice-toggle ${isVoiceSessionActive ? "active" : ""} ${isListening ? "listening" : ""}`}
-              onClick={toggleVoice}
-              title={isVoiceSessionActive ? "Stop voice" : "Start voice"}
-              aria-label={isVoiceSessionActive ? "Stop voice session" : "Start voice session"}
-            >
-              {isVoiceSessionActive ? <Square size={14} /> : <Mic size={15} />}
-            </button>
             <button className="chat-send" onClick={() => sendMessage()}>
               <Send size={16} />
             </button>
@@ -1533,13 +1415,8 @@ const Index = () => {
         </button>
       </div>
 
-      <button
-        className={`voice-btn ${isListening ? "listening" : ""}`}
-        id="voiceBtn"
-        onClick={toggleVoice}
-        title={isVoiceSessionActive ? "Tap to stop voice session" : "Tap to start voice session"}
-      >
-        {isVoiceSessionActive ? <Square size={20} /> : <Mic size={22} />}
+      <button className={`voice-btn ${isListening ? "listening" : ""}`} id="voiceBtn" onClick={toggleVoice} title="Voice search">
+        <Mic size={22} />
       </button>
       <div className={`voice-toast ${voiceToast ? "show" : ""}`} id="voiceToast">{voiceToast}</div>
     </div>
@@ -1547,3 +1424,6 @@ const Index = () => {
 };
 
 export default Index;
+
+
+
