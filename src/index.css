@@ -490,6 +490,20 @@ body.cursor-hover .v2 .cursor-ring {
   animation: v2-download-bob 1.25s ease-in-out infinite;
 }
 
+.v2 .btn-download {
+  background: linear-gradient(135deg, var(--accent), #0a84ff);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(41, 151, 255, 0.24);
+}
+
+.v2 .btn-download:hover {
+  background: linear-gradient(135deg, #0a84ff, #2f8cff);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(41, 151, 255, 0.34);
+}
+
 .v2 .hero-stats {
   display: flex;
   gap: 40px;

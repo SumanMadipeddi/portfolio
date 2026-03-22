@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, MessageCircle, Mic, Moon, Phone, Send, Sun, X } from "lucide-react";
+import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Sun, X } from "lucide-react";
 import profileImage from "@/assets/profile-hero.jpg";
 import graphRagImage from "@/assets/graphRAG.png";
 import mobileQaImage from "@/assets/mobileQA.png";
@@ -52,10 +52,10 @@ const suggestions = [
 
 const experiences = [
   {
-    period: "10/2025 - Present",
+    period: "10/2025 – Present",
     title: "AI/ML Software Engineer",
     company: "Stealth AI Startup",
-    desc: "Architected multi-agent orchestration and document intelligence pipelines using LangGraph and multimodal extraction. Built graph retrieval systems for production troubleshooting copilots.",
+    desc: "Architected multi-agent LangGraph pipelines and document intelligence systems serving 100K+ users. Built and shipped Python SDK + REST APIs consumed by external developers. Implemented production observability with LangSmith tracing, latency dashboards, and agentic eval harnesses."
   },
   {
     period: "08/2024 - 10/2025",
@@ -141,18 +141,21 @@ const techStack = [
 ];
 
 const skillBars = [
-  { label: "LLM Engineering and Agents", value: 96 },
+  { label: "Agent Orchestration & LLM Systems", value: 96 },
+  { label: "Observability · Tracing · Agentic Evals", value: 93 },
   { label: "RAG and Vector Search", value: 93 },
-  { label: "ML Engineering and MLOps", value: 89 },
-  { label: "Cloud Architecture (AWS)", value: 84 },
-  { label: "Full-Stack Development", value: 80 },
+  { label: "MLOps · Fine-tuning · Inference Serving", value: 87 },
+  { label: "Cloud Infrastructure (AWS · Docker · K8s)", value: 84 },
+  // { label: "Full-Stack Development", value: 84 },
 ];
 
 const stats = [
   { value: 2, suffix: "+", label: "Years in AI/ML" },
-  { value: 9, suffix: "+", label: "AI projects shipped" },
+  { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
+  { value: 9, suffix: "+", label: "AI systems shipped" },
   { value: 2, suffix: "", label: "Founding/early roles" },
-  { value: 3, suffix: "K+", label: "Monthly AI queries" },
+  { value: 1,   suffix: "M+", label: "Production AI queries" },
+  // { value: 3, suffix: "K+", label: "Monthly AI queries" },
 ];
 
 const isBrowser = typeof window !== "undefined";
@@ -558,36 +561,59 @@ const Index = () => {
 
     try {
       const endpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) || "/api/chat";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: content,
-          history: nextHistory,
-          systemPrompt: SYSTEM_PROMPT,
-        }),
-      });
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            message: content,
+            history: nextHistory,
+            systemPrompt: SYSTEM_PROMPT,
+          }),
+        });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || "Unable to get reply right now.");
+        const raw = await response.text();
+        let data: { error?: string; reply?: string } = {};
+        if (raw) {
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            if (!response.ok) {
+              throw new Error(raw);
+            }
+            throw new Error("Received an invalid response from chat API.");
+          }
+        }
+        if (!response.ok) {
+          throw new Error(data?.error || `Unable to get reply right now (status ${response.status}).`);
+        }
+
+        const replyText = String(data?.reply || "").trim();
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: replyText || "I could not generate a response right now. Please reach Suman via email or LinkedIn.",
+          },
+        ]);
+      } finally {
+        window.clearTimeout(timeoutId);
       }
-
+    } catch (error) {
+      const errorMessage =
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Request timed out. Please try again."
+          : error instanceof Error && error.message
+            ? error.message
+            : "Connection issue right now. Please contact Suman at smadiped@asu.edu.";
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            data?.reply ||
-            "I could not generate a response right now. Please reach Suman via email or LinkedIn.",
-        },
-      ]);
-    } catch {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Connection issue right now. Please contact Suman at smadiped@asu.edu.",
+          content: errorMessage,
         },
       ]);
     } finally {
@@ -725,10 +751,14 @@ const Index = () => {
 
           setVoiceToast("Done");
           window.setTimeout(() => setVoiceToast(""), 900);
-        } catch {
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error && error.message
+              ? error.message
+              : "Voice request failed. Please try again or type your question.";
           setChatMessages((prev) => [
             ...prev,
-            { role: "assistant", content: "Voice request failed. Please try again or type your question." },
+            { role: "assistant", content: errorMessage },
           ]);
           setVoiceToast("Voice request failed");
           window.setTimeout(() => setVoiceToast(""), 1400);
@@ -813,10 +843,6 @@ const Index = () => {
         </p>
         <div className="avail-chip">Available for opportunities</div>
         <div className="hero-actions">
-          <button className="btn-primary" onClick={() => setIsChatOpen(true)}>
-            <MessageCircle size={16} />
-            Chat with my AI
-          </button>
           <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
             View my work
           </button>
@@ -878,9 +904,9 @@ const Index = () => {
           <div className="card card-span-3 reveal" style={{ background: "linear-gradient(160deg,rgba(41,151,255,0.10),transparent)" }}>
             <div className="card-tag">Impact</div>
             <div className="big-num">
-              3<span className="unit">K+</span>
+              100<span className="unit">k+</span>
             </div>
-            <div className="card-body">Monthly production AI query volume handled</div>
+            <div className="card-body">Monthly AI query volume handled</div>
           </div>
 
           <div className="card card-span-3 reveal reveal-delay-1" style={{ background: "linear-gradient(160deg,rgba(191,90,242,0.10),transparent)" }}>
