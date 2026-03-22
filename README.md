@@ -118,3 +118,19 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Support
 
 For questions or issues, please open an issue in the repository.
+
+## Chat LLM Setup
+
+Create a .env.local file (or configure Vercel env vars) using .env.example.
+
+The chat endpoint is /api/chat and supports provider fallback:
+- Primary provider from LLM_PRIMARY (gemini or claude).
+- If primary fails, it automatically falls back to the other provider if configured.
+- Configure model names with GEMINI_MODEL and CLAUDE_MODEL.
+
+
+### Voice AI + Context Data
+- Voice endpoint: /api/voice (Gemini multimodal audio input).
+- Default Gemini model: gemini-2.0-flash.
+- Editable context file used by AI: data/ai-data.txt.
+
