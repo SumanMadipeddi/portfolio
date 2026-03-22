@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Sun, X } from "lucide-react";
+import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Square, Sun, X } from "lucide-react";
 import profileImage from "@/assets/profile-hero.jpg";
 import graphRagImage from "@/assets/graphRAG.png";
 import mobileQaImage from "@/assets/mobileQA.png";
@@ -1394,6 +1394,14 @@ const Index = () => {
                 if (e.key === "Enter") sendMessage();
               }}
             />
+            <button
+              className={`chat-voice-toggle ${isListening ? "active listening" : ""}`}
+              onClick={toggleVoice}
+              title={isListening ? "Stop voice" : "Start voice"}
+              aria-label={isListening ? "Stop voice" : "Start voice"}
+            >
+              {isListening ? <Square size={14} /> : <Mic size={15} />}
+            </button>
             <button className="chat-send" onClick={() => sendMessage()}>
               <Send size={16} />
             </button>
@@ -1415,8 +1423,13 @@ const Index = () => {
         </button>
       </div>
 
-      <button className={`voice-btn ${isListening ? "listening" : ""}`} id="voiceBtn" onClick={toggleVoice} title="Voice search">
-        <Mic size={22} />
+      <button
+        className={`voice-btn ${isListening ? "listening" : ""}`}
+        id="voiceBtn"
+        onClick={toggleVoice}
+        title={isListening ? "Tap to stop voice" : "Tap to start voice"}
+      >
+        {isListening ? <Square size={20} /> : <Mic size={22} />}
       </button>
       <div className={`voice-toast ${voiceToast ? "show" : ""}`} id="voiceToast">{voiceToast}</div>
     </div>

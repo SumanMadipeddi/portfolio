@@ -22,7 +22,8 @@ const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
 
 const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const DEFAULT_GEMINI_VOICE_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025";
+const DEFAULT_GEMINI_VOICE_MODEL =
+  process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || "Aoede";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
 const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
@@ -33,6 +34,11 @@ const normalizeModelName = (raw: string) =>
     .trim()
     .replace(/^models\//, "")
     .replace(/:generateContent$/, "");
+
+const isModelUnavailableError = (message: string) => {
+  const m = String(message || "").toLowerCase();
+  return m.includes("not found for api version") || m.includes("model not found") || m.includes("404");
+};
 
 const pcm16ToWavBase64 = (pcmBase64: string, sampleRate = 24000, channels = 1) => {
   const pcm = Buffer.from(pcmBase64, "base64");
@@ -244,21 +250,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .filter(Boolean)
       .join("\n\n");
 
-    const configuredVoiceModel = normalizeModelName(
-      process.env.GEMINI_VOICE_MODEL || DEFAULT_GEMINI_VOICE_MODEL,
-    );
+    const configuredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
     const fallbackVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
+    const textFallbackModel = normalizeModelName(DEFAULT_GEMINI_MODEL);
 
     let usedVoiceModel = configuredVoiceModel;
-    let result = await callGeminiVoice({
-      apiKey: geminiKey,
-      model: usedVoiceModel,
-      systemPrompt: mergedPrompt,
-      history,
-      audioBase64,
-      mimeType,
-      voiceName: DEFAULT_GEMINI_VOICE,
-    });
+    let result;
+    try {
+      result = await callGeminiVoice({
+        apiKey: geminiKey,
+        model: usedVoiceModel,
+        systemPrompt: mergedPrompt,
+        history,
+        audioBase64,
+        mimeType,
+        voiceName: DEFAULT_GEMINI_VOICE,
+      });
+    } catch (err: any) {
+      const msg = String(err?.message || "");
+      if (isModelUnavailableError(msg) && textFallbackModel && textFallbackModel !== usedVoiceModel) {
+        usedVoiceModel = textFallbackModel;
+        result = await callGeminiVoice({
+          apiKey: geminiKey,
+          model: usedVoiceModel,
+          systemPrompt: mergedPrompt,
+          history,
+          audioBase64,
+          mimeType,
+          voiceName: DEFAULT_GEMINI_VOICE,
+        });
+      } else {
+        throw err;
+      }
+    }
     if (!result.audioBase64 && usedVoiceModel !== fallbackVoiceModel) {
       const fallbackResult = await callGeminiVoice({
         apiKey: geminiKey,
