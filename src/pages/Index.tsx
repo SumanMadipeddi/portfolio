@@ -298,6 +298,7 @@ const Index = () => {
   const speechRecognitionRef = useRef<any>(null);
   const voiceLiveTextRef = useRef("");
   const lastVoiceReplyRef = useRef("");
+  const aiAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const aboutWordTop = useCyclingWord(ABOUT_WORDS_TOP);
   const aboutWordBottom = useCyclingWord(ABOUT_WORDS_BOTTOM);
@@ -721,8 +722,19 @@ const Index = () => {
       mediaRecorderRef.current = null;
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
       mediaStreamRef.current = null;
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+      if (aiAudioRef.current) {
+        aiAudioRef.current.pause();
+        aiAudioRef.current.src = "";
+        aiAudioRef.current = null;
+      }
+      const recognition = speechRecognitionRef.current;
+      if (recognition) {
+        try {
+          recognition.stop();
+        } catch {
+          // noop
+        }
+        speechRecognitionRef.current = null;
       }
     };
   }, []);
@@ -835,6 +847,59 @@ const Index = () => {
     }
   };
 
+  const stopLiveTranscription = () => {
+    const recognition = speechRecognitionRef.current;
+    if (!recognition) return;
+    try {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognition.stop();
+    } catch {
+      // noop
+    }
+    speechRecognitionRef.current = null;
+  };
+
+  const startLiveTranscription = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    stopLiveTranscription();
+    const recognition = new SR();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i += 1) {
+        transcript += event.results[i][0]?.transcript || "";
+      }
+      setVoiceLiveText(transcript.trim());
+    };
+
+    recognition.onerror = () => {
+      // keep recording even if transcript API errors
+    };
+
+    recognition.onend = () => {
+      if (mediaRecorderRef.current?.state === "recording") {
+        try {
+          recognition.start();
+        } catch {
+          // noop
+        }
+      }
+    };
+
+    speechRecognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {
+      speechRecognitionRef.current = null;
+    }
+  };
+
   const toggleVoice = async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setVoiceToast("Voice recording is not supported in this browser");
@@ -845,6 +910,13 @@ const Index = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       stopRecording();
       return;
+    }
+
+    if (aiAudioRef.current) {
+      aiAudioRef.current.pause();
+      aiAudioRef.current.currentTime = 0;
+      aiAudioRef.current = null;
+      setIsAiSpeaking(false);
     }
 
     try {
@@ -869,7 +941,10 @@ const Index = () => {
 
       recorder.onstart = () => {
         setIsListening(true);
+        setVoiceLiveText("");
+        setIsChatOpen(true);
         setVoiceToast("Listening... tap again to stop");
+        startLiveTranscription();
       };
 
       recorder.ondataavailable = (event) => {
@@ -880,16 +955,21 @@ const Index = () => {
 
       recorder.onerror = () => {
         setIsListening(false);
+        stopLiveTranscription();
+        setVoiceLiveText("");
         setVoiceToast("Voice capture failed");
         window.setTimeout(() => setVoiceToast(""), 1600);
       };
 
       recorder.onstop = async () => {
         setIsListening(false);
+        stopLiveTranscription();
         setVoiceToast("Processing voice...");
 
         mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
         mediaStreamRef.current = null;
+        const transcriptText = voiceLiveTextRef.current.trim();
+        setVoiceLiveText("");
 
         const blobType = selectedMimeType || recorder.mimeType || "audio/webm";
         const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
@@ -916,6 +996,12 @@ const Index = () => {
 
           setIsChatOpen(true);
           setIsThinking(true);
+          let historyForVoice = chatHistory;
+          if (transcriptText) {
+            const userTranscriptMessage: ChatItem = { role: "user", content: transcriptText };
+            setChatMessages((prev) => [...prev, userTranscriptMessage]);
+            historyForVoice = [...chatHistory, userTranscriptMessage];
+          }
 
           const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
           const response = await fetch(voiceEndpoint, {
@@ -924,7 +1010,7 @@ const Index = () => {
             body: JSON.stringify({
               audioBase64: base64,
               mimeType: blobType,
-              history: chatHistory,
+              history: historyForVoice,
               systemPrompt: SYSTEM_PROMPT,
             }),
           });
@@ -938,6 +1024,8 @@ const Index = () => {
           if (!reply) {
             throw new Error("Empty voice reply");
           }
+          const responseAudioBase64 = String(data?.audioBase64 || "").trim();
+          const responseAudioMimeType = String(data?.audioMimeType || "audio/wav").trim();
 
           setShowSuggestions(false);
           setChatMessages((prev) => [
@@ -945,12 +1033,24 @@ const Index = () => {
             { role: "assistant", content: reply },
           ]);
 
-          if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(reply);
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
+          if (responseAudioBase64) {
+            const aiAudio = new Audio(`data:${responseAudioMimeType};base64,${responseAudioBase64}`);
+            aiAudioRef.current = aiAudio;
+            setIsAiSpeaking(true);
+            aiAudio.onended = () => {
+              setIsAiSpeaking(false);
+              if (aiAudioRef.current === aiAudio) aiAudioRef.current = null;
+            };
+            aiAudio.onerror = () => {
+              setIsAiSpeaking(false);
+              if (aiAudioRef.current === aiAudio) aiAudioRef.current = null;
+            };
+            await aiAudio.play().catch(() => {
+              throw new Error("Gemini audio playback failed.");
+            });
+          } else {
+            setVoiceToast("No Gemini audio returned for this model");
+            window.setTimeout(() => setVoiceToast(""), 1300);
           }
 
           setVoiceToast("Done");
@@ -1365,6 +1465,11 @@ const Index = () => {
                 {msg.content}
               </div>
             ))}
+            {isListening && voiceLiveText && (
+              <div className="msg msg-user msg-live">
+                {voiceLiveText}
+              </div>
+            )}
             {isThinking && (
               <div className="typing-indicator" id="typingIndicator">
                 <div className="typing-dot" />
