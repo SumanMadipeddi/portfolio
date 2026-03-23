@@ -90,6 +90,7 @@ const DEFAULT_GEMINI_VOICE_MODEL =
   process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const DEFAULT_GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts";
 const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
+const TTS_TIMEOUT_MS = Number(process.env.LLM_TTS_TIMEOUT_MS || 30000);
 const normalizeModelName = (raw) =>
   String(raw || "")
     .trim()
@@ -231,7 +232,8 @@ const callGeminiVoiceText = async ({ apiKey, model, systemPrompt, history, audio
     },
   ];
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId =
+    PROVIDER_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS) : null;
   let response;
   try {
     response = await fetch(
@@ -256,7 +258,7 @@ const callGeminiVoiceText = async ({ apiKey, model, systemPrompt, history, audio
     }
     throw error;
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
   if (!response.ok) {
     const body = await response.text();
@@ -277,7 +279,8 @@ const callGeminiVoiceText = async ({ apiKey, model, systemPrompt, history, audio
 
 const callGeminiTts = async ({ apiKey, model, text, voiceName }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId =
+    TTS_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), TTS_TIMEOUT_MS) : null;
   let response;
   try {
     response = await fetch(
@@ -310,11 +313,11 @@ const callGeminiTts = async ({ apiKey, model, text, voiceName }) => {
     );
   } catch (error) {
     if (error?.name === "AbortError") {
-      throw new Error(`Gemini TTS timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+      throw new Error(`Gemini TTS timed out after ${TTS_TIMEOUT_MS}ms`);
     }
     throw error;
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
   if (!response.ok) {
     const body = await response.text();

@@ -30,6 +30,7 @@ const DEFAULT_GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-2.5-fla
 const DEFAULT_GEMINI_VOICE =
   process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
+const TTS_TIMEOUT_MS = Number(process.env.LLM_TTS_TIMEOUT_MS || 30000);
 const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
 const DATA_FILE = path.join(process.cwd(), "data", "ai-data.txt");
 
@@ -171,7 +172,8 @@ const callGeminiVoiceText = async (params: {
   ];
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId =
+    PROVIDER_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS) : null;
   let response: Response;
   try {
     response = await fetch(
@@ -198,7 +200,7 @@ const callGeminiVoiceText = async (params: {
     }
     throw error;
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
@@ -226,7 +228,8 @@ const callGeminiTts = async (params: {
 }) => {
   const { apiKey, model, text, voiceName } = params;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId =
+    TTS_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), TTS_TIMEOUT_MS) : null;
   let response: Response;
   try {
     response = await fetch(
@@ -259,11 +262,11 @@ const callGeminiTts = async (params: {
     );
   } catch (error: any) {
     if (error?.name === "AbortError") {
-      throw new Error(`Gemini TTS timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+      throw new Error(`Gemini TTS timed out after ${TTS_TIMEOUT_MS}ms`);
     }
     throw error;
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   if (!response.ok) {

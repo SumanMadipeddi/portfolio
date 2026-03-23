@@ -1125,7 +1125,6 @@ const Index = () => {
       const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
       const controller = new AbortController();
       voiceRequestControllerRef.current = controller;
-      const timeoutId = window.setTimeout(() => controller.abort(), 45000);
       let response: Response | null = null;
       let data: any = {};
       try {
@@ -1154,7 +1153,6 @@ const Index = () => {
         }
       } finally {
         voiceRequestControllerRef.current = null;
-        window.clearTimeout(timeoutId);
       }
 
       if (!response || !response.ok) {
