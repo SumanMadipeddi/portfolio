@@ -1373,6 +1373,7 @@ body.cursor-hover .v2 .cursor-ring {
   font-size: 14px;
   line-height: 1.5;
   font-weight: 300;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
   animation: v2-msg-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);

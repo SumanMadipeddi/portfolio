@@ -32,7 +32,28 @@ const XIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
-const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant. Answer concisely in 2-3 sentences.
+const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant.
+
+RESPONSE RULES — follow these exactly, every single time:
+- Maximum 4-5 sentences when required.
+- No asterisks. No bold. No em-dashes. No markdown need the structure formats.
+- If asked for a list (top 3, main skills, strengths, abilities) - respond with ONLY the numbered points, nothing else before or after. Each point MUST be on its own line. No intro sentence. No closing sentence.
+
+Format Example structure: each point in each line seperately in this order 
+User: what are his 3 strengths
+Answer: 
+1. Founding AI engineer: owns architecture and production stack from day one. 
+2. Agentic systems expert: multi-agent orchestration, RAG, LLM pipelines at scale. 
+3. Ships to production: 100K+ users, 1M+ queries/month, full observability.
+
+User: what are his top skills
+Answer: 
+1. Multi-agent orchestration with LangGraph. 
+2. RAG pipelines over 10M+ docs. 
+3. LLM fine-tuning with 10x cost reduction via vLLM.
+- If asked a casual/off-topic question — one sentence redirect back to Suman's work.
+- Never repeat the same phrasing across two answers.
+- Sound like a sharp recruiter briefing, not a chatbot and answer to the question no fluff.
 
 Suman is a Founding AI Engineer specializing in agentic AI systems, LLM pipelines, and production ML.
 
@@ -41,7 +62,9 @@ Key facts:
 - Shipped Python SDK + REST APIs to 100K+ users handling 1M+ queries/month  
 - Built multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
 - Full production stack: LangSmith observability, agentic evals, vLLM inference, Pinecone/Weaviate
-- Open to: Founding AI Engineer, AI Software Engineer, Agentic AI Engineer roles
+- Observability: LangSmith tracing, agentic evals, custom latency dashboards.
+- Projects: GraphRAG multi-agent, Computer Use Agents, REST APIs, Python SDKs, MobileQA agent, RAG Voice AI, fine-tuning pipeline, object segmentation.
+- Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-first startups.
 - Location: San Jose CA, open to remote and relocation
 - Email: smadiped@asu.edu
 - LinkedIn: linkedin.com/in/suman-madipeddi
@@ -262,6 +285,19 @@ const useCyclingWord = (
 };
 
 const isBrowser = typeof window !== "undefined";
+
+const formatAssistantMessage = (input: string) => {
+  const text = String(input || "").trim();
+  if (!text) return text;
+
+  // Ensure inline numbered lists become line-separated:
+  // "1. ... 2. ... 3. ..." -> each point on a new line
+  const withNumberedLines = text
+    .replace(/\s+([2-9]|[1-9]\d+)\.\s+/g, "\n$1. ")
+    .replace(/\n{3,}/g, "\n\n");
+
+  return withNumberedLines;
+};
 
 const Index = () => {
   const [theme, setTheme] = useState<Theme>("dark");
@@ -918,7 +954,7 @@ const Index = () => {
           throw new Error(data?.error || `Unable to get reply right now (status ${response.status}).`);
         }
 
-        const replyText = String(data?.reply || "").trim();
+        const replyText = formatAssistantMessage(String(data?.reply || "").trim());
         setChatMessages((prev) => [
           ...prev,
           {
@@ -1124,7 +1160,7 @@ const Index = () => {
         throw new Error(data?.error || "Voice request failed");
       }
 
-      const reply = String(data?.reply || "").trim();
+      const reply = formatAssistantMessage(String(data?.reply || "").trim());
       if (!reply) throw new Error("Empty voice reply");
 
       const responseAudioBase64 = String(data?.audioBase64 || "").trim();
