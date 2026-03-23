@@ -357,6 +357,29 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    if (req.url === "/api/debug" && req.method === "GET") {
+      return json(res, 200, {
+        success: true,
+        runtime: "local-api-server",
+        now: new Date().toISOString(),
+        env: {
+          nodeEnv: process.env.NODE_ENV || "development",
+          hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+          geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash (default)",
+          geminiVoiceModel: process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash (default)",
+          geminiTtsModel: process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts (default)",
+          geminiVoice: process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore (default)",
+          llmTimeoutMs: process.env.LLM_TIMEOUT_MS || "default",
+          llmTtsTimeoutMs: process.env.LLM_TTS_TIMEOUT_MS || "default",
+          hasAdminPasscode: Boolean(process.env.ADMIN_PASSCODE),
+          hasJsonbinKey: Boolean(process.env.JSONBIN_API_KEY),
+          hasEmailJsService: Boolean(process.env.VITE_EMAILJS_SERVICE_ID),
+          hasEmailJsTemplate: Boolean(process.env.VITE_EMAILJS_TEMPLATE_ID),
+          hasEmailJsPublicKey: Boolean(process.env.VITE_EMAILJS_PUBLIC_KEY),
+        },
+      });
+    }
+
     if (req.url === "/api/chat" && req.method === "POST") {
       const body = await readBody(req);
       const message = String(body?.message || "").trim();
