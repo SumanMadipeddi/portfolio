@@ -1165,6 +1165,17 @@ body.cursor-hover .v2 .cursor-ring {
   justify-content: center;
 }
 
+.v2 .contact-main-card .btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.v2 .contact-status {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
 .v2 #ai-chat {
   position: fixed;
   bottom: 24px;

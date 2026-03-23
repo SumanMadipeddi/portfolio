@@ -24,7 +24,9 @@ const DEFAULT_SYSTEM_PROMPT =
 const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const DEFAULT_GEMINI_VOICE_MODEL =
   process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || "Aoede";
+const DEFAULT_GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts";
+const DEFAULT_GEMINI_VOICE =
+  process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
 const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
 const DATA_FILE = path.join(process.cwd(), "data", "ai-data.txt");
@@ -38,6 +40,37 @@ const normalizeModelName = (raw: string) =>
 const isModelUnavailableError = (message: string) => {
   const m = String(message || "").toLowerCase();
   return m.includes("not found for api version") || m.includes("model not found") || m.includes("404");
+};
+
+const KNOWN_GEMINI_VOICES = new Set([
+  "aoede",
+  "leda",
+  "kore",
+  "charon",
+  "fenrir",
+  "orus",
+  "zephyr",
+  "puck",
+]);
+
+const MIME_MAP: Record<string, string> = {
+  "audio/webm": "audio/ogg",
+  "audio/webm;codecs=opus": "audio/ogg",
+  "audio/webm;codecs=pcm": "audio/ogg",
+  "audio/ogg": "audio/ogg",
+  "audio/ogg;codecs=opus": "audio/ogg",
+  "audio/mp4": "audio/mp4",
+  "audio/mpeg": "audio/mp3",
+  "audio/wav": "audio/wav",
+  "audio/flac": "audio/flac",
+};
+
+const toGeminiMimeType = (mimeType: string) => {
+  const raw = String(mimeType || "").toLowerCase().trim();
+  if (MIME_MAP[raw]) return MIME_MAP[raw];
+  const base = raw.split(";")[0]?.trim();
+  if (base && MIME_MAP[base]) return MIME_MAP[base];
+  return "audio/ogg";
 };
 
 const pcm16ToWavBase64 = (pcmBase64: string, sampleRate = 24000, channels = 1) => {
@@ -105,16 +138,15 @@ const loadDataContext = () => {
   }
 };
 
-const callGeminiVoice = async (params: {
+const callGeminiVoiceText = async (params: {
   apiKey: string;
   model: string;
   systemPrompt: string;
   history: ChatMessage[];
   audioBase64: string;
   mimeType: string;
-  voiceName: string;
 }) => {
-  const { apiKey, model, systemPrompt, history, audioBase64, mimeType, voiceName } = params;
+  const { apiKey, model, systemPrompt, history, audioBase64, mimeType } = params;
   const contents = [
     ...history.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -136,63 +168,40 @@ const callGeminiVoice = async (params: {
     },
   ];
 
-  const requestGemini = async (withAudio: boolean) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
-    try {
-      return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: systemPrompt }],
-            },
-            contents,
-            generationConfig: withAudio
-              ? {
-                  maxOutputTokens: 700,
-                  temperature: 0.55,
-                  responseModalities: ["TEXT", "AUDIO"],
-                  speechConfig: {
-                    voiceConfig: {
-                      prebuiltVoiceConfig: {
-                        voiceName,
-                      },
-                    },
-                  },
-                }
-              : {
-                  maxOutputTokens: 700,
-                  temperature: 0.55,
-                },
-          }),
-        },
-      );
-    } catch (error: any) {
-      if (error?.name === "AbortError") {
-        throw new Error(`Gemini voice timed out after ${PROVIDER_TIMEOUT_MS}ms`);
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
+          },
+          contents,
+          generationConfig: {
+            maxOutputTokens: 700,
+            temperature: 0.55,
+          },
+        }),
+      },
+    );
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Gemini voice timed out after ${PROVIDER_TIMEOUT_MS}ms`);
     }
-  };
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
-  let response = await requestGemini(true);
   if (!response.ok) {
     const body = await response.text();
-    if (response.status === 400 && body.includes("only supports text output")) {
-      response = await requestGemini(false);
-      if (!response.ok) {
-        const retryBody = await response.text();
-        throw new Error(`Gemini voice error ${response.status}: ${retryBody.slice(0, 240)}`);
-      }
-    } else {
-      throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
-    }
+    throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
   }
 
   const data = await response.json();
@@ -204,16 +213,70 @@ const callGeminiVoice = async (params: {
     .join("\n")
     .trim();
   if (!reply) throw new Error("Gemini voice returned an empty response.");
+  return { reply };
+};
+
+const callGeminiTts = async (params: {
+  apiKey: string;
+  model: string;
+  text: string;
+  voiceName: string;
+}) => {
+  const { apiKey, model, text, voiceName } = params;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text }],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 700,
+            temperature: 0.35,
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName,
+                },
+              },
+            },
+          },
+        }),
+      },
+    );
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Gemini TTS timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Gemini TTS error ${response.status}: ${body.slice(0, 240)}`);
+  }
+
+  const data = await response.json();
+  const parts = Array.isArray(data?.candidates?.[0]?.content?.parts)
+    ? data.candidates[0].content.parts
+    : [];
   const inlineData = parts.find((p: any) => p?.inlineData)?.inlineData;
-  const normalizedAudio = normalizeGeminiAudio(
-    inlineData?.data ? String(inlineData.data) : "",
-    inlineData?.mimeType ? String(inlineData.mimeType) : "",
-  );
-  return {
-    reply,
-    audioBase64: normalizedAudio.audioBase64,
-    audioMimeType: normalizedAudio.audioMimeType,
-  };
+  if (!inlineData?.data) return { audioBase64: "", audioMimeType: "" };
+
+  return normalizeGeminiAudio(String(inlineData.data), String(inlineData.mimeType || ""));
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -232,6 +295,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const audioBase64 = String(req.body?.audioBase64 || "").trim();
     const mimeType = String(req.body?.mimeType || "audio/webm").trim();
+    const safeMimeType = toGeminiMimeType(mimeType);
     const history = normalizeHistory(req.body?.history);
     const requestPrompt = String(req.body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
 
@@ -250,55 +314,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .filter(Boolean)
       .join("\n\n");
 
-    const configuredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
-    const fallbackVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
+    const rawConfiguredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
     const textFallbackModel = normalizeModelName(DEFAULT_GEMINI_MODEL);
+    const configuredTtsModel = normalizeModelName(DEFAULT_GEMINI_TTS_MODEL);
+    const resolvedVoiceName = KNOWN_GEMINI_VOICES.has(rawConfiguredVoiceModel.toLowerCase())
+      ? rawConfiguredVoiceModel
+      : DEFAULT_GEMINI_VOICE;
+    const configuredVoiceModel = KNOWN_GEMINI_VOICES.has(rawConfiguredVoiceModel.toLowerCase())
+      ? textFallbackModel
+      : rawConfiguredVoiceModel;
 
     let usedVoiceModel = configuredVoiceModel;
-    let result;
+    let textResult;
     try {
-      result = await callGeminiVoice({
+      textResult = await callGeminiVoiceText({
         apiKey: geminiKey,
         model: usedVoiceModel,
         systemPrompt: mergedPrompt,
         history,
         audioBase64,
-        mimeType,
-        voiceName: DEFAULT_GEMINI_VOICE,
+        mimeType: safeMimeType,
       });
     } catch (err: any) {
       const msg = String(err?.message || "");
       if (isModelUnavailableError(msg) && textFallbackModel && textFallbackModel !== usedVoiceModel) {
         usedVoiceModel = textFallbackModel;
-        result = await callGeminiVoice({
+        textResult = await callGeminiVoiceText({
           apiKey: geminiKey,
           model: usedVoiceModel,
           systemPrompt: mergedPrompt,
           history,
           audioBase64,
-          mimeType,
-          voiceName: DEFAULT_GEMINI_VOICE,
+          mimeType: safeMimeType,
         });
       } else {
         throw err;
       }
     }
-    if (!result.audioBase64 && usedVoiceModel !== fallbackVoiceModel) {
-      const fallbackResult = await callGeminiVoice({
-        apiKey: geminiKey,
-        model: fallbackVoiceModel,
-        systemPrompt: mergedPrompt,
-        history,
-        audioBase64,
-        mimeType,
-        voiceName: DEFAULT_GEMINI_VOICE,
-      });
-      if (fallbackResult.audioBase64) {
-        result = fallbackResult;
-        usedVoiceModel = fallbackVoiceModel;
+
+    let usedTtsModel = configuredTtsModel;
+    let ttsError: string | null = null;
+    let ttsAudio = { audioBase64: "", audioMimeType: "" };
+    if (configuredTtsModel) {
+      try {
+        ttsAudio = await callGeminiTts({
+          apiKey: geminiKey,
+          model: configuredTtsModel,
+          text: textResult.reply,
+          voiceName: resolvedVoiceName,
+        });
+      } catch (err: any) {
+        const msg = String(err?.message || "");
+        ttsError = msg || "Unknown TTS error";
+        if (isModelUnavailableError(msg)) {
+          usedTtsModel = "";
+        } else if (STRICT_GOOGLE_VOICE) {
+          throw err;
+        }
       }
     }
-    if (STRICT_GOOGLE_VOICE && !result.audioBase64) {
+
+    if (STRICT_GOOGLE_VOICE && !ttsAudio.audioBase64) {
       res.status(500).json({
         error:
           "Google voice audio was not returned by Gemini. Try another GEMINI_VOICE or model.",
@@ -307,13 +383,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     res.status(200).json({
-      reply: result.reply,
+      reply: textResult.reply,
       provider: "gemini",
       model: usedVoiceModel,
-      voice: DEFAULT_GEMINI_VOICE,
-      audioBase64: result.audioBase64,
-      audioMimeType: result.audioMimeType,
-      usedGoogleVoice: Boolean(result.audioBase64),
+      ttsModel: usedTtsModel || null,
+      voice: resolvedVoiceName,
+      audioBase64: ttsAudio.audioBase64,
+      audioMimeType: ttsAudio.audioMimeType,
+      usedGoogleVoice: Boolean(ttsAudio.audioBase64),
+      ttsError,
     });
   } catch (error: any) {
     res.status(500).json({ error: error?.message || "Voice request failed." });

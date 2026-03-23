@@ -7,6 +7,7 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
+import { downloadResume } from "@/lib/resume";
 
 type Theme = "light" | "dark";
 type ChatRole = "user" | "assistant";
@@ -31,18 +32,24 @@ const XIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
-const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant on his portfolio website. Answer questions about Suman concisely and warmly in 2-4 sentences.
+const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant. Answer concisely in 2-3 sentences.
 
-About Suman:
-- Founding Engineer specializing in AI/ML, LLM pipelines, RAG, and autonomous agents
-- Experience building production AI products at startups and early-stage teams
-- Expert in LangChain, LangGraph, LlamaIndex, PyTorch, OpenAI/Anthropic/Gemini APIs, Pinecone, Weaviate, FastAPI, AWS, Docker, Kubernetes
-- Key project areas: multi-agent orchestration, RAG systems, fine-tuning pipelines, MLOps infrastructure
-- Open to founding ai engineer / AI lead opportunities
+Suman is a Founding AI Engineer specializing in agentic AI systems, LLM pipelines, and production ML.
+
+Key facts:
+- Founding/first AI hire twice — owns architecture, infra, and roadmap from day one
+- Shipped Python SDK + REST APIs to 100K+ users handling 1M+ queries/month  
+- Built multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
+- Full production stack: LangSmith observability, agentic evals, vLLM inference, Pinecone/Weaviate
+- Open to: Founding AI Engineer, AI Software Engineer, Agentic AI Engineer roles
+- Location: San Jose CA, open to remote and relocation
 - Email: smadiped@asu.edu
 - LinkedIn: linkedin.com/in/suman-madipeddi
+- GitHub: github.com/SumanMadipeddi
 
-Be concise, confident, and helpful. Don't invent personal facts that are not provided.`;
+Target companies: AI-first startups, Series A/B building agentic products, companies that need someone who can go 0→1 on AI infrastructure.
+
+Be confident and specific. Never vague.`;
 
 const suggestions = [
   "What do you specialize in?",
@@ -55,13 +62,13 @@ const experiences = [
     period: "10/2025 – Present",
     title: "AI/ML Software Engineer",
     company: "Stealth AI Startup",
-    desc: "Architected multi-agent LangGraph pipelines and document intelligence systems serving 100K+ users. Built and shipped Python SDK + REST APIs consumed by external developers. Implemented production observability with LangSmith tracing, latency dashboards, and agentic eval harnesses."
+    desc: "Architected multi-agent LangGraph pipelines and document intelligence systems serving 100K+ users. Designed and shipped a Python SDK + REST APIs endpoints. Built full observability stack: LangSmith tracing, latency dashboards, and agentic eval harnesses."
   },
   {
     period: "08/2024 - 10/2025",
     title: "Founding AI Engineer",
     company: "Minor Chores",
-    desc: "Fine-tuned LLaMA models with LoRA/QLoRA and deployed low-latency serving stacks. Shipped RAG and recommendation systems and led cross-platform product delivery.",
+    desc: "Fine-tuned LLaMA 3 with LoRA/QLoRA - 10x inference cost reduction via vLLM quantized serving. Shipped conversational RAG Agents, recommendation systems and Mobile dev (IOS/android). Led cross-platform product delivery and increased 40% customer engagement.",
   },
   {
     period: "Earlier",
@@ -74,8 +81,8 @@ const experiences = [
 const projects: Project[] = [
   {
     name: "GraphRAG Multi Agent",
-    desc: "Graph extraction and retrieval from unstructured PDFs using multi-agent workflows and visual knowledge mapping.",
-    stack: ["LangGraph", "LangChain", "Supabase"],
+    desc: "Knowledge Graph extraction from unstructured PDFs using multi-agent workflows for multi hop reasoning.",
+    stack: ["LangGraph", "LangChain", "Supabase", "TypeScript"],
     image: graphRagImage,
     githubLink: "https://github.com/SumanMadipeddi/graphRAG-Agent",
     demoLink: "https://drive.google.com/file/d/1yu_3kWcr04DUCoJ8W04dtCgAta9hCPHp/view?usp=drive_link",
@@ -83,23 +90,23 @@ const projects: Project[] = [
   {
     name: "MobileQA Multi Agent",
     desc: "Automated mobile QA with planning agents, ADB tool execution, and vision-grounded validation loops.",
-    stack: ["Python", "LLM Orchestration", "Android"],
+    stack: ["Agent-S3", "LLM Orchestration", "Python","Android"],
     image: mobileQaImage,
     githubLink: "https://github.com/SumanMadipeddi/mobile-QA-Agent",
     demoLink: "https://drive.google.com/file/d/1vqaf3gtaYZeliB1yow5v4HuSNcNp-OAA/view?usp=sharing",
   },
   {
     name: "RAG Voice AI",
-    desc: "Voice-enabled multi-agent assistant with retrieval, tool calls, and live real-time conversational workflows.",
-    stack: ["LiveKit", "Pinecone", "OpenAI"],
+    desc: "Voice-enabled multi-agent assistant. Retrieval, tool calls, and real-time conversational AI in one pipeline.",
+    stack: ["LiveKit", "Pinecone", "OpenAI", "Deepgram"],
     image: ragVoiceImage,
     githubLink: "https://github.com/SumanMadipeddi/voice-agent",
     demoLink: "https://www.loom.com/share/c7950b8eda37434893fb03e091a89ebe",
   },
   {
     name: "Fine-Tuning and Inference",
-    desc: "LoRA/QLoRA fine-tuning and optimized inference serving for domain-specific AI assistants.",
-    stack: ["PyTorch", "PEFT", "vLLM"],
+    desc: "LoRA/QLoRA fine-tuning pipeline with Quantization and vLLM inference serving. 10x cost reduction.",
+    stack: ["PyTorch", "PEFT", "vLLM", "Unsloth"],
     image: fineTuningImage,
     githubLink: "https://github.com/SumanMadipeddi/vllm-finetuned-inference-serving",
     demoLink: "https://github.com/SumanMadipeddi/vllm-finetuned-inference-serving",
@@ -107,15 +114,15 @@ const projects: Project[] = [
   {
     name: "Object Segmentation",
     desc: "High-performance object segmentation experiments and benchmark-focused computer vision pipelines.",
-    stack: ["CV", "Python", "Research"],
+    stack: ["Mask-RCNN", "PyTorch", "ResNet-50", "Research"],
     image: objectSegImage,
     githubLink: "https://github.com/SumanMadipeddi/Object-Segmentation-on-ARMBENCH",
     demoLink: "https://www.linkedin.com/feed/update/urn:li:activity:7195244374438424577/",
   },
   {
     name: "Realtime Crypto Stream",
-    desc: "Realtime crypto tracking with web automation, streaming transport, and interactive data visualization.",
-    stack: ["Next.js", "Express", "WebSocket"],
+    desc: "Realtime crypto tracking with web automation, streaming transport, and interactive data viss.",
+    stack: ["Playwright", "Next.js", "Express", "WebSocket"],
     image: cryptoStreamImage,
     githubLink: "https://github.com/SumanMadipeddi/CryptoStream",
     demoLink: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link",
@@ -275,6 +282,8 @@ const Index = () => {
   const [voiceLiveText, setVoiceLiveText] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [avatarImageError, setAvatarImageError] = useState(false);
+  const [contactStatus, setContactStatus] = useState("");
+  const [isContactSending, setIsContactSending] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
@@ -299,6 +308,22 @@ const Index = () => {
   const voiceLiveTextRef = useRef("");
   const lastVoiceReplyRef = useRef("");
   const aiAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isAiSpeakingRef = useRef(false);
+  const webAudioPlaybackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const voiceRequestControllerRef = useRef<AbortController | null>(null);
+  const voiceInterruptedRef = useRef(false);
+  const lastBargeInAtRef = useRef<number>(0);
+  const voiceSessionActiveRef = useRef(false);
+  const voiceTurnBusyRef = useRef(false);
+  const vadRafRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const isUtteranceRecordingRef = useRef(false);
+  const utteranceSpeechStartRef = useRef<number>(0);
+  const utteranceLastVoiceAtRef = useRef<number>(0);
+  const resumeListeningAtRef = useRef<number>(0);
+  const selectedRecorderMimeRef = useRef<string>("");
 
   const aboutWordTop = useCyclingWord(ABOUT_WORDS_TOP);
   const aboutWordBottom = useCyclingWord(ABOUT_WORDS_BOTTOM);
@@ -408,6 +433,10 @@ const Index = () => {
   useEffect(() => {
     voiceLiveTextRef.current = voiceLiveText;
   }, [voiceLiveText]);
+
+  useEffect(() => {
+    isAiSpeakingRef.current = isAiSpeaking;
+  }, [isAiSpeaking]);
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -718,14 +747,51 @@ const Index = () => {
     return () => {
       if (autoStopTimerRef.current) {
         window.clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
       }
+      if (vadRafRef.current) {
+        window.cancelAnimationFrame(vadRafRef.current);
+        vadRafRef.current = null;
+      }
+      voiceSessionActiveRef.current = false;
+      voiceTurnBusyRef.current = false;
+      isUtteranceRecordingRef.current = false;
       mediaRecorderRef.current = null;
+      if (audioSourceNodeRef.current) {
+        try {
+          audioSourceNodeRef.current.disconnect();
+        } catch {
+          // noop
+        }
+        audioSourceNodeRef.current = null;
+      }
+      analyserRef.current = null;
+      if (audioContextRef.current) {
+        void audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
       mediaStreamRef.current = null;
       if (aiAudioRef.current) {
         aiAudioRef.current.pause();
         aiAudioRef.current.src = "";
         aiAudioRef.current = null;
+      }
+      if (webAudioPlaybackSourceRef.current) {
+        try {
+          webAudioPlaybackSourceRef.current.stop();
+        } catch {
+          // noop
+        }
+        webAudioPlaybackSourceRef.current = null;
+      }
+      if (voiceRequestControllerRef.current) {
+        try {
+          voiceRequestControllerRef.current.abort();
+        } catch {
+          // noop
+        }
+        voiceRequestControllerRef.current = null;
       }
       const recognition = speechRecognitionRef.current;
       if (recognition) {
@@ -736,6 +802,9 @@ const Index = () => {
         }
         speechRecognitionRef.current = null;
       }
+      setIsListening(false);
+      isAiSpeakingRef.current = false;
+      setIsAiSpeaking(false);
     };
   }, []);
 
@@ -763,9 +832,51 @@ const Index = () => {
     };
   }, [isChatOpen]);
 
+  const interruptAiOutput = () => {
+    if (aiAudioRef.current) {
+      try {
+        aiAudioRef.current.pause();
+        aiAudioRef.current.currentTime = 0;
+      } catch {
+        // noop
+      }
+      aiAudioRef.current = null;
+    }
+    if (webAudioPlaybackSourceRef.current) {
+      try {
+        webAudioPlaybackSourceRef.current.stop();
+      } catch {
+        // noop
+      }
+      webAudioPlaybackSourceRef.current = null;
+    }
+    isAiSpeakingRef.current = false;
+    setIsAiSpeaking(false);
+  };
+
+  const interruptInFlightVoiceTurn = () => {
+    voiceInterruptedRef.current = true;
+    if (voiceRequestControllerRef.current) {
+      try {
+        voiceRequestControllerRef.current.abort();
+      } catch {
+        // noop
+      }
+      voiceRequestControllerRef.current = null;
+    }
+    voiceTurnBusyRef.current = false;
+    setIsThinking(false);
+  };
+
   const sendMessage = async (forcedText?: string) => {
     const content = (forcedText ?? chatInput).trim();
-    if (!content || isThinking) return;
+    if (!content) return;
+
+    interruptAiOutput();
+    interruptInFlightVoiceTurn();
+    if (voiceSessionActiveRef.current) {
+      stopVoiceSession();
+    }
 
     setChatInput("");
     setShowSuggestions(false);
@@ -842,8 +953,14 @@ const Index = () => {
       window.clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      mediaRecorderRef.current.stop();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === "recording") {
+      isUtteranceRecordingRef.current = false;
+      try {
+        recorder.stop();
+      } catch {
+        // noop
+      }
     }
   };
 
@@ -863,7 +980,11 @@ const Index = () => {
 
   const startLiveTranscription = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
+    if (!SR) {
+      setVoiceToast("Live transcription is unavailable in this browser");
+      window.setTimeout(() => setVoiceToast(""), 2200);
+      return;
+    }
     stopLiveTranscription();
     const recognition = new SR();
     recognition.lang = "en-US";
@@ -883,7 +1004,7 @@ const Index = () => {
     };
 
     recognition.onend = () => {
-      if (mediaRecorderRef.current?.state === "recording") {
+      if (voiceSessionActiveRef.current) {
         try {
           recognition.start();
         } catch {
@@ -900,28 +1021,239 @@ const Index = () => {
     }
   };
 
+  const stopVoiceSession = () => {
+    voiceSessionActiveRef.current = false;
+    voiceTurnBusyRef.current = false;
+    isUtteranceRecordingRef.current = false;
+    interruptInFlightVoiceTurn();
+    stopRecording();
+    stopLiveTranscription();
+
+    if (vadRafRef.current) {
+      window.cancelAnimationFrame(vadRafRef.current);
+      vadRafRef.current = null;
+    }
+    if (audioSourceNodeRef.current) {
+      try {
+        audioSourceNodeRef.current.disconnect();
+      } catch {
+        // noop
+      }
+      audioSourceNodeRef.current = null;
+    }
+    analyserRef.current = null;
+    if (audioContextRef.current) {
+      void audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+    mediaStreamRef.current = null;
+
+    interruptAiOutput();
+    setIsListening(false);
+    setVoiceLiveText("");
+    setVoiceToast("");
+  };
+
+  const sendVoiceBlob = async (audioBlob: Blob, blobType: string, transcriptText: string) => {
+    if (!audioBlob.size || !voiceSessionActiveRef.current) return;
+    if (voiceTurnBusyRef.current) return;
+
+    voiceInterruptedRef.current = false;
+    voiceTurnBusyRef.current = true;
+    setIsThinking(true);
+    setIsChatOpen(true);
+    setVoiceToast("Processing...");
+
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const dataUrl = String(reader.result || "");
+          const payload = dataUrl.split(",")[1];
+          if (!payload) reject(new Error("Failed to encode audio"));
+          else resolve(payload);
+        };
+        reader.onerror = () => reject(new Error("Failed to read audio blob"));
+        reader.readAsDataURL(audioBlob);
+      });
+
+      let historyForVoice = chatHistory;
+      if (transcriptText) {
+        const userTranscriptMessage: ChatItem = { role: "user", content: transcriptText };
+        setChatMessages((prev) => [...prev, userTranscriptMessage]);
+        historyForVoice = [...chatHistory, userTranscriptMessage];
+      }
+
+      const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
+      const controller = new AbortController();
+      voiceRequestControllerRef.current = controller;
+      const timeoutId = window.setTimeout(() => controller.abort(), 45000);
+      let response: Response | null = null;
+      let data: any = {};
+      try {
+        response = await fetch(voiceEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            audioBase64: base64,
+            mimeType: blobType,
+            history: historyForVoice,
+            systemPrompt: SYSTEM_PROMPT,
+          }),
+        });
+
+        const raw = await response.text();
+        if (raw) {
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            if (!response.ok) {
+              throw new Error(raw);
+            }
+            throw new Error("Voice API returned invalid JSON.");
+          }
+        }
+      } finally {
+        voiceRequestControllerRef.current = null;
+        window.clearTimeout(timeoutId);
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(data?.error || "Voice request failed");
+      }
+
+      const reply = String(data?.reply || "").trim();
+      if (!reply) throw new Error("Empty voice reply");
+
+      const responseAudioBase64 = String(data?.audioBase64 || "").trim();
+      const responseAudioMimeType = String(data?.audioMimeType || "audio/wav").trim();
+      const ttsError = String(data?.ttsError || "").trim();
+
+      setShowSuggestions(false);
+      setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+
+      if (responseAudioBase64) {
+        let played = false;
+        const dataUri = `data:${responseAudioMimeType};base64,${responseAudioBase64}`;
+        const aiAudio = new Audio(dataUri);
+        aiAudioRef.current = aiAudio;
+        isAiSpeakingRef.current = true;
+        setIsAiSpeaking(true);
+
+        try {
+          await new Promise<void>((resolve, reject) => {
+            aiAudio.onended = () => resolve();
+            aiAudio.onerror = () => reject(new Error("Gemini audio playback failed."));
+            void aiAudio.play().catch(() => reject(new Error("Gemini audio playback failed.")));
+          });
+          played = true;
+        } catch {
+          played = false;
+        }
+
+        if (!played) {
+          const ctx = audioContextRef.current;
+          if (!ctx) {
+            throw new Error("Gemini audio playback failed.");
+          }
+          try {
+            if (ctx.state === "suspended") {
+              await ctx.resume();
+            }
+            const audioBytes = Uint8Array.from(atob(responseAudioBase64), (c) => c.charCodeAt(0));
+            const arrayBuffer = audioBytes.buffer.slice(
+              audioBytes.byteOffset,
+              audioBytes.byteOffset + audioBytes.byteLength,
+            ) as ArrayBuffer;
+            const decoded = await ctx.decodeAudioData(arrayBuffer);
+            await new Promise<void>((resolve) => {
+              const source = ctx.createBufferSource();
+              webAudioPlaybackSourceRef.current = source;
+              source.buffer = decoded;
+              source.connect(ctx.destination);
+              source.onended = () => {
+                if (webAudioPlaybackSourceRef.current === source) {
+                  webAudioPlaybackSourceRef.current = null;
+                }
+                resolve();
+              };
+              source.start(0);
+            });
+          } catch {
+            throw new Error("Gemini audio playback failed.");
+          }
+        }
+      } else {
+        setVoiceToast(ttsError ? `TTS failed: ${ttsError}` : "No Gemini audio returned for this model");
+        window.setTimeout(() => setVoiceToast(""), 1800);
+        if (ttsError) {
+          setChatMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `TTS failed: ${ttsError}` },
+          ]);
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Voice request timed out. Please try again."
+          : error instanceof Error && error.message
+          ? error.message
+          : "Voice request failed. Please try again or type your question.";
+      if (error instanceof DOMException && error.name === "AbortError" && voiceInterruptedRef.current) {
+        return;
+      }
+      if (voiceSessionActiveRef.current) {
+        setChatMessages((prev) => [...prev, { role: "assistant", content: errorMessage }]);
+        setVoiceToast("Voice request failed");
+        window.setTimeout(() => setVoiceToast(""), 1800);
+      }
+    } finally {
+      isAiSpeakingRef.current = false;
+      setIsAiSpeaking(false);
+      if (aiAudioRef.current) {
+        aiAudioRef.current = null;
+      }
+      webAudioPlaybackSourceRef.current = null;
+      setIsThinking(false);
+      voiceTurnBusyRef.current = false;
+      if (voiceSessionActiveRef.current) {
+        resumeListeningAtRef.current = performance.now() + 450;
+        setVoiceToast("Listening...");
+      }
+    }
+  };
+
   const toggleVoice = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia || !(window as any).MediaRecorder) {
       setVoiceToast("Voice recording is not supported in this browser");
       window.setTimeout(() => setVoiceToast(""), 2800);
       return;
     }
 
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      stopRecording();
+    if (voiceSessionActiveRef.current) {
+      stopVoiceSession();
       return;
     }
 
-    if (aiAudioRef.current) {
-      aiAudioRef.current.pause();
-      aiAudioRef.current.currentTime = 0;
-      aiAudioRef.current = null;
-      setIsAiSpeaking(false);
-    }
+    interruptAiOutput();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       mediaStreamRef.current = stream;
+      setIsChatOpen(true);
+      setIsListening(true);
+      setVoiceLiveText("");
+      setVoiceToast("Listening...");
+      voiceSessionActiveRef.current = true;
 
       const mimeCandidates = [
         "audio/webm;codecs=opus",
@@ -929,166 +1261,188 @@ const Index = () => {
         "audio/mp4",
         "audio/ogg;codecs=opus",
       ];
-      const selectedMimeType =
+      selectedRecorderMimeRef.current =
         mimeCandidates.find((m) => (window as any).MediaRecorder?.isTypeSupported?.(m)) || "";
 
-      const recorder = selectedMimeType
-        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
-        : new MediaRecorder(stream);
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
+      const audioContext = new Ctx();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.75;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      audioSourceNodeRef.current = source;
 
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-
-      recorder.onstart = () => {
-        setIsListening(true);
-        setVoiceLiveText("");
-        setIsChatOpen(true);
-        setVoiceToast("Listening... tap again to stop");
-        startLiveTranscription();
-      };
-
-      recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onerror = () => {
-        setIsListening(false);
-        stopLiveTranscription();
-        setVoiceLiveText("");
-        setVoiceToast("Voice capture failed");
-        window.setTimeout(() => setVoiceToast(""), 1600);
-      };
-
-      recorder.onstop = async () => {
-        setIsListening(false);
-        stopLiveTranscription();
-        setVoiceToast("Processing voice...");
-
-        mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
-        mediaStreamRef.current = null;
-        const transcriptText = voiceLiveTextRef.current.trim();
-        setVoiceLiveText("");
-
-        const blobType = selectedMimeType || recorder.mimeType || "audio/webm";
-        const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
+      const startUtteranceRecorder = () => {
+        if (!voiceSessionActiveRef.current || voiceTurnBusyRef.current || isUtteranceRecordingRef.current) return;
         audioChunksRef.current = [];
+        const recorder = selectedRecorderMimeRef.current
+          ? new MediaRecorder(stream, { mimeType: selectedRecorderMimeRef.current })
+          : new MediaRecorder(stream);
+        mediaRecorderRef.current = recorder;
+        isUtteranceRecordingRef.current = true;
+        utteranceSpeechStartRef.current = performance.now();
+        utteranceLastVoiceAtRef.current = performance.now();
+        setVoiceLiveText("");
+        startLiveTranscription();
 
-        if (!audioBlob.size) {
-          setVoiceToast("No audio captured");
-          window.setTimeout(() => setVoiceToast(""), 1400);
-          return;
-        }
-
-        try {
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const dataUrl = String(reader.result || "");
-              const payload = dataUrl.split(",")[1];
-              if (!payload) reject(new Error("Failed to encode audio"));
-              else resolve(payload);
-            };
-            reader.onerror = () => reject(new Error("Failed to read audio blob"));
-            reader.readAsDataURL(audioBlob);
-          });
-
-          setIsChatOpen(true);
-          setIsThinking(true);
-          let historyForVoice = chatHistory;
-          if (transcriptText) {
-            const userTranscriptMessage: ChatItem = { role: "user", content: transcriptText };
-            setChatMessages((prev) => [...prev, userTranscriptMessage]);
-            historyForVoice = [...chatHistory, userTranscriptMessage];
+        recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
           }
+        };
 
-          const voiceEndpoint = (import.meta.env.VITE_VOICE_API_URL as string | undefined) || "/api/voice";
-          const response = await fetch(voiceEndpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              audioBase64: base64,
-              mimeType: blobType,
-              history: historyForVoice,
-              systemPrompt: SYSTEM_PROMPT,
-            }),
-          });
+        recorder.onerror = () => {
+          isUtteranceRecordingRef.current = false;
+        };
 
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data?.error || "Voice request failed");
-          }
+        recorder.onstop = async () => {
+          stopLiveTranscription();
+          const blobType = selectedRecorderMimeRef.current || recorder.mimeType || "audio/webm";
+          const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
+          audioChunksRef.current = [];
+          isUtteranceRecordingRef.current = false;
+          if (!voiceSessionActiveRef.current) return;
+          const transcriptText = voiceLiveTextRef.current.trim();
+          setVoiceLiveText("");
+          await sendVoiceBlob(audioBlob, blobType, transcriptText);
+        };
 
-          const reply = String(data?.reply || "").trim();
-          if (!reply) {
-            throw new Error("Empty voice reply");
-          }
-          const responseAudioBase64 = String(data?.audioBase64 || "").trim();
-          const responseAudioMimeType = String(data?.audioMimeType || "audio/wav").trim();
-
-          setShowSuggestions(false);
-          setChatMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: reply },
-          ]);
-
-          if (responseAudioBase64) {
-            const aiAudio = new Audio(`data:${responseAudioMimeType};base64,${responseAudioBase64}`);
-            aiAudioRef.current = aiAudio;
-            setIsAiSpeaking(true);
-            aiAudio.onended = () => {
-              setIsAiSpeaking(false);
-              if (aiAudioRef.current === aiAudio) aiAudioRef.current = null;
-            };
-            aiAudio.onerror = () => {
-              setIsAiSpeaking(false);
-              if (aiAudioRef.current === aiAudio) aiAudioRef.current = null;
-            };
-            await aiAudio.play().catch(() => {
-              throw new Error("Gemini audio playback failed.");
-            });
-          } else {
-            setVoiceToast("No Gemini audio returned for this model");
-            window.setTimeout(() => setVoiceToast(""), 1300);
-          }
-
-          setVoiceToast("Done");
-          window.setTimeout(() => setVoiceToast(""), 900);
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error && error.message
-              ? error.message
-              : "Voice request failed. Please try again or type your question.";
-          setChatMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: errorMessage },
-          ]);
-          setVoiceToast("Voice request failed");
-          window.setTimeout(() => setVoiceToast(""), 1400);
-        } finally {
-          setIsThinking(false);
-        }
+        recorder.start(200);
       };
 
-      recorder.start();
-      autoStopTimerRef.current = window.setTimeout(() => {
-        if (recorder.state === "recording") recorder.stop();
-      }, 10000);
+      const data = new Uint8Array(analyser.fftSize);
+      const VAD_THRESHOLD = 0.028;
+      const SPEECH_START_MS = 140;
+      const SILENCE_END_MS = 850;
+      const MIN_UTTERANCE_MS = 350;
+      const MAX_UTTERANCE_MS = 12_000;
+      let speechAboveThresholdSince = 0;
+
+      const vadTick = () => {
+        if (!voiceSessionActiveRef.current) return;
+        analyser.getByteTimeDomainData(data);
+
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 1) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / data.length);
+        const now = performance.now();
+        const isSpeaking = rms >= VAD_THRESHOLD;
+
+        if (isSpeaking && isAiSpeakingRef.current && now - lastBargeInAtRef.current > 250) {
+          lastBargeInAtRef.current = now;
+          interruptAiOutput();
+          resumeListeningAtRef.current = now;
+        }
+
+        if (!voiceTurnBusyRef.current && !isAiSpeakingRef.current && now >= resumeListeningAtRef.current) {
+          if (!isUtteranceRecordingRef.current) {
+            if (isSpeaking) {
+              if (!speechAboveThresholdSince) speechAboveThresholdSince = now;
+              if (now - speechAboveThresholdSince >= SPEECH_START_MS) {
+                startUtteranceRecorder();
+                speechAboveThresholdSince = 0;
+              }
+            } else {
+              speechAboveThresholdSince = 0;
+            }
+          } else {
+            if (isSpeaking) {
+              utteranceLastVoiceAtRef.current = now;
+            }
+            const longEnough = now - utteranceSpeechStartRef.current >= MIN_UTTERANCE_MS;
+            const silenceLongEnough = now - utteranceLastVoiceAtRef.current >= SILENCE_END_MS;
+            const maxReached = now - utteranceSpeechStartRef.current >= MAX_UTTERANCE_MS;
+            if ((longEnough && silenceLongEnough) || maxReached) {
+              stopRecording();
+            }
+          }
+        }
+
+        vadRafRef.current = window.requestAnimationFrame(vadTick);
+      };
+
+      vadRafRef.current = window.requestAnimationFrame(vadTick);
     } catch {
-      setIsListening(false);
+      stopVoiceSession();
       setVoiceToast("Microphone permission denied");
       window.setTimeout(() => setVoiceToast(""), 1800);
     }
   };
 
-  const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const subject = encodeURIComponent(contactForm.subject || "Portfolio inquiry");
-    const body = encodeURIComponent(
-      `Name: ${contactForm.name}\nEmail: ${contactForm.email}\n\n${contactForm.message}`,
-    );
-    window.location.href = `mailto:smadiped@asu.edu?subject=${subject}&body=${body}`;
+    if (isContactSending) return;
+
+    const name = contactForm.name.trim();
+    const email = contactForm.email.trim();
+    const subjectText = contactForm.subject.trim();
+    const messageText = contactForm.message.trim();
+
+    if (!name || !email || !subjectText || !messageText) {
+      setContactStatus("Please fill all fields before sending.");
+      return;
+    }
+
+    const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailLooksValid) {
+      setContactStatus("Please enter a valid email address.");
+      return;
+    }
+
+    const serviceId = String(import.meta.env.VITE_EMAILJS_SERVICE_ID || "").trim();
+    const templateId = String(import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "").trim();
+    const publicKey = String(import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "").trim();
+    if (!serviceId || !templateId || !publicKey) {
+      setContactStatus("Email service is not configured.");
+      return;
+    }
+
+    try {
+      setIsContactSending(true);
+      setContactStatus("Sending...");
+
+      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          service_id: serviceId,
+          template_id: templateId,
+          user_id: publicKey,
+          template_params: {
+            from_name: name,
+            from_email: email,
+            subject: subjectText,
+            message: messageText,
+            to_name: "Suman Madipeddi",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(body || `Email send failed (${response.status})`);
+      }
+
+      setContactForm({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+      setContactStatus("Message sent successfully.");
+    } catch {
+      setContactStatus("Failed to send message. Please try again.");
+    } finally {
+      setIsContactSending(false);
+    }
   };
 
   return (
@@ -1133,7 +1487,7 @@ const Index = () => {
       <section id="hero">
         <div className="hero-layout">
           <div className="hero-main">
-            <div className="hero-eyebrow">AI / ML Engineer - Founding AI Engineer</div>
+            <div className="hero-eyebrow">Founding AI Engineer - Agentic AI Systems</div>
             <h1 className="hero-name">
               Suman
               <br />
@@ -1145,17 +1499,23 @@ const Index = () => {
               learn, and scale.
             </div>
             <p className="hero-desc">
-              Founding AI Engineer specializing in LLM pipelines, autonomous agents, and production-grade ML systems. I turn ambitious AI ideas into shipped products.
+            Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
             </p>
             <div className="avail-chip">Available for opportunities</div>
             <div className="hero-actions">
               <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
                 View my work
               </button>
-              <a className="btn-secondary btn-download" href="/resume/SumanMadipeddi_CV.pdf" download>
+              <button
+                className="btn-secondary btn-download"
+                type="button"
+                onClick={() => {
+                  void downloadResume();
+                }}
+              >
                 <Download size={15} className="download-icon-anim" />
                 Download Resume
-              </a>
+              </button>
             </div>
 
             <div className="hero-stats">
@@ -1211,10 +1571,10 @@ const Index = () => {
             <div className="card-tag">Background</div>
             <div className="card-title">Founding Engineer and AI Systems Architect</div>
             <div className="card-body" style={{ marginTop: 16 }}>
-              I build production AI systems from zero: LLM pipelines, RAG architectures, autonomous agents, and full-stack infrastructure. I have worked as an early technical hire shaping both systems and execution speed.
+              I build production AI systems that run in production, scale under load. Multi-agent orchestration, LLM pipelines, computer use voice agents and full-stack infrastructure. Been the founding AI hire twice. Owned the architecture, the 3am incidents, and the roadmap.
               <br />
               <br />
-              My approach: fast prototypes, rigorous production engineering.
+              My approach: thrive in ambiguity, ship fast, engineer for production.
             </div>
           </div>
 
@@ -1382,7 +1742,10 @@ const Index = () => {
                   type="text"
                   placeholder="Your name"
                   value={contactForm.name}
-                  onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => {
+                    setContactStatus("");
+                    setContactForm((prev) => ({ ...prev, name: e.target.value }));
+                  }}
                   required
                 />
                 <input
@@ -1390,7 +1753,10 @@ const Index = () => {
                   type="email"
                   placeholder="your.email@example.com"
                   value={contactForm.email}
-                  onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => {
+                    setContactStatus("");
+                    setContactForm((prev) => ({ ...prev, email: e.target.value }));
+                  }}
                   required
                 />
               </div>
@@ -1399,21 +1765,28 @@ const Index = () => {
                 type="text"
                 placeholder="Subject"
                 value={contactForm.subject}
-                onChange={(e) => setContactForm((prev) => ({ ...prev, subject: e.target.value }))}
+                onChange={(e) => {
+                  setContactStatus("");
+                  setContactForm((prev) => ({ ...prev, subject: e.target.value }));
+                }}
                 required
               />
               <textarea
                 className="contact-textarea"
                 placeholder="Tell me about your project or idea..."
                 value={contactForm.message}
-                onChange={(e) => setContactForm((prev) => ({ ...prev, message: e.target.value }))}
+                onChange={(e) => {
+                  setContactStatus("");
+                  setContactForm((prev) => ({ ...prev, message: e.target.value }));
+                }}
                 rows={5}
                 required
               />
-              <button className="btn-primary" type="submit">
+              <button className="btn-primary" type="submit" disabled={isContactSending}>
                 <Send size={16} />
-                Send Message
+                {isContactSending ? "Sending..." : "Send Message"}
               </button>
+              {contactStatus && <div className="contact-status">{contactStatus}</div>}
             </form>
           </div>
 

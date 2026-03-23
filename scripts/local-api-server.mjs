@@ -83,9 +83,10 @@ const loadDataContext = () => {
 const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 12000);
-const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || "Aoede";
+const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore";
 const DEFAULT_GEMINI_VOICE_MODEL =
   process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const DEFAULT_GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts";
 const STRICT_GOOGLE_VOICE = String(process.env.GEMINI_VOICE_STRICT || "false").toLowerCase() === "true";
 const normalizeModelName = (raw) =>
   String(raw || "")
@@ -95,6 +96,34 @@ const normalizeModelName = (raw) =>
 const isModelUnavailableError = (message) => {
   const m = String(message || "").toLowerCase();
   return m.includes("not found for api version") || m.includes("model not found") || m.includes("404");
+};
+const KNOWN_GEMINI_VOICES = new Set([
+  "aoede",
+  "leda",
+  "kore",
+  "charon",
+  "fenrir",
+  "orus",
+  "zephyr",
+  "puck",
+]);
+const MIME_MAP = {
+  "audio/webm": "audio/ogg",
+  "audio/webm;codecs=opus": "audio/ogg",
+  "audio/webm;codecs=pcm": "audio/ogg",
+  "audio/ogg": "audio/ogg",
+  "audio/ogg;codecs=opus": "audio/ogg",
+  "audio/mp4": "audio/mp4",
+  "audio/mpeg": "audio/mp3",
+  "audio/wav": "audio/wav",
+  "audio/flac": "audio/flac",
+};
+const toGeminiMimeType = (mimeType) => {
+  const raw = String(mimeType || "").toLowerCase().trim();
+  if (MIME_MAP[raw]) return MIME_MAP[raw];
+  const base = raw.split(";")[0]?.trim();
+  if (base && MIME_MAP[base]) return MIME_MAP[base];
+  return "audio/ogg";
 };
 
 const pcm16ToWavBase64 = (pcmBase64, sampleRate = 24000, channels = 1) => {
@@ -185,7 +214,7 @@ const callGemini = async ({ apiKey, model, systemPrompt, history, message }) => 
   return { reply, provider: "gemini", model };
 };
 
-const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase64, mimeType, voiceName }) => {
+const callGeminiVoiceText = async ({ apiKey, model, systemPrompt, history, audioBase64, mimeType }) => {
   const contents = [
     ...history.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -199,62 +228,37 @@ const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase
       ],
     },
   ];
-
-  const requestGemini = async (withAudio) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
-    try {
-      return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents,
-            generationConfig: withAudio
-              ? {
-                  maxOutputTokens: 700,
-                  temperature: 0.55,
-                  responseModalities: ["TEXT", "AUDIO"],
-                  speechConfig: {
-                    voiceConfig: {
-                      prebuiltVoiceConfig: {
-                        voiceName,
-                      },
-                    },
-                  },
-                }
-              : {
-                  maxOutputTokens: 700,
-                  temperature: 0.55,
-                },
-          }),
-        },
-      );
-    } catch (error) {
-      if (error?.name === "AbortError") {
-        throw new Error(`Gemini voice timed out after ${PROVIDER_TIMEOUT_MS}ms`);
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents,
+          generationConfig: {
+            maxOutputTokens: 700,
+            temperature: 0.55,
+          },
+        }),
+      },
+    );
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Gemini voice timed out after ${PROVIDER_TIMEOUT_MS}ms`);
     }
-  };
-
-  let response = await requestGemini(true);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!response.ok) {
     const body = await response.text();
-    if (response.status === 400 && body.includes("only supports text output")) {
-      response = await requestGemini(false);
-      if (!response.ok) {
-        const retryBody = await response.text();
-        throw new Error(`Gemini voice error ${response.status}: ${retryBody.slice(0, 240)}`);
-      }
-    } else {
-      throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
-    }
+    throw new Error(`Gemini voice error ${response.status}: ${body.slice(0, 240)}`);
   }
 
   const data = await response.json();
@@ -266,15 +270,66 @@ const callGeminiVoice = async ({ apiKey, model, systemPrompt, history, audioBase
     .join("\n")
     .trim();
   if (!reply) throw new Error("Gemini voice returned an empty response.");
+  return { reply, provider: "gemini", model };
+};
+
+const callGeminiTts = async ({ apiKey, model, text, voiceName }) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text }],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 700,
+            temperature: 0.35,
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName,
+                },
+              },
+            },
+          },
+        }),
+      },
+    );
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Gemini TTS timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Gemini TTS error ${response.status}: ${body.slice(0, 240)}`);
+  }
+
+  const data = await response.json();
+  const parts = Array.isArray(data?.candidates?.[0]?.content?.parts)
+    ? data.candidates[0].content.parts
+    : [];
   const inlineData = parts.find((p) => p?.inlineData)?.inlineData;
+  if (!inlineData?.data) return { audioBase64: "", audioMimeType: "" };
   const normalizedAudio = normalizeGeminiAudio({
     audioBase64: inlineData?.data ? String(inlineData.data) : "",
     audioMimeType: inlineData?.mimeType ? String(inlineData.mimeType) : "",
   });
   return {
-    reply,
-    provider: "gemini",
-    model,
     audioBase64: normalizedAudio.audioBase64,
     audioMimeType: normalizedAudio.audioMimeType,
   };
@@ -322,6 +377,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const audioBase64 = String(body?.audioBase64 || "").trim();
       const mimeType = String(body?.mimeType || "audio/webm").trim();
+      const safeMimeType = toGeminiMimeType(mimeType);
       if (!audioBase64) return json(res, 400, { error: "audioBase64 is required." });
 
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
@@ -330,39 +386,67 @@ const server = http.createServer(async (req, res) => {
       const history = normalizeHistory(body?.history, 10);
       const requestPrompt = String(body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
       const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
-      const configuredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
+      const rawConfiguredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
       const textFallbackModel = normalizeModelName(process.env.GEMINI_MODEL || "gemini-2.5-flash");
+      const configuredTtsModel = normalizeModelName(DEFAULT_GEMINI_TTS_MODEL);
+      const resolvedVoiceName = KNOWN_GEMINI_VOICES.has(rawConfiguredVoiceModel.toLowerCase())
+        ? rawConfiguredVoiceModel
+        : DEFAULT_GEMINI_VOICE;
+      const configuredVoiceModel = KNOWN_GEMINI_VOICES.has(rawConfiguredVoiceModel.toLowerCase())
+        ? textFallbackModel
+        : rawConfiguredVoiceModel;
       let geminiModel = configuredVoiceModel;
 
-      let result;
+      let textResult;
       try {
-        result = await callGeminiVoice({
+        textResult = await callGeminiVoiceText({
           apiKey: geminiKey,
           model: geminiModel,
           systemPrompt: mergedPrompt,
           history,
           audioBase64,
-          mimeType,
-          voiceName: DEFAULT_GEMINI_VOICE,
+          mimeType: safeMimeType,
         });
       } catch (err) {
         const msg = String(err?.message || "");
         if (isModelUnavailableError(msg) && textFallbackModel && textFallbackModel !== geminiModel) {
           geminiModel = textFallbackModel;
-          result = await callGeminiVoice({
+          textResult = await callGeminiVoiceText({
             apiKey: geminiKey,
             model: geminiModel,
             systemPrompt: mergedPrompt,
             history,
             audioBase64,
-            mimeType,
-            voiceName: DEFAULT_GEMINI_VOICE,
+            mimeType: safeMimeType,
           });
         } else {
           throw err;
         }
       }
-      if (STRICT_GOOGLE_VOICE && !result.audioBase64) {
+
+      let ttsAudio = { audioBase64: "", audioMimeType: "" };
+      let usedTtsModel = configuredTtsModel;
+      let ttsError = null;
+      if (configuredTtsModel) {
+        try {
+          ttsAudio = await callGeminiTts({
+            apiKey: geminiKey,
+            model: configuredTtsModel,
+            text: textResult.reply,
+            voiceName: resolvedVoiceName,
+          });
+        } catch (err) {
+          const msg = String(err?.message || "");
+          ttsError = msg || "Unknown TTS error";
+          if (isModelUnavailableError(msg)) {
+            usedTtsModel = "";
+          } else if (STRICT_GOOGLE_VOICE) {
+            throw err;
+          }
+        }
+      }
+
+      if (STRICT_GOOGLE_VOICE && !ttsAudio.audioBase64) {
         return json(res, 500, {
           error:
             "Google voice audio was not returned by Gemini. Try another GEMINI_VOICE or model.",
@@ -370,9 +454,15 @@ const server = http.createServer(async (req, res) => {
       }
 
       return json(res, 200, {
-        ...result,
-        voice: DEFAULT_GEMINI_VOICE,
-        usedGoogleVoice: Boolean(result.audioBase64),
+        reply: textResult.reply,
+        provider: "gemini",
+        model: geminiModel,
+        ttsModel: usedTtsModel || null,
+        audioBase64: ttsAudio.audioBase64,
+        audioMimeType: ttsAudio.audioMimeType,
+        voice: resolvedVoiceName,
+        usedGoogleVoice: Boolean(ttsAudio.audioBase64),
+        ttsError,
       });
     }
 
