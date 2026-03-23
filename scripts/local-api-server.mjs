@@ -82,6 +82,8 @@ const loadDataContext = () => {
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
+const OUTPUT_STYLE_PROMPT =
+  "Formatting rules: keep answers complete (never cut mid-sentence). When user asks for N points/strengths/steps, return exactly N numbered lines (1., 2., 3...) with one point per line. Avoid markdown bold unless explicitly requested.";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 12000);
 const DEFAULT_GEMINI_VOICE = process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore";
 const DEFAULT_GEMINI_VOICE_MODEL =
@@ -188,8 +190,8 @@ const callGemini = async ({ apiKey, model, systemPrompt, history, message }) => 
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents,
           generationConfig: {
-            maxOutputTokens: 400,
-            temperature: 0.6,
+            maxOutputTokens: 700,
+            temperature: 0.25,
           },
         }),
       },
@@ -243,7 +245,7 @@ const callGeminiVoiceText = async ({ apiKey, model, systemPrompt, history, audio
           contents,
           generationConfig: {
             maxOutputTokens: 700,
-            temperature: 0.55,
+            temperature: 0.25,
           },
         }),
       },
@@ -359,7 +361,7 @@ const server = http.createServer(async (req, res) => {
 
       const history = normalizeHistory(body?.history, 16);
       const requestPrompt = String(body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
-      const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
+      const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, OUTPUT_STYLE_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
 
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
       const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -385,7 +387,7 @@ const server = http.createServer(async (req, res) => {
 
       const history = normalizeHistory(body?.history, 10);
       const requestPrompt = String(body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
-      const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
+      const mergedPrompt = [DEFAULT_SYSTEM_PROMPT, OUTPUT_STYLE_PROMPT, requestPrompt, loadDataContext()].filter(Boolean).join("\n\n");
       const rawConfiguredVoiceModel = normalizeModelName(DEFAULT_GEMINI_VOICE_MODEL);
       const textFallbackModel = normalizeModelName(process.env.GEMINI_MODEL || "gemini-2.5-flash");
       const configuredTtsModel = normalizeModelName(DEFAULT_GEMINI_TTS_MODEL);

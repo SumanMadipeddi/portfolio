@@ -40,7 +40,8 @@ RESPONSE RULES — follow these exactly, every single time:
 - If asked for a list (top 3, main skills, strengths, abilities) - respond with ONLY the numbered points, nothing else before or after. Each point MUST be on its own line. No intro sentence. No closing sentence.
 
 Format Example structure: each point in each line seperately in this order 
-User: what are his 3 strengths
+you no need to asnwer only these  3 strictly use my data and answer
+User: what are his 3 strengths 
 Answer: 
 1. Founding AI engineer: owns architecture and production stack from day one. 
 2. Agentic systems expert: multi-agent orchestration, RAG, LLM pipelines at scale. 

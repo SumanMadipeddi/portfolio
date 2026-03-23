@@ -20,6 +20,8 @@ type ChatMessage = {
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
+const OUTPUT_STYLE_PROMPT =
+  "Formatting rules: keep answers complete (never cut mid-sentence). When user asks for N points/strengths/steps, return exactly N numbered lines (1., 2., 3...) with one point per line. Avoid markdown bold unless explicitly requested.";
 
 const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 12000);
@@ -79,8 +81,8 @@ const callGemini = async (params: {
           },
           contents,
           generationConfig: {
-            maxOutputTokens: 400,
-            temperature: 0.6,
+            maxOutputTokens: 700,
+            temperature: 0.25,
           },
         }),
       },
@@ -124,7 +126,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const systemPrompt = String(req.body?.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim();
     const history = normalizeHistory(req.body?.history);
     const dataContext = loadDataContext();
-    const mergedSystemPrompt = [DEFAULT_SYSTEM_PROMPT, systemPrompt, dataContext]
+    const mergedSystemPrompt = [DEFAULT_SYSTEM_PROMPT, OUTPUT_STYLE_PROMPT, systemPrompt, dataContext]
       .filter(Boolean)
       .join("\n\n");
 
