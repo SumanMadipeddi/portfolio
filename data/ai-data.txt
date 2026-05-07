@@ -1,4 +1,4 @@
-﻿Suman Madipeddi - Portfolio AI context
+Suman Madipeddi - Portfolio AI context
 
 Identity:
 - Name: Suman Madipeddi
@@ -14,6 +14,8 @@ Core focus:
 - Fast iteration with strong production rigor
 
 Projects highlights:
+- Atimuss Flow (Founder, local-first voice agent)
+- ApplyLoom (Founder, AI interview platform)
 - GraphRAG Multi Agent
 - MobileQA Multi Agent
 - RAG Voice AI

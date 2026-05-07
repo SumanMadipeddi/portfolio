@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download, ExternalLink, Github, Linkedin, Mail, MapPin, Mic, Moon, Phone, Send, Square, Sun, X } from "lucide-react";
 import profileImage from "@/assets/profile-hero.jpg";
 import graphRagImage from "@/assets/graphRAG.png";
@@ -59,12 +59,13 @@ Answer:
 Suman is a Founding AI Engineer specializing in agentic AI systems, LLM pipelines, and production ML.
 
 Key facts:
-- Founding/first AI hire twice — owns architecture, infra, and roadmap from day one
+- Founding/first AI hire 3x — owns architecture, infra, and roadmap from day one
 - Shipped Python SDK + REST APIs to 100K+ users handling 1M+ queries/month  
-- Built multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
+- Built Atimuss Flow: local-first voice agent with sub-500ms latency and 159 WPM capture
+- Built ApplyLoom: end-to-end platform with 1,000+ active users and LiveKit mock interview engine
+- Shipped multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
 - Full production stack: LangSmith observability, agentic evals, vLLM inference, Pinecone/Weaviate
-- Observability: LangSmith tracing, agentic evals, custom latency dashboards.
-- Projects: GraphRAG multi-agent, Computer Use Agents, REST APIs, Python SDKs, MobileQA agent, RAG Voice AI, fine-tuning pipeline, object segmentation.
+- Projects: Atimuss Flow, ApplyLoom, GraphRAG multi-agent, MobileQA agent, RAG Voice AI, fine-tuning pipeline.
 - Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-first startups.
 - Location: San Jose CA, open to remote and relocation
 - Email: smadiped@asu.edu
@@ -83,6 +84,12 @@ const suggestions = [
 
 const experiences = [
   {
+    period: "May 2026 – Present",
+    title: "Founder",
+    company: "Atimuss Flow",
+    desc: "Built a local first personal voice agent that lives entirely on device, no data leaving your machine. Engineered sub-500ms speech-to-speech latency with raise-to-wake invocation and global hotkey STT. Shipped a desktop agent capturing voice at 159 WPM average with zero friction and end-to-end encrypted local processing."
+  },
+  {
     period: "10/2025 – Present",
     title: "AI/ML Software Engineer",
     company: "Stealth AI Startup",
@@ -95,10 +102,10 @@ const experiences = [
     desc: "Fine-tuned LLaMA 3 with LoRA/QLoRA - 10x inference cost reduction via vLLM quantized serving. Shipped conversational RAG Agents, recommendation systems and Mobile dev (IOS/android). Led cross-platform product delivery and increased 40% customer engagement.",
   },
   {
-    period: "Earlier",
-    title: "Software + ML Engineering",
-    company: "Product and startup teams",
-    desc: "Built scalable APIs, AI automation pipelines, and data systems with a focus on measurable business outcomes and fast iteration cycles.",
+    period: "May 2024 - Present",
+    title: "Founder",
+    company: "ApplyLoom",
+    desc: "Architected and shipped ApplyLoom end-to-end from 0 to 1, scaling to 1,000+ active users. Built a real-time mock interview engine with AI Personas using an intent-based model router; powered live audio/video sessions via LiveKit with sub 300ms latency. Engineered collaborative multiuser job board for real-time tracking.",
   },
 ];
 
@@ -175,7 +182,7 @@ const stats = [
   { value: 2, suffix: "+", label: "Years in AI/ML" },
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
   { value: 9, suffix: "+", label: "AI systems shipped" },
-  // { value: 2, suffix: "", label: "Founding/early roles" },
+  { value: 3, suffix: "", label: "Founding/early roles" },
   { value: 1,   suffix: "M+", label: "Production AI queries" },
   // { value: 3, suffix: "K+", label: "Monthly AI queries" },
 ];
@@ -1536,22 +1543,21 @@ const Index = () => {
             <p className="hero-desc">
             Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
             </p>
-            <div className="avail-chip">Available for opportunities</div>
-            <div className="hero-actions">
-              <button className="btn-secondary" onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}>
-                View my work
-              </button>
-              <button
-                className="btn-secondary btn-download"
-                type="button"
-                onClick={() => {
-                  void downloadResume();
-                }}
-              >
-                <Download size={15} className="download-icon-anim" />
+            <div className="hero-chips">
+              <a href="https://applyloom.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip applyloom">
+                <ExternalLink size={12} />
+                ApplyLoom
+              </a>
+              <a href="https://siri.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip siri">
+                <ExternalLink size={12} />
+                Atimuss Flow
+              </a>
+              <button className="link-chip resume-chip" onClick={downloadResume}>
+                <Download size={14} />
                 Download Resume
               </button>
             </div>
+
 
             <div className="hero-stats">
               {stats.map((stat) => (
