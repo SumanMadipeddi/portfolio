@@ -86,8 +86,8 @@ const experiences = [
   {
     period: "May 2026 – Present",
     title: "Founder",
-    company: "Atimuss Flow",
-    desc: "Built a local first personal voice agent that lives entirely on device, no data leaving your machine. Engineered sub-500ms speech-to-speech latency with raise-to-wake invocation and global hotkey STT. Shipped a desktop agent capturing voice at 159 WPM average with zero friction and end-to-end encrypted local processing."
+    company: "Atimuss",
+    desc: "Built a local-first personal AI agent that lives entirely on device, no data leaving your machine. Engineered sub-500ms speech-to-speech latency with raise-to-wake invocation and global hotkey STT. Shipped a desktop agent capturing voice at 159 WPM average with zero friction and end-to-end encrypted local processing."
   },
   {
     period: "10/2025 – Present",
@@ -232,13 +232,13 @@ type TerminalSkillLine = {
 };
 
 const terminalSkillLines: TerminalSkillLine[] = [
-  { prompt: ">", text: "Booting production skill profile..." },
   { prompt: ">", text: "Agent orchestration and LLM systems  [online]" },
-  { prompt: ">", text: "Observability, tracing, agentic evals [ready]" },
-  { prompt: ">", text: "RAG and vector search at scale        [ready]" },
-  { prompt: ">", text: "MLOps, fine-tuning, inference serving [ready]" },
-  { prompt: ">", text: "Cloud infra (AWS, Docker, K8s)        [ready]" },
-  { prompt: "#", text: "Core skills loaded." },
+  { prompt: ">", text: "Observability, tracing, agentic evals [active]" },
+  { prompt: ">", text: "RAG and vector search at scale      [indexed]" },
+  { prompt: ">", text: "MLOps, fine-tuning, inference serving  [vLLM]" },
+  { prompt: ">", text: "Multi-agent pipelines & custom SDKs [shipped]" },
+  { prompt: ">", text: "Cloud infra (AWS, Docker, K8s)       [scaled]" },
+  { prompt: "#", text: "All systems operational." },
 ];
 
 const ABOUT_WORDS_TOP = ["build and", "ship and", "scale and"];
@@ -308,7 +308,15 @@ const formatAssistantMessage = (input: string) => {
 };
 
 const Index = () => {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme") as Theme | null;
+      if (savedTheme) return savedTheme;
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return systemPrefersDark ? "dark" : "light";
+    }
+    return "dark";
+  });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
@@ -484,17 +492,12 @@ const Index = () => {
 
   useEffect(() => {
     if (!isBrowser) return;
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initialTheme = savedTheme || "dark";
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    localStorage.setItem("theme", nextTheme);
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   useEffect(() => {
@@ -1548,9 +1551,9 @@ const Index = () => {
                 <ExternalLink size={12} />
                 ApplyLoom
               </a>
-              <a href="https://siri.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip siri">
+              <a href="https://helios.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip siri">
                 <ExternalLink size={12} />
-                Atimuss Flow
+                Atimuss
               </a>
               <button className="link-chip resume-chip" onClick={downloadResume}>
                 <Download size={14} />

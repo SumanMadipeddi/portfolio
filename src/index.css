@@ -395,19 +395,22 @@ body.cursor-hover .v2 .cursor-ring {
 }
 
 .v2 .hero-terminal {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  border-top: 1px solid rgba(10, 15, 30, 0.16);
   border-radius: 16px;
   overflow: hidden;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark .v2 .hero-terminal {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .v2 .hero-terminal-bar {
@@ -415,8 +418,14 @@ body.cursor-hover .v2 .cursor-ring {
   align-items: center;
   gap: 6px;
   padding: 12px 14px;
+  border-bottom: 1px solid rgba(10, 15, 30, 0.08);
+  background: rgba(10, 15, 30, 0.04);
+  transition: all 0.3s;
+}
+
+.dark .v2 .hero-terminal-bar {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .v2 .t-dot {
@@ -427,9 +436,14 @@ body.cursor-hover .v2 .cursor-ring {
 
 .v2 .t-title {
   font-family: "SF Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  color: var(--text2);
   margin-left: 8px;
+  transition: color 0.3s;
+}
+
+.dark .v2 .t-title {
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .v2 .hero-terminal-body {
@@ -617,6 +631,69 @@ body.cursor-hover .v2 .cursor-ring {
   border-color: transparent;
   color: #ffffff;
   box-shadow: 0 14px 28px rgba(41, 151, 255, 0.34);
+}
+
+.v2 .premium-card {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: var(--glass-shadow) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  color: var(--text) !important;
+}
+
+.dark .v2 .premium-card {
+  background: rgba(18, 20, 28, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45) !important;
+}
+
+.v2 .premium-input {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: 980px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  height: 42px !important;
+  transition: all 0.25s !important;
+  font-family: var(--font) !important;
+}
+
+.v2 .premium-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+  outline: none !important;
+}
+
+.dark .v2 .premium-input {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.v2 .btn-logout {
+  padding: 6px 14px !important;
+  background: transparent !important;
+  color: rgba(239, 68, 68, 0.8) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  border-radius: 980px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  font-family: var(--font) !important;
+  transition: all 0.25s !important;
+  letter-spacing: -0.2px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.v2 .btn-logout:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: rgb(239, 68, 68) !important;
+  transform: scale(1.02) !important;
 }
 
 .v2 .hero-stats {

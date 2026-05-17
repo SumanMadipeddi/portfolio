@@ -494,6 +494,95 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // Resume routes
+    if (req.url === "/api/resume" && req.method === "GET") {
+      try {
+        const resumeUrl = process.env.LOCAL_RESUME_URL || "https://drive.google.com/uc?export=download&id=16pajWO-QZlmp8CHkFH_c9ce-FbM27hQN";
+        return json(res, 200, {
+          success: true,
+          data: {
+            downloadUrl: resumeUrl,
+            lastUpdated: new Date().toISOString().split('T')[0],
+            filename: "resume_suman_madipeddi.pdf"
+          }
+        });
+      } catch (error) {
+        return json(res, 500, { success: false, message: "Failed to fetch resume data.", error: error.message });
+      }
+    }
+
+    if (req.url === "/api/resume/verify" && req.method === "POST") {
+      try {
+        const body = await readBody(req);
+        const { passcode } = body;
+        const adminPasscode = process.env.VITE_ADMIN_PASSCODE || process.env.ADMIN_PASSCODE;
+
+        if (!passcode) {
+          return json(res, 400, { success: false, message: "Passcode is required" });
+        }
+
+        if (passcode !== adminPasscode) {
+          return json(res, 401, { success: false, message: "Invalid passcode. Access denied." });
+        }
+
+        return json(res, 200, {
+          success: true,
+          message: "Passcode verified successfully"
+        });
+      } catch (error) {
+        return json(res, 500, { success: false, message: "Failed to verify passcode" });
+      }
+    }
+
+    if (req.url === "/api/resume" && req.method === "POST") {
+      try {
+        const body = await readBody(req);
+        const { fileId, passcode } = body;
+        const adminPasscode = process.env.VITE_ADMIN_PASSCODE || process.env.ADMIN_PASSCODE;
+
+        if (!passcode || passcode !== adminPasscode) {
+          return json(res, 401, { success: false, message: "Invalid passcode. Access denied." });
+        }
+
+        if (!fileId) {
+          return json(res, 400, { success: false, message: "File ID is required" });
+        }
+
+        // Direct update to JSONBin
+        const STORAGE_URL = 'https://api.jsonbin.io/v3/b/68c90385d0ea881f407f8393';
+        const STORAGE_KEY = process.env.JSONBIN_API_KEY || '$2a$10$yKUUJi95xhXA7hAukjkrCOE2bCBzWf15lXfGE/bz1VW8KrnoeBRDy';
+
+        const updatedData = {
+          downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,
+          lastUpdated: new Date().toISOString().split('T')[0],
+          filename: 'resume_suman_madipeddi.pdf',
+        };
+
+        const response = await fetch(STORAGE_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': STORAGE_KEY,
+          },
+          body: JSON.stringify(updatedData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          process.env.LOCAL_RESUME_URL = updatedData.downloadUrl; // update cache
+          return json(res, 200, {
+            success: true,
+            message: 'Resume updated permanently! Changes are now live for all users across all domains.',
+            data: updatedData
+          });
+        } else {
+          return json(res, 500, { success: false, message: "Failed to update JSONBin." });
+        }
+      } catch (error) {
+        return json(res, 500, { success: false, message: "Failed to update resume permanently.", error: error.message });
+      }
+    }
+
     return json(res, 404, { error: "Not found" });
   } catch (error) {
     return json(res, 500, { error: error instanceof Error ? error.message : "Local API server error" });

@@ -9,7 +9,6 @@ import { updateResumeOnServer, verifyPasscode } from "../lib/resume-api";
 
 export default function Admin() {
   const [resumeUrl, setResumeUrl] = useState("");
-  const [instructions, setInstructions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,14 +44,19 @@ export default function Admin() {
       
       if (result.success) {
         setIsAuthenticated(true);
-        setMessage('✅ Access granted! You can now update the resume.');
+        setMessage('Access granted! You can now update the resume.');
         const info = await getResumeInfo();
         setResumeInfo(info);
+        
+        // Auto-clear message after 3 seconds
+        setTimeout(() => {
+          setMessage('');
+        }, 3000);
       } else {
-        setMessage(`❌ ${result.message}`);
+        setMessage(result.message || 'Invalid passcode. Access denied.');
       }
     } catch (error) {
-      setMessage('❌ Failed to verify passcode. Please try again.');
+      setMessage('Failed to verify passcode. Please try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -80,15 +84,20 @@ export default function Admin() {
       const result = await updateResumeOnServer(fileId, passcode);
       
       if (result.success) {
-        setMessage('✅ Resume updated successfully! Changes are now live for all users.');
+        setMessage('Resume updated successfully! Changes are now live for all users.');
         localStorage.setItem('resumeUrl', result.data?.downloadUrl || '');
         const info = await getResumeInfo();
         setResumeInfo(info);
+
+        // Auto-clear message after 3 seconds
+        setTimeout(() => {
+          setMessage('');
+        }, 3000);
       } else {
-        setMessage(`❌ ${result.message}`);
+        setMessage(result.message || 'Failed to update resume.');
       }
     } catch (error) {
-      setMessage('❌ Failed to update resume. Please try again.');
+      setMessage('Failed to update resume. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -102,29 +111,29 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-20">
+    <div className="v2 min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300 py-20">
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold gradient-text mb-4">
             Resume Management
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-[var(--text2)]">
             Secure admin access for resume updates
           </p>
         </div>
 
         {!isAuthenticated ? (
-          <Card className="max-w-md mx-auto">
+          <Card className="premium-card max-w-md mx-auto">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-[var(--text)]">
+                <Info className="h-5 w-5 text-[var(--accent)]" />
                 Admin Access
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="passcode">Enter Passcode</Label>
-                <div className="relative">
+                <Label htmlFor="passcode" className="text-[var(--text2)]">Enter Passcode</Label>
+                <div className="relative mt-1">
                   <Input
                     id="passcode"
                     type={showPasscode ? "text" : "password"}
@@ -132,28 +141,28 @@ export default function Admin() {
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handlePasscodeVerification()}
-                    className="pr-10"
+                    className="premium-input pr-12"
                   />
                   <button
                     type="button"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-white/10 dark:hover:bg-black/10 transition-colors"
                     onClick={() => setShowPasscode(!showPasscode)}
                   >
                     {showPasscode ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-[var(--text3)]" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-[var(--text3)]" />
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-[var(--text3)] mt-2">
                   Enter the admin passcode to access resume management
                 </p>
               </div>
               
               <Button 
                 onClick={handlePasscodeVerification} 
-                className="w-full"
+                className="w-full btn-primary"
                 disabled={isVerifying}
               >
                 {isVerifying ? (
@@ -167,10 +176,10 @@ export default function Admin() {
               </Button>
 
               {message && (
-                <div className={`p-3 rounded-md text-sm ${
-                  message.includes('✅') 
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
+                <div className={`py-2.5 px-6 rounded-full text-sm border backdrop-blur-md transition-all text-center ${
+                  message.toLowerCase().includes('granted') || message.toLowerCase().includes('success')
+                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                    : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                 }`}>
                   {message}
                 </div>
@@ -178,18 +187,18 @@ export default function Admin() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="max-w-2xl mx-auto">
+          <Card className="premium-card max-w-2xl mx-auto">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-[var(--text)]">
+                  <Upload className="h-5 w-5 text-[var(--accent)]" />
                   Update Resume
                 </CardTitle>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700"
+                  className="btn-logout"
                 >
                   Logout
                 </Button>
@@ -197,14 +206,15 @@ export default function Admin() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="resume-url">Google Drive File ID or URL</Label>
+                <Label htmlFor="resume-url" className="text-[var(--text2)]">Google Drive File ID or URL</Label>
                 <Input
                   id="resume-url"
                   placeholder="16pajWO-QZlmp8CHkFH_c9ce-FbM27hQN"
                   value={resumeUrl}
                   onChange={(e) => setResumeUrl(e.target.value)}
+                  className="premium-input mt-1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-[var(--text3)] mt-2">
                   Enter your Google Drive file ID or complete URL
                 </p>
               </div>
@@ -212,7 +222,7 @@ export default function Admin() {
               <div className="flex gap-3">
                 <Button 
                   onClick={handleUrlUpdate} 
-                  className="flex-1"
+                  className="flex-1 btn-primary"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -227,7 +237,7 @@ export default function Admin() {
                 <Button 
                   variant="outline"
                   onClick={() => window.open('https://drive.google.com', '_blank')}
-                  className="flex-1"
+                  className="flex-1 btn-secondary"
                 >
                   Open Google Drive
                   <ExternalLink className="ml-2 h-4 w-4" />
@@ -235,56 +245,14 @@ export default function Admin() {
               </div>
 
               {message && (
-                <div className={`p-3 rounded-md text-sm ${
-                  message.includes('✅') 
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
+                <div className={`py-2.5 px-6 rounded-full text-sm border backdrop-blur-md transition-all text-center ${
+                  message.toLowerCase().includes('granted') || message.toLowerCase().includes('success')
+                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                    : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                 }`}>
                   {message}
                 </div>
               )}
-
-              <div className="pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setInstructions(!instructions)}
-                  className="w-full"
-                >
-                  <Info className="mr-2 h-4 w-4" />
-                  {instructions ? 'Hide' : 'Show'} Setup Instructions
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {instructions && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>Setup Instructions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Google Drive Setup</h3>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Upload your resume to Google Drive</li>
-                  <li>Right-click the file and select 'Get link'</li>
-                  <li>Change sharing to 'Anyone with the link can view'</li>
-                  <li>Copy the file ID from the URL</li>
-                  <li>Use this format: https://drive.google.com/uc?export=download&id=YOUR_FILE_ID</li>
-                </ol>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Dropbox Setup</h3>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Upload your resume to Dropbox</li>
-                  <li>Right-click the file and select 'Share'</li>
-                  <li>Click 'Create link' and copy the link</li>
-                  <li>Replace the 'dl=0' at the end with 'dl=1'</li>
-                  <li>Use that URL in the admin interface</li>
-                </ol>
-              </div>
             </CardContent>
           </Card>
         )}
