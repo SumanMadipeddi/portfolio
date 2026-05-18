@@ -83,12 +83,12 @@ const suggestions = [
 ];
 
 const experiences = [
-  {
-    period: "May 2026 – Present",
-    title: "Founder",
-    company: "Atimuss",
-    desc: "Built a local-first personal AI agent that lives entirely on device, no data leaving your machine. Engineered sub-500ms speech-to-speech latency with raise-to-wake invocation and global hotkey STT. Shipped a desktop agent capturing voice at 159 WPM average with zero friction and end-to-end encrypted local processing."
-  },
+  // {
+  //   period: "May 2026 – Present",
+  //   title: "Founder",
+  //   company: "Atimuss",
+  //   desc: "Built a local-first personal AI agent that lives entirely on device, no data leaving your machine. Engineered sub-500ms speech-to-speech latency with raise-to-wake invocation and global hotkey STT. Shipped a desktop agent capturing voice at 159 WPM average with zero friction and end-to-end encrypted local processing."
+  // },
   {
     period: "10/2025 – Present",
     title: "AI/ML Software Engineer",
@@ -345,8 +345,6 @@ const Index = () => {
   const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
 
-  const cursorDotRef = useRef<HTMLDivElement | null>(null);
-  const cursorRingRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
@@ -564,61 +562,7 @@ const Index = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isBrowser) return;
 
-    const dot = cursorDotRef.current;
-    const ring = cursorRingRef.current;
-    if (!dot || !ring) return;
-
-    let mx = -100;
-    let my = -100;
-    let rx = -100;
-    let ry = -100;
-    let raf = 0;
-
-    const onMove = (e: MouseEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-      dot.style.left = `${mx}px`;
-      dot.style.top = `${my}px`;
-    };
-
-    const interactiveSelector = "a, button, .project-card, .exp-item, .suggestion, .nav-cta, .card";
-    const onOver = (e: Event) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest(interactiveSelector)) {
-        document.body.classList.add("cursor-hover");
-      }
-    };
-    const onOut = (e: Event) => {
-      const related = (e as MouseEvent).relatedTarget as HTMLElement | null;
-      if (!related?.closest(interactiveSelector)) {
-        document.body.classList.remove("cursor-hover");
-      }
-    };
-
-    const animate = () => {
-      rx += (mx - rx) * 0.25;
-      ry += (my - ry) * 0.25;
-      ring.style.left = `${rx}px`;
-      ring.style.top = `${ry}px`;
-      raf = window.requestAnimationFrame(animate);
-    };
-
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseover", onOver);
-    document.addEventListener("mouseout", onOut);
-    raf = window.requestAnimationFrame(animate);
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseover", onOver);
-      document.removeEventListener("mouseout", onOut);
-      document.body.classList.remove("cursor-hover");
-    };
-  }, []);
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -650,138 +594,183 @@ const Index = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    let W = 0, H = 0;
     let raf = 0;
-    let mx = width / 2;
-    let my = height / 2;
+    let t = 0;
+    let rotY = 0, rotX = 0;
 
-    const PARTICLE_COUNT = 300;
-    const CONNECTION_DIST = 130;
-    const MOUSE_RADIUS = 180;
-    const MOUSE_STRENGTH = 1.4;
-    const PARTICLE_SPEED = 0.45;
-    const P_SIZE_MIN = 0.8;
-    const P_SIZE_MAX = 2.5;
-    const PARTICLE_RGB = "41,151,255";
-    const CONNECTION_RGB = "41,151,255";
-    const CANVAS_OPACITY = 0.85;
+    const mouse = { x: -9999, y: -9999 };
 
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      r: number;
-      alpha: number;
-      life: number;
-      maxLife: number;
-      reset: () => void;
-      update: () => void;
-      draw: () => void;
+    // Google Antigravity color palette (warm reds/oranges → magentas → cool blues)
+    const COLORS = [
+      '#E8412A','#E8502A','#E8622A','#E87A2A','#E89A2A',
+      '#D4602A','#C8443A','#BC3A60','#A83A90','#8830C0',
+      '#6830D8','#5038E0','#3A50E8','#3A72E8','#3A96E0','#3AAED0'
+    ];
+
+    type Pill = {
+      bx: number; by: number; bz: number;
+      x: number; y: number; z: number;
+      vx: number; vy: number; vz: number;
+      angle: number; va: number;
+      color: string;
+      w: number; h: number;
     };
 
-    const particles: Particle[] = [];
-    canvas.style.opacity = String(CANVAS_OPACITY);
+    let pills: Pill[] = [];
 
-    const resize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    const FOV = 900;
+
+    const proj3d = (x: number, y: number, z: number) => {
+      const s = FOV / (FOV + z + 400);
+      return { sx: W / 2 + x * s, sy: H / 2 + y * s, s };
     };
 
-    const createParticle = (): Particle => {
-      const p = {
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * PARTICLE_SPEED,
-        vy: (Math.random() - 0.5) * PARTICLE_SPEED,
-        r: Math.random() * (P_SIZE_MAX - P_SIZE_MIN) + P_SIZE_MIN,
-        alpha: Math.random() * 0.5 + 0.1,
-        life: 0,
-        maxLife: Math.random() * 400 + 200,
-        reset() {
-          this.x = Math.random() * width;
-          this.y = Math.random() * height;
-          this.vx = (Math.random() - 0.5) * PARTICLE_SPEED;
-          this.vy = (Math.random() - 0.5) * PARTICLE_SPEED;
-          this.r = Math.random() * (P_SIZE_MAX - P_SIZE_MIN) + P_SIZE_MIN;
-          this.alpha = Math.random() * 0.5 + 0.1;
-          this.life = 0;
-          this.maxLife = Math.random() * 400 + 200;
-        },
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          this.life += 1;
-          const dist = Math.hypot(this.x - mx, this.y - my);
-          if (dist < MOUSE_RADIUS && dist > 0) {
-            const f = ((MOUSE_RADIUS - dist) / MOUSE_RADIUS) * MOUSE_STRENGTH;
-            this.vx += ((this.x - mx) / dist) * f;
-            this.vy += ((this.y - my) / dist) * f;
-          }
-          this.vx *= 0.99;
-          this.vy *= 0.99;
-
-          if (this.life > this.maxLife || this.x < -10 || this.x > width + 10 || this.y < -10 || this.y > height + 10) {
-            this.reset();
-          }
-        },
-        draw() {
-          const t = this.life / this.maxLife;
-          const a = this.alpha * Math.sin(t * Math.PI);
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${PARTICLE_RGB},${a})`;
-          ctx.fill();
-        },
-      };
-      return p;
+    const rot3d = (x: number, y: number, z: number, ry: number, rx: number) => {
+      const x1 = x * Math.cos(ry) - z * Math.sin(ry);
+      const z1 = x * Math.sin(ry) + z * Math.cos(ry);
+      const y1 = y * Math.cos(rx) - z1 * Math.sin(rx);
+      const z2 = y * Math.sin(rx) + z1 * Math.cos(rx);
+      return { x: x1, y: y1, z: z2 };
     };
 
-    const onMove = (e: MouseEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-    };
+    const init = () => {
+      pills = [];
+      // ==========================================
+      // 1. SPHERE RADIUS CONTROL (Overall Circle Size)
+      // Change 0.45 below to make the sphere bigger or smaller (e.g., 0.35 is smaller, 0.55 is larger)
+      // ==========================================
+      const R = Math.min(W, H) * 0.55;
 
-    const drawConnections = () => {
-      for (let i = 0; i < particles.length; i += 1) {
-        for (let j = i + 1; j < particles.length; j += 1) {
-          const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
-          if (d < CONNECTION_DIST) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(${CONNECTION_RGB},${0.12 * (1 - d / CONNECTION_DIST)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
+      // 2. TOTAL PILL COUNT
+      const N = 240;
+
+      for (let i = 0; i < N; i++) {
+        const phi = Math.acos(1 - 2 * (i + 0.5) / N);
+        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+        const sx = Math.sin(phi) * Math.cos(theta);
+        const sy = Math.sin(phi) * Math.sin(theta);
+        const sz = Math.cos(phi);
+        const ci = Math.floor(((sx + 1) / 2) * (COLORS.length - 1));
+        pills.push({
+          bx: sx * R, by: sy * R, bz: sz * R,
+          x: sx * R, y: sy * R, z: sz * R,
+          vx: 0, vy: 0, vz: 0,
+          angle: Math.random() * Math.PI,
+          va: (Math.random() - 0.5) * 0.004,
+          color: COLORS[Math.max(0, Math.min(COLORS.length - 1, ci))],
+          // ==========================================
+          // 3. INDIVIDUAL PILL SIZE CONTROL
+          // w = Pill Length (how long the dash is)
+          // h = Pill Thickness (how fat/thick the pill is)
+          // ==========================================
+          w: (Math.random() * 7 + 6) * dpr,
+          h: (Math.random() * 3.5 + 3.5) * dpr,
+        });
       }
     };
 
-    const animate = () => {
-      ctx.clearRect(0, 0, width, height);
-      drawConnections();
-      particles.forEach((p) => {
-        p.update();
-        p.draw();
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      W = canvas.width = rect.width * dpr;
+      H = canvas.height = rect.height * dpr;
+      init();
+    };
+
+    const update = () => {
+      t += 0.008;
+      // ==========================================
+      // 4. MOUSE REPEL RADIUS CONTROL
+      // Change 140 below to adjust how far away the mouse pushes pills
+      // ==========================================
+      const fr = 320 * dpr;
+      for (const p of pills) {
+        const rv = rot3d(p.x, p.y, p.z, rotY, rotX);
+        const pj = proj3d(rv.x, rv.y, rv.z);
+        const dx = pj.sx - mouse.x;
+        const dy = pj.sy - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < fr && dist > 1) {
+          const f = (1 - dist / fr) * (1 - dist / fr) * 3.5;
+          p.vx += (dx / dist) * f * 2.5;
+          p.vy += (dy / dist) * f * 2.5;
+          p.vz += (1 - dist / fr) * f * 30;
+        }
+        p.vx += (p.bx - p.x) * 0.032;
+        p.vy += (p.by - p.y) * 0.032;
+        p.vz += (p.bz - p.z) * 0.032;
+        p.vx *= 0.82; p.vy *= 0.82; p.vz *= 0.82;
+        p.x += p.vx; p.y += p.vy; p.z += p.vz;
+        p.angle += p.va;
+      }
+      rotY += 0.003;
+      rotX = Math.sin(t * 0.4) * 0.12;
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      const sorted = pills.slice().sort((a, b) => {
+        const ra = rot3d(a.x, a.y, a.z, rotY, rotX);
+        const rb = rot3d(b.x, b.y, b.z, rotY, rotX);
+        return rb.z - ra.z;
       });
-      raf = window.requestAnimationFrame(animate);
+      for (const p of sorted) {
+        const rv = rot3d(p.x, p.y, p.z, rotY, rotX);
+        const pj = proj3d(rv.x, rv.y, rv.z);
+        const depth = (rv.z + 500) / 900;
+        const alpha = 0.25 + depth * 0.75;
+        const rw = p.w * pj.s * (0.6 + depth * 0.5);
+        const rh = p.h * pj.s * (0.6 + depth * 0.5);
+        const r = Math.max(rh / 2, 0.5);
+        ctx.save();
+        ctx.translate(pj.sx, pj.sy);
+        ctx.rotate(p.angle);
+        ctx.globalAlpha = Math.min(1, alpha);
+        ctx.fillStyle = p.color;
+        if (rw > r * 2) {
+          ctx.beginPath();
+          ctx.moveTo(-rw / 2 + r, -r);
+          ctx.lineTo(rw / 2 - r, -r);
+          ctx.arc(rw / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+          ctx.lineTo(-rw / 2 + r, r);
+          ctx.arc(-rw / 2 + r, 0, r, Math.PI / 2, -Math.PI / 2);
+          ctx.closePath();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+
+    const loop = () => {
+      update();
+      draw();
+      raf = window.requestAnimationFrame(loop);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX * dpr;
+      mouse.y = e.clientY * dpr;
+    };
+    const onMouseLeave = () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
     };
 
     resize();
-    for (let i = 0; i < PARTICLE_COUNT; i += 1) {
-      particles.push(createParticle());
-    }
-
     window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", onMove);
-    raf = window.requestAnimationFrame(animate);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseleave", onMouseLeave);
+    raf = window.requestAnimationFrame(loop);
 
     return () => {
       window.cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseleave", onMouseLeave);
     };
   }, []);
 
@@ -1492,8 +1481,6 @@ const Index = () => {
 
   return (
     <div className="v2">
-      <div className="cursor" ref={cursorDotRef} />
-      <div className="cursor-ring" ref={cursorRingRef} />
       <canvas id="particleCanvas" ref={canvasRef} />
       <div className="progress-bar" style={{ width: `${scrollProgress}%` }} />
 

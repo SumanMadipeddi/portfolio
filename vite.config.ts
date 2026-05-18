@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "::",
-      port: 3000,
+      port: 3003,
       proxy: {
         "/api": {
           target: `http://127.0.0.1:${localApiPort}`,

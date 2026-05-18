@@ -112,7 +112,6 @@
   line-height: 1.6;
   overflow-x: hidden;
   min-height: 100vh;
-  cursor: none;
 }
 
 .dark .v2 {
@@ -150,48 +149,6 @@
   text-decoration: none;
 }
 
-.v2 .cursor {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  background: white;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  margin-left: -5px;
-  margin-top: -5px;
-  transition: width 0.25s, height 0.25s, background 0.25s, border-radius 0.25s;
-  mix-blend-mode: difference;
-}
-
-.v2 .cursor-ring {
-  position: fixed;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid rgba(41, 151, 255, 0.7);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
-  margin-left: -18px;
-  margin-top: -18px;
-  transition: width 0.3s, height 0.3s, border-color 0.3s, opacity 0.3s, border-radius 0.3s;
-}
-
-body.cursor-hover .v2 .cursor {
-  width: 18px;
-  height: 18px;
-  margin-left: -9px;
-  margin-top: -9px;
-}
-
-body.cursor-hover .v2 .cursor-ring {
-  width: 54px;
-  height: 54px;
-  margin-left: -27px;
-  margin-top: -27px;
-  opacity: 0.4;
-  border-color: rgba(191, 90, 242, 0.8);
-}
 
 .v2 #particleCanvas {
   position: fixed;
@@ -2037,16 +1994,4 @@ body.cursor-hover .v2 .cursor-ring {
     gap: 20px;
     text-align: center;
   }
-}
-
-@media (pointer: coarse),
-(max-width: 900px) {
-  .v2 {
-    cursor: auto;
-  }
-
-  .v2 .cursor,
-  .v2 .cursor-ring {
-    display: none;
-  }
-}
+}
