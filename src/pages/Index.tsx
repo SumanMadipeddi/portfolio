@@ -91,18 +91,18 @@ const experiences = [
   // },
   {
     period: "10/2025 – Present",
-    title: "AI/ML Software Engineer",
+    title: "Founding AI/ML Engineer",
     company: "Stealth AI Startup",
-    desc: "Architected multi-agent LangGraph pipelines and document intelligence systems serving 100K+ users. Designed and shipped a Python SDK + REST APIs endpoints. Built full observability stack: LangSmith tracing, latency dashboards, and agentic eval harnesses."
+    desc: "Architected multi-agent LangGraph pipelines and document intelligence systems serving 100K+ users. Designed and shipped a Python SDK + REST APIs endpoints. Built full observability stack: LangSmith tracing, guardrails, RAGAS, latency tracking, model evals, and agentic eval harnesses."
   },
   {
     period: "08/2024 - 10/2025",
     title: "Founding AI Engineer",
     company: "Minor Chores",
-    desc: "Fine-tuned LLaMA 3 with LoRA/QLoRA - 10x inference cost reduction via vLLM quantized serving. Shipped conversational RAG Agents, recommendation systems and Mobile dev (IOS/android). Led cross-platform product delivery and increased 40% customer engagement.",
+    desc: "Fine-tuned LLaMA 3.3-70B with LoRA/QLoRA - reduced 78% inference cost via vLLM quantized serving. Shipped conversational RAG Agents, recommendation systems and Mobile dev (IOS/android). Led cross-platform product delivery and increased 40% customer engagement.",
   },
   {
-    period: "May 2024 - Present",
+    period: "May 2024",
     title: "Founder",
     company: "ApplyLoom",
     desc: "Architected and shipped ApplyLoom end-to-end from 0 to 1, scaling to 1,000+ active users. Built a real-time mock interview engine with AI Personas using an intent-based model router; powered live audio/video sessions via LiveKit with sub 300ms latency. Engineered collaborative multiuser job board for real-time tracking.",
@@ -121,7 +121,7 @@ const projects: Project[] = [
   {
     name: "MobileQA Multi Agent",
     desc: "Automated mobile QA with planning agents, ADB tool execution, and vision-grounded validation loops.",
-    stack: ["Agent-S3", "LLM Orchestration", "Python","Android"],
+    stack: ["Agent-S3", "LLM Orchestration", "Python", "Android"],
     image: mobileQaImage,
     githubLink: "https://github.com/SumanMadipeddi/mobile-QA-Agent",
     demoLink: "https://drive.google.com/file/d/1vqaf3gtaYZeliB1yow5v4HuSNcNp-OAA/view?usp=sharing",
@@ -183,7 +183,7 @@ const stats = [
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
   { value: 9, suffix: "+", label: "AI systems shipped" },
   { value: 3, suffix: "", label: "Founding/early roles" },
-  { value: 1,   suffix: "M+", label: "Production AI queries" },
+  { value: 1, suffix: "M+", label: "Production AI queries" },
   // { value: 3, suffix: "K+", label: "Monthly AI queries" },
 ];
 
@@ -413,7 +413,7 @@ const Index = () => {
 
     const click = base.cloneNode() as HTMLAudioElement;
     click.volume = base.volume;
-    void click.play().catch(() => {});
+    void click.play().catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -604,9 +604,9 @@ const Index = () => {
 
     // Google Antigravity color palette (warm reds/oranges → magentas → cool blues)
     const COLORS = [
-      '#E8412A','#E8502A','#E8622A','#E87A2A','#E89A2A',
-      '#D4602A','#C8443A','#BC3A60','#A83A90','#8830C0',
-      '#6830D8','#5038E0','#3A50E8','#3A72E8','#3A96E0','#3AAED0'
+      '#E8412A', '#E8502A', '#E8622A', '#E87A2A', '#E89A2A',
+      '#D4602A', '#C8443A', '#BC3A60', '#A83A90', '#8830C0',
+      '#6830D8', '#5038E0', '#3A50E8', '#3A72E8', '#3A96E0', '#3AAED0'
     ];
 
     type Pill = {
@@ -641,7 +641,7 @@ const Index = () => {
       // 1. SPHERE RADIUS CONTROL (Overall Circle Size)
       // Change 0.45 below to make the sphere bigger or smaller (e.g., 0.35 is smaller, 0.55 is larger)
       // ==========================================
-      const R = Math.min(W, H) * 0.55;
+      const R = Math.min(W, H) * 0.37;
 
       // 2. TOTAL PILL COUNT
       const N = 240;
@@ -684,7 +684,7 @@ const Index = () => {
       // 4. MOUSE REPEL RADIUS CONTROL
       // Change 140 below to adjust how far away the mouse pushes pills
       // ==========================================
-      const fr = 320 * dpr;
+      const fr = 140 * dpr;
       for (const p of pills) {
         const rv = rot3d(p.x, p.y, p.z, rotY, rotX);
         const pj = proj3d(rv.x, rv.y, rv.z);
@@ -803,7 +803,7 @@ const Index = () => {
       }
       analyserRef.current = null;
       if (audioContextRef.current) {
-        void audioContextRef.current.close().catch(() => {});
+        void audioContextRef.current.close().catch(() => { });
         audioContextRef.current = null;
       }
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -1079,7 +1079,7 @@ const Index = () => {
     }
     analyserRef.current = null;
     if (audioContextRef.current) {
-      void audioContextRef.current.close().catch(() => {});
+      void audioContextRef.current.close().catch(() => { });
       audioContextRef.current = null;
     }
     mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -1234,8 +1234,8 @@ const Index = () => {
         error instanceof DOMException && error.name === "AbortError"
           ? "Voice request timed out. Please try again."
           : error instanceof Error && error.message
-          ? error.message
-          : "Voice request failed. Please try again or type your question.";
+            ? error.message
+            : "Voice request failed. Please try again or type your question.";
       if (error instanceof DOMException && error.name === "AbortError" && voiceInterruptedRef.current) {
         return;
       }
@@ -1531,7 +1531,7 @@ const Index = () => {
               learn, and scale.
             </div>
             <p className="hero-desc">
-            Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
+              Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
             </p>
             <div className="hero-chips">
               <a href="https://applyloom.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip applyloom">
