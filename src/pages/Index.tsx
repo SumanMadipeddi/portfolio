@@ -1535,6 +1535,17 @@ const Index = () => {
           <li><a href="#contact">Contact</a></li>
         </ul>
         <div className="nav-actions">
+          <div className="nav-social-pill">
+            <a href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="LinkedIn">
+              <Linkedin size={16} />
+            </a>
+            <a href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="GitHub">
+              <Github size={16} />
+            </a>
+            <a href="https://medium.com/@madipeddisuman" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="Medium">
+              <MediumIcon size={16} />
+            </a>
+          </div>
           <button className="theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
