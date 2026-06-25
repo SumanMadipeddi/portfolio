@@ -2031,3 +2031,20 @@
     text-align: center;
   }
 }
+
+@media (max-width: 600px) {
+  .v2 .nav-social-pill {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .v2 .nav-cta {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .v2 .nav-logo {
+    gap: 6px;
+  }
+}
+
