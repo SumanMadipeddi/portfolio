@@ -78,6 +78,7 @@ Key facts:
 - Email: smadiped@asu.edu
 - LinkedIn: linkedin.com/in/suman-madipeddi
 - GitHub: github.com/SumanMadipeddi
+- Medium: medium.com/@madipeddisuman
 
 Target companies: AI-first startups, Series A/B building agentic products, companies that need someone who can go 0→1 on AI infrastructure.
 

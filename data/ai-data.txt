@@ -7,6 +7,7 @@ Identity:
 - Email: smadiped@asu.edu
 - LinkedIn: https://linkedin.com/in/suman-madipeddi
 - GitHub: https://github.com/SumanMadipeddi
+- Medium: https://medium.com/@madipeddisuman
 
 Core focus:
 - LLM pipelines, RAG, autonomous agents, production AI systems
