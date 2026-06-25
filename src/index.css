@@ -244,11 +244,11 @@
 .v2 .nav-social-pill {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   background: rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border);
   border-radius: 980px;
-  padding: 0 4px;
+  padding: 0 8px;
   height: 34px;
   box-sizing: border-box;
 }
@@ -2030,4 +2030,4 @@
     gap: 20px;
     text-align: center;
   }
-}
+}
