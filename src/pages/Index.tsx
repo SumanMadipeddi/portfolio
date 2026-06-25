@@ -32,6 +32,13 @@ const XIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
+const MediumIcon = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+    <path d="M9.025 8c0 2.485-2.02 4.5-4.513 4.5A4.506 4.506 0 0 1 0 8c0-2.486 2.02-4.5 4.512-4.5A4.506 4.506 0 0 1 9.025 8m4.95 0c0 2.34-1.01 4.236-2.256 4.236S9.463 10.339 9.463 8c0-2.34 1.01-4.236 2.256-4.236S13.975 5.661 13.975 8M16 8c0 2.096-.355 3.795-.794 3.795-.438 0-.793-1.7-.793-3.795 0-2.096.355-3.795.794-3.795.438 0 .793 1.699.793 3.795" />
+  </svg>
+);
+
+
 const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant.
 
 RESPONSE RULES — follow these exactly, every single time:
@@ -491,11 +498,29 @@ const Index = () => {
   useEffect(() => {
     if (!isBrowser) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (!isBrowser) return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem("theme");
+      if (!savedTheme) {
+        setTheme(e.matches ? "dark" : "light");
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener("change", handleSystemThemeChange);
+  }, []);
+
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => {
+      const newTheme = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", newTheme);
+      return newTheme;
+    });
   };
 
   useEffect(() => {
@@ -1829,6 +1854,7 @@ const Index = () => {
               <a className="quick-link" href="https://maps.google.com/?q=San+Jose,CA" target="_blank" rel="noreferrer"><span className="quick-link-left"><MapPin size={15} />San Jose, CA</span><span>↗</span></a>
               <a className="quick-link" href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Linkedin size={15} />LinkedIn</span><span>↗</span></a>
               <a className="quick-link" href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Github size={15} />GitHub</span><span>↗</span></a>
+              <a className="quick-link" href="https://medium.com/@madipeddisuman" target="_blank" rel="noreferrer"><span className="quick-link-left"><MediumIcon size={15} />Medium</span><span>↗</span></a>
               <a className="quick-link" href="https://x.com/sumanmadipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><XIcon size={14} />X</span><span>↗</span></a>
             </div>
           </div>
