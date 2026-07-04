@@ -797,7 +797,7 @@
   background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
   border: none;
   border-radius: 24px;
-  padding: 32px;
+  padding: 24px;
   transition: border-color 0.3s, background 0.3s, transform 0.3s;
   position: relative;
   overflow: hidden;
@@ -869,7 +869,7 @@
   color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .v2 .card-title {
@@ -877,7 +877,7 @@
   font-weight: 600;
   letter-spacing: -0.5px;
   color: var(--text);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   line-height: 1.2;
 }
 
@@ -944,6 +944,39 @@
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-glow);
+}
+
+/* Tech Stack Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.v2 .marquee-container {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  width: 100%;
+  position: relative;
+  padding: 8px 0;
+  /* Use mask-image for fading edges (keeps glassmorphism transparency) */
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.v2 .animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+/* Pause animation on hover */
+.v2 .marquee-container:hover .animate-marquee {
+  animation-play-state: paused;
 }
 
 .v2 .exp-list {
@@ -1827,12 +1860,12 @@
 }
 
 .v2 .big-num {
-  font-size: 56px;
+  font-size: 48px;
   font-weight: 600;
   letter-spacing: -3px;
   color: var(--text);
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .v2 .big-num .unit {
