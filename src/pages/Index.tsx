@@ -7,7 +7,7 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
-import { downloadResume } from "@/lib/resume";
+import { downloadResume, openResume } from "@/lib/resume";
 
 type Theme = "light" | "dark";
 type ChatRole = "user" | "assistant";
@@ -341,13 +341,8 @@ const ICONS: { slug: string; name: string }[] = [
 const renderTechIcon = (icon: { slug: string; name: string }) => {
   if (icon.slug === "pinecone") {
     return (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-80 text-zinc-700 dark:text-zinc-200 shrink-0">
-        <polygon points="12,3 9,7 15,7" />
-        <polygon points="8.5,8 5,12 10.5,12" />
-        <polygon points="15.5,8 19,12 13.5,12" />
-        <polygon points="8,13 4,17 10,17" />
-        <polygon points="16,13 20,17 14,17" />
-        <polygon points="12,18 10,21 14,21" />
+      <svg viewBox="0 0 760 810" fill="currentColor" className="h-5 w-5 opacity-80 text-zinc-700 dark:text-zinc-200 shrink-0">
+        <path fillRule="evenodd" clipRule="evenodd" d="M471.826 24.0936C464.116 14.9134 450.95 12.5551 440.534 18.4886L430.803 24.0322L430.679 24.0093L430.659 24.1139L325.85 83.8204L350.42 126.977L418.874 87.9814L402.035 179.236L450.859 188.251L467.791 96.4974L518.212 156.532L556.227 124.585L479.472 33.1965L479.503 33.0244L479.295 32.9859L471.826 24.0936ZM324.08 794.824C349.328 794.824 369.795 774.868 369.795 750.25C369.795 725.633 349.328 705.676 324.08 705.676C298.833 705.676 278.366 725.633 278.366 750.25C278.366 774.868 298.833 794.824 324.08 794.824ZM385.561 550.209L369.091 642.069L320.221 633.302L336.586 542.025L268.375 581.205L243.651 538.136L348.033 478.18L348.056 478.049L348.212 478.077L358.011 472.449C368.389 466.488 381.541 468.781 389.29 477.903L396.851 486.803L396.926 486.816L396.915 486.879L474.358 578.039L436.524 610.2L385.561 550.209ZM425.11 330.935L408.652 422.737L359.782 413.971L376.085 323.035L308.091 361.894L283.461 318.771L387.51 259.306L387.617 258.708L388.331 258.836L397.847 253.398C408.224 247.468 421.351 249.774 429.086 258.887L436.356 267.451L436.487 267.475L436.467 267.583L513.866 358.765L476.019 390.91L425.11 330.935ZM104.667 693.368L104.394 693.554L104.171 693.225L94.0456 690.317C83.3324 687.24 76.2404 677.074 77.0484 665.954L86.0484 542.094L133.05 545.511L127.574 620.869L200.8 571.19L227.251 610.203L155.455 658.912L228.701 679.952L215.694 725.26L104.667 693.368ZM590.296 744.836L590.301 744.844L590.291 744.852L586.988 755.721C583.802 766.205 573.813 773.109 562.883 772.383L552.56 771.698L551.9 772.167L551.517 771.629L436.444 763.986L439.566 716.95L516.258 722.044L466.25 651.718L504.651 624.395L555.789 696.309L577.921 623.484L623.009 637.195L590.296 744.836ZM725.177 489.19L725.322 489.215L725.29 489.393L730.774 499.22C736.394 509.291 734.104 521.931 725.309 529.389L717.018 536.42L716.96 536.747L716.688 536.699L627.257 612.532L596.06 575.717L654.901 525.823L566.796 510.314L575.158 462.783L663.903 478.404L626.686 411.712L668.814 388.189L725.177 489.19ZM634.493 282.027L554.909 324.863L532.047 282.364L610.263 240.264L538.372 211.176L556.464 166.435L665.478 210.544L665.964 210.283L666.279 210.868L676.146 214.861C686.737 219.146 692.871 230.276 690.839 241.522L688.81 252.753L688.826 252.782L688.802 252.795L668.319 366.171L620.841 357.589L634.493 282.027ZM100.963 381.58L189.25 396.607L181.156 444.185L92.111 429.029L130.083 495.958L88.1229 519.778L30.7057 418.577L30.665 418.57L30.6735 418.52L25.1727 408.825C19.4828 398.796 21.6815 386.142 30.4207 378.621L38.6678 371.524L38.7583 370.992L39.1988 371.067L127.517 295.067L158.982 331.653L100.963 381.58ZM234.324 175.801L293.072 241.268L257.168 273.506L197.06 206.523L183.065 282.822L135.61 274.113L156.332 161.138L156.228 161.021L156.379 160.886L158.474 149.463C160.507 138.378 169.941 130.177 181.199 129.708L191.582 129.276L192.131 128.783L192.539 129.236L310.473 124.33L312.478 172.55L234.324 175.801Z" />
       </svg>
     );
   }
@@ -622,6 +617,82 @@ const GithubContributions = ({ username = "SumanMadipeddi" }: { username?: strin
   );
 };
 
+interface KeyCapProps {
+  href?: string;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
+  icon?: any;
+  label: string;
+  wide?: boolean;
+  external?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function KeyCap({
+  href,
+  onClick,
+  icon: Icon,
+  label,
+  wide = false,
+  external = false,
+  className = "",
+  style,
+  ...props
+}: KeyCapProps) {
+  const commonClassName = `key-cap key-cap-hover group flex h-12 items-center justify-center gap-2 transition-all ${
+    wide ? "px-4" : "w-12"
+  } ${className}`;
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        onClick={onClick}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noreferrer" : undefined}
+        aria-label={label}
+        className={commonClassName}
+        style={style}
+        {...(props as any)}
+      >
+        {Icon && (
+          <Icon 
+            className="h-5 w-5 transition-transform group-hover:scale-90 shrink-0" 
+            strokeWidth={1.5} 
+          />
+        )}
+        {wide && (
+          <span className="font-mono text-[12px] uppercase tracking-widest font-semibold italic">
+            {label}
+          </span>
+        )}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className={commonClassName}
+      style={style}
+      {...(props as any)}
+    >
+      {Icon && (
+        <Icon 
+          className="h-5 w-5 transition-transform group-hover:scale-90 shrink-0" 
+          strokeWidth={1.5} 
+        />
+      )}
+      {wide && (
+        <span className="font-mono text-[12px] uppercase tracking-widest font-semibold italic">
+          {label}
+        </span>
+      )}
+    </button>
+  );
+}
+
 const Index = () => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
@@ -644,6 +715,7 @@ const Index = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceToast, setVoiceToast] = useState("");
   const [voiceLiveText, setVoiceLiveText] = useState("");
@@ -660,6 +732,7 @@ const Index = () => {
   const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
 
+  const lastScrollY = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
@@ -835,10 +908,25 @@ const Index = () => {
     if (!isBrowser) return;
 
     const onScroll = () => {
+      const currentScrollY = window.scrollY;
       const max = document.body.scrollHeight - window.innerHeight;
-      const p = max > 0 ? (window.scrollY / max) * 100 : 0;
+      const p = max > 0 ? (currentScrollY / max) * 100 : 0;
       setScrollProgress(Math.min(100, Math.max(0, p)));
-      setIsScrolled(window.scrollY > 60);
+      setIsScrolled(currentScrollY > 60);
+
+      // Detect scroll direction (shrink on scroll DOWN, expand on scroll UP)
+      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+        // Scrolling DOWN
+        setIsCollapsed(true);
+      } else if (currentScrollY < lastScrollY.current && currentScrollY > 60) {
+        // Scrolling UP
+        setIsCollapsed(false);
+      } else if (currentScrollY <= 60) {
+        // Reset to normal/expanded at top of page
+        setIsCollapsed(false);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
     onScroll();
@@ -1815,11 +1903,12 @@ const Index = () => {
   return (
     <div className="v2">
       <canvas id="particleCanvas" ref={canvasRef} />
-      <div className="progress-bar" style={{ width: `${scrollProgress}%` }} />
+      <nav id="navbar" className={`${isScrolled ? "scrolled" : ""} ${isCollapsed ? "collapsed" : ""}`} style={{ background: isScrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)" }}>
+        {/* Inset floating page scroll progress indicator */}
+        <div className="nav-scroll-progress" style={{ transform: `scaleX(${scrollProgress / 100})` }} />
 
-      <nav id="navbar" style={{ background: isScrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)" }}>
         <div className="nav-logo">
-          <div className="hero-photo-wrap nav-photo-wrap">
+          <a href="#hero" className="hero-photo-wrap nav-photo-wrap cursor-pointer" aria-label="Go to top">
             {avatarImageError ? (
               <div className="hero-photo-fallback nav-photo-fallback">SM</div>
             ) : (
@@ -1830,10 +1919,7 @@ const Index = () => {
                 onError={() => setAvatarImageError(true)}
               />
             )}
-          </div>
-          <span className="nav-logo-text">
-            Suman<span className="nav-logo-dot"></span>
-          </span>
+          </a>
         </div>
         <ul className="nav-links">
           <li><a href="#about">About</a></li>
@@ -1877,19 +1963,29 @@ const Index = () => {
             <p className="hero-desc">
               Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
             </p>
-            <div className="hero-chips">
-              <a href="https://applyloom.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip applyloom">
-                <ExternalLink size={12} />
-                ApplyLoom
-              </a>
-              <a href="https://helios.atimuss.com/" target="_blank" rel="noopener noreferrer" className="link-chip siri">
-                <ExternalLink size={12} />
-                Atimuss
-              </a>
-              <button className="link-chip resume-chip" onClick={downloadResume}>
-                <Download size={14} />
-                Download Resume
-              </button>
+            <div className="hero-chips flex flex-wrap gap-4" style={{ marginTop: "24px" }}>
+              <KeyCap
+                href="https://applyloom.atimuss.com/"
+                external
+                icon={ExternalLink}
+                label="ApplyLoom"
+                wide
+                className="applyloom"
+              />
+              <KeyCap
+                href="https://helios.atimuss.com/"
+                external
+                icon={ExternalLink}
+                label="Atimuss"
+                wide
+                className="siri"
+              />
+              <KeyCap
+                onClick={openResume}
+                label="View Resume"
+                wide
+                className="resume-chip"
+              />
             </div>
 
 
@@ -2202,7 +2298,10 @@ const Index = () => {
                 <div className="chat-status">Online</div>
               </div>
             </div>
-            <button className="chat-close" onClick={() => setIsChatOpen(false)}>
+            <button className="chat-close" onClick={() => {
+              setIsChatOpen(false);
+              stopVoiceSession();
+            }}>
               <X size={18} />
             </button>
           </div>
@@ -2276,14 +2375,7 @@ const Index = () => {
         </button>
       </div>
 
-      <button
-        className={`voice-btn ${isListening ? "listening" : ""}`}
-        id="voiceBtn"
-        onClick={toggleVoice}
-        title={isListening ? "Tap to stop voice" : "Tap to start voice"}
-      >
-        {isListening ? <Square size={20} /> : <Mic size={22} />}
-      </button>
+
       <div className={`voice-toast ${voiceToast ? "show" : ""}`} id="voiceToast">{voiceToast}</div>
     </div>
   );

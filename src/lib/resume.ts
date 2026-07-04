@@ -97,3 +97,19 @@ export const downloadResume = async () => {
   link.click();
   document.body.removeChild(link);
 };
+
+export const openResume = async () => {
+  const resumeInfo = await getResumeInfo();
+  let url = resumeInfo.downloadUrl;
+  
+  // Convert Google Drive download URL to view URL
+  if (url.includes("drive.google.com/uc?export=download")) {
+    const urlObj = new URL(url);
+    const fileId = urlObj.searchParams.get("id");
+    if (fileId) {
+      url = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+    }
+  }
+  
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
