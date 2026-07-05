@@ -170,11 +170,11 @@
   width: max-content;
   max-width: 95%;
   margin: 0 auto;
-  padding: 6px 20px;
+  padding: 8px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 26px;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--border);
@@ -241,7 +241,7 @@
   gap: 10px;
   max-width: 450px;
   opacity: 1;
-  overflow: hidden;
+  overflow: visible;
   transition: max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, margin-left 0.5s ease;
   white-space: nowrap;
 }
@@ -249,6 +249,7 @@
 .v2 nav.collapsed .nav-actions {
   max-width: 0;
   opacity: 0;
+  overflow: hidden;
   pointer-events: none;
   margin-left: -28px;
 }
