@@ -163,14 +163,14 @@
 
 .v2 nav {
   position: fixed;
-  top: 16px;
+  top: 8px;
   left: 0;
   right: 0;
   z-index: 100;
   width: max-content;
   max-width: 95%;
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: 6px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +188,7 @@
 }
 
 .v2 nav.scrolled {
-  top: 10px;
+  top: 6px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
 }
 
@@ -254,8 +254,8 @@
 }
 
 .v2 .theme-btn {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--border);
   border-radius: 50%;
   background: transparent;
@@ -280,7 +280,7 @@
   border: 1px solid var(--border);
   border-radius: 980px;
   padding: 0 8px;
-  height: 34px;
+  height: 28px;
   box-sizing: border-box;
 }
 
@@ -289,8 +289,8 @@
 }
 
 .v2 .nav-social-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -309,7 +309,7 @@
 }
 
 .v2 .nav-cta {
-  padding: 8px 18px;
+  padding: 5px 14px;
   background: var(--accent);
   color: white;
   border: none;
@@ -363,8 +363,8 @@
 }
 
 .v2 .nav-photo-wrap {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   background: linear-gradient(135deg, var(--accent), var(--purple));
   flex-shrink: 0;
 }
