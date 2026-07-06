@@ -1318,22 +1318,22 @@ const Index = () => {
               learn, and scale.
             </div>
             <p className="hero-desc">
-              Founding AI Engineer specializing in agentic systems, LLM pipelines, and production ML-I turn ambitious AI ideas into shipped, scalable products.
+              Founding AI Engineer specializing in agentic systems, LLM Evals, and production AI/ML. I turn research into scalable products.
             </p>
             <div className="hero-chips flex flex-wrap gap-4" style={{ marginTop: "24px" }}>
               <KeyCap
-                href="https://applyloom.atimuss.com/"
+                href="https://atimuss.com/"
                 external
                 icon={ExternalLink}
-                label="ApplyLoom"
+                label="Atimuss"
                 wide
-                className="applyloom"
+                className="atimuss"
               />
               <KeyCap
                 href="https://helios.atimuss.com/"
                 external
                 icon={ExternalLink}
-                label="Atimuss"
+                label="Helios"
                 wide
                 className="siri"
               />
@@ -1497,7 +1497,16 @@ const Index = () => {
                 <div className="exp-period">{exp.period}</div>
                 <div>
                   <div className="exp-title">{exp.title}</div>
-                  <div className="exp-company">{exp.company}</div>
+                  <div className="exp-company">
+                    {exp.link ? (
+                      <a href={exp.link} target="_blank" rel="noopener noreferrer">
+                        {exp.company}
+                        <ExternalLink size={12} style={{ display: "inline-block", marginLeft: "4px", verticalAlign: "middle" }} />
+                      </a>
+                    ) : (
+                      exp.company
+                    )}
+                  </div>
                   <div className="exp-desc">{exp.desc}</div>
                 </div>
               </div>

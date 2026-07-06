@@ -36,10 +36,10 @@ Key facts:
 - Founding/first AI hire 3x — owns architecture, infra, and roadmap from day one
 - Shipped Python SDK + REST APIs to 100K+ users handling 1M+ queries/month  
 - Built Atimuss Flow: local-first voice agent with sub-500ms latency and 159 WPM capture
-- Built ApplyLoom: end-to-end platform with 1,000+ active users and LiveKit mock interview engine
+- Built Atimuss (Helios): AI personal assistant with EQ & IQ, smart meeting detection, and calendar sync
 - Shipped multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
 - Full production stack: LangSmith observability, agentic evals, vLLM inference, Pinecone/Weaviate
-- Projects: Atimuss Flow, ApplyLoom, GraphRAG multi-agent, MobileQA agent, RAG Voice AI, fine-tuning pipeline.
+- Projects: Atimuss Flow, Atimuss (Helios), GraphRAG multi-agent, MobileQA agent, RAG Voice AI, fine-tuning pipeline.
 - Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-first startups.
 - Location: San Jose CA, open to remote and relocation
 - Email: smadiped@asu.edu
@@ -68,13 +68,16 @@ export const experiences = [
     period: "08/2024 - 10/2025",
     title: "Founding AI Engineer",
     company: "Minor Chores",
+    link: "https://minorchores.com/",
     desc: "Fine-tuned LLaMA 3.3-70B with LoRA/QLoRA - reduced 78% inference cost via vLLM quantized serving. Shipped conversational RAG Agents, recommendation systems and Mobile dev (IOS/android). Led cross-platform product delivery and increased 40% customer engagement.",
   },
   {
     period: "May 2024",
     title: "Founder",
-    company: "ApplyLoom",
-    desc: "Architected and shipped ApplyLoom end-to-end from 0 to 1, scaling to 1,000+ active users. Built a real-time mock interview engine with AI Personas using an intent-based model router; powered live audio/video sessions via LiveKit with sub 300ms latency. Engineered collaborative multiuser job board for real-time tracking.",
+    company: "Atimuss",
+    link: "https://atimuss.com/",
+    desc: `Architected an on-device intelligence orchestration system with local wake-word detection, ASR/TTS routing, and context-aware task execution, achieving sub-500ms speech to speech latency through optimized WebRTC, Whisper, and streaming audio pipelines.
+Developed the voice interaction layer around raw Intelligence and Emotional Intelligence, IQ for context, executing tasks, and reasoning across apps; EQ for natural, low-friction interaction that feels personal, proactive and context-aware.`,
   },
 ];
 
@@ -146,7 +149,7 @@ export const techStack = [
 ];
 
 export const stats = [
-  { value: 2, suffix: "+", label: "Years in AI/ML" },
+  { value: 3, suffix: "+", label: "Years in AI/ML" },
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
   { value: 9, suffix: "+", label: "AI systems shipped" },
   { value: 3, suffix: "", label: "Founding/early roles" },
