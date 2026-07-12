@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { 
   Download, 
@@ -49,6 +50,57 @@ import { XIcon, MediumIcon } from "@/components/atoms/Icons";
 import { KeyCap } from "@/components/atoms/KeyCap";
 import { TechStack } from "@/components/organisms/TechStack";
 import { GithubContributions } from "@/components/organisms/GithubContributions";
+
+function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+  for (let i = 0; i < input.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+}
+
+function writeString(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function bufferToWav(buffer: AudioBuffer): ArrayBuffer {
+  const numOfChan = buffer.numberOfChannels;
+  const sampleRate = 16000;
+  const format = 1;
+  const bitDepth = 16;
+  const sourceSampleRate = buffer.sampleRate;
+  const ratio = sourceSampleRate / sampleRate;
+  const newLength = Math.round(buffer.length / ratio);
+  const leftData = buffer.getChannelData(0);
+  const rightData = numOfChan > 1 ? buffer.getChannelData(1) : null;
+  const samples = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const srcIndex = Math.round(i * ratio);
+    if (rightData) {
+      samples[i] = (leftData[srcIndex] + rightData[srcIndex]) / 2;
+    } else {
+      samples[i] = leftData[srcIndex];
+    }
+  }
+  const result = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(result);
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, "data");
+  view.setUint32(40, samples.length * 2, true);
+  floatTo16BitPCM(view, 44, samples);
+  return result;
+}
 
 const Index = () => {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -136,29 +188,41 @@ const Index = () => {
     [chatMessages],
   );
 
-  const keySoundRef = useRef<HTMLAudioElement | null>(null);
+  const keySoundPoolRef = useRef<HTMLAudioElement[]>([]);
+  const poolIndexRef = useRef(0);
   const lastTypeSoundAtRef = useRef(0);
   const terminalVisibleRef = useRef(true);
 
   useEffect(() => {
-    const a = new Audio("/sounds/key-clic.mp3");
-    a.volume = 0.1; // 0.0 - 1.0
-    a.preload = "auto";
-    keySoundRef.current = a;
+    const pool: HTMLAudioElement[] = [];
+    for (let i = 0; i < 5; i++) {
+      const a = new Audio("/sounds/key-clic.mp3");
+      a.volume = 0.1;
+      a.preload = "auto";
+      pool.push(a);
+    }
+    keySoundPoolRef.current = pool;
   }, []);
 
   const playTypeSound = useCallback(() => {
     if (!terminalVisibleRef.current) return;
-    const base = keySoundRef.current;
-    if (!base) return;
+    const pool = keySoundPoolRef.current;
+    if (pool.length === 0) return;
 
     const now = performance.now();
     if (now - lastTypeSoundAtRef.current < 22) return; // throttle
     lastTypeSoundAtRef.current = now;
 
-    const click = base.cloneNode() as HTMLAudioElement;
-    click.volume = base.volume;
-    void click.play().catch(() => { });
+    const click = pool[poolIndexRef.current];
+    if (click) {
+      poolIndexRef.current = (poolIndexRef.current + 1) % pool.length;
+      try {
+        click.currentTime = 0;
+        void click.play().catch(() => { });
+      } catch {
+        // noop
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -647,6 +711,13 @@ const Index = () => {
   }, [isChatOpen]);
 
   const interruptAiOutput = () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // noop
+      }
+    }
     if (aiAudioRef.current) {
       try {
         aiAudioRef.current.pause();
@@ -957,8 +1028,8 @@ const Index = () => {
         try {
           await new Promise<void>((resolve, reject) => {
             aiAudio.onended = () => resolve();
-            aiAudio.onerror = () => reject(new Error("Gemini audio playback failed."));
-            void aiAudio.play().catch(() => reject(new Error("Gemini audio playback failed.")));
+            aiAudio.onerror = () => reject(new Error("AI audio playback failed."));
+            void aiAudio.play().catch(() => reject(new Error("AI audio playback failed.")));
           });
           played = true;
         } catch {
@@ -968,7 +1039,7 @@ const Index = () => {
         if (!played) {
           const ctx = audioContextRef.current;
           if (!ctx) {
-            throw new Error("Gemini audio playback failed.");
+            throw new Error("AI audio playback failed.");
           }
           try {
             if (ctx.state === "suspended") {
@@ -994,17 +1065,49 @@ const Index = () => {
               source.start(0);
             });
           } catch {
-            throw new Error("Gemini audio playback failed.");
+            throw new Error("AI audio playback failed.");
           }
         }
       } else {
-        setVoiceToast(ttsError ? `TTS failed: ${ttsError}` : "No Gemini audio returned for this model");
-        window.setTimeout(() => setVoiceToast(""), 1800);
-        if (ttsError) {
-          setChatMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: `TTS failed: ${ttsError}` },
-          ]);
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          const cleanText = reply.replace(/[*#_`~]/g, "").trim();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = "en-US";
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(
+            (v) =>
+              v.lang.startsWith("en") &&
+              (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Microsoft"))
+          ) || voices.find((v) => v.lang.startsWith("en"));
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          }
+          await new Promise<void>((resolve) => {
+            utterance.onstart = () => {
+              isAiSpeakingRef.current = true;
+              setIsAiSpeaking(true);
+            };
+            utterance.onend = () => {
+              isAiSpeakingRef.current = false;
+              setIsAiSpeaking(false);
+              resolve();
+            };
+            utterance.onerror = () => {
+              isAiSpeakingRef.current = false;
+              setIsAiSpeaking(false);
+              resolve();
+            };
+            window.speechSynthesis.speak(utterance);
+          });
+        } else {
+          setVoiceToast(ttsError ? `TTS failed: ${ttsError}` : "No AI audio returned for this model");
+          window.setTimeout(() => setVoiceToast(""), 1800);
+          if (ttsError) {
+            setChatMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: `TTS failed: ${ttsError}` },
+            ]);
+          }
         }
       }
     } catch (error) {
@@ -1119,7 +1222,26 @@ const Index = () => {
           if (!voiceSessionActiveRef.current) return;
           const transcriptText = voiceLiveTextRef.current.trim();
           setVoiceLiveText("");
-          await sendVoiceBlob(audioBlob, blobType, transcriptText);
+          
+          let processedBlob = audioBlob;
+          let processedMime = blobType;
+          
+          if (!transcriptText && audioBlob.size > 0) {
+            try {
+              const arrayBuffer = await audioBlob.arrayBuffer();
+              const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+              const audioCtx = new Ctx();
+              const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+              const wavBuffer = bufferToWav(decodedBuffer);
+              processedBlob = new Blob([wavBuffer], { type: "audio/wav" });
+              processedMime = "audio/wav";
+              await audioCtx.close();
+            } catch (err) {
+              console.error("Client side WAV conversion failed, falling back to raw blob:", err);
+            }
+          }
+          
+          await sendVoiceBlob(processedBlob, processedMime, transcriptText);
         };
 
         recorder.start(200);

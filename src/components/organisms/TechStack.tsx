@@ -11,7 +11,7 @@ export const ICONS: { slug: string; name: string }[] = [
   { slug: "nextdotjs", name: "Next.js" },
   { slug: "nodedotjs", name: "Node.js" },
   { slug: "claude", name: "Claude API" },
-  { slug: "googlegemini", name: "Gemini API" },
+  { slug: "nvidia", name: "NVIDIA NIM / API" },
   { slug: "openai", name: "OpenAI" },
   { slug: "pinecone", name: "Pinecone" },
   { slug: "docker", name: "Docker" },

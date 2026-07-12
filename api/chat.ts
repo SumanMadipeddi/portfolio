@@ -23,8 +23,9 @@ const DEFAULT_SYSTEM_PROMPT =
 const OUTPUT_STYLE_PROMPT =
   "Formatting rules: keep answers complete (never cut mid-sentence). When user asks for N points/strengths/steps, return exactly N numbered lines (1., 2., 3...) with one point per line. Avoid markdown bold unless explicitly requested.";
 
-const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 12000);
+const NVIDIA_API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
+const DEFAULT_NVIDIA_LLM_MODEL = process.env.NVIDIA_LLM_MODEL || "meta/llama-3.1-70b-instruct";
+const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
 const DATA_FILE = path.join(process.cwd(), "data", "ai-data.txt");
 
 const setCors = (res: VercelResponse) => {
@@ -51,7 +52,7 @@ const loadDataContext = () => {
   }
 };
 
-const callGemini = async (params: {
+const callNvidiaChat = async (params: {
   apiKey: string;
   model: string;
   systemPrompt: string;
@@ -62,34 +63,34 @@ const callGemini = async (params: {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
 
-  const contents = [...history, { role: "user" as const, content: message }].map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history,
+    { role: "user", content: message },
+  ];
 
   let response: Response;
   try {
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+      `${NVIDIA_API_BASE}/chat/completions`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
         signal: controller.signal,
         body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          contents,
-          generationConfig: {
-            maxOutputTokens: 700,
-            temperature: 0.25,
-          },
+          model,
+          messages,
+          max_tokens: 700,
+          temperature: 0.25,
         }),
       },
     );
   } catch (error: any) {
     if (error?.name === "AbortError") {
-      throw new Error(`Gemini timed out after ${PROVIDER_TIMEOUT_MS}ms`);
+      throw new Error(`NVIDIA LLM timed out after ${PROVIDER_TIMEOUT_MS}ms`);
     }
     throw error;
   } finally {
@@ -98,14 +99,14 @@ const callGemini = async (params: {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Gemini error ${response.status}: ${body.slice(0, 240)}`);
+    throw new Error(`NVIDIA LLM error ${response.status}: ${body.slice(0, 240)}`);
   }
 
   const data = await response.json();
-  const reply = data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || "").join("\n").trim();
-  if (!reply) throw new Error("Gemini returned an empty response.");
+  const reply = data?.choices?.[0]?.message?.content?.trim();
+  if (!reply) throw new Error("NVIDIA LLM returned an empty response.");
 
-  return { reply, provider: "gemini", model };
+  return { reply, provider: "nvidia", model };
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -135,16 +136,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    if (!geminiKey) {
+    const nvidiaKey = process.env.NVIDIA_API_KEY || "";
+    if (!nvidiaKey) {
       res.status(500).json({
-        error: "No Gemini API key configured. Add GEMINI_API_KEY in environment variables.",
+        error: "No NVIDIA API key configured. Add NVIDIA_API_KEY in environment variables.",
       });
       return;
     }
-    const result = await callGemini({
-      apiKey: geminiKey,
-      model: DEFAULT_GEMINI_MODEL,
+    const result = await callNvidiaChat({
+      apiKey: nvidiaKey,
+      model: DEFAULT_NVIDIA_LLM_MODEL,
       systemPrompt: mergedSystemPrompt,
       history,
       message,

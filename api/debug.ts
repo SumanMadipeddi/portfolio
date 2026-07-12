@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface VercelRequest {
   method?: string;
 }
@@ -32,11 +33,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     branch: process.env.VERCEL_GIT_COMMIT_REF || null,
     env: {
       nodeEnv: process.env.NODE_ENV || null,
-      hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
-      geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash (default)",
-      geminiVoiceModel: process.env.GEMINI_VOICE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash (default)",
-      geminiTtsModel: process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts (default)",
-      geminiVoice: process.env.GEMINI_VOICE || process.env.GEMINI_VOICE_NAME || "Kore (default)",
+      hasNvidiaKey: Boolean(process.env.NVIDIA_API_KEY),
+      nvidiaApiBase: process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1",
+      nvidiaSttModel: process.env.NVIDIA_STT_MODEL || "openai/whisper-large-v3",
+      nvidiaLlmModel: process.env.NVIDIA_LLM_MODEL || "meta/llama-3.1-70b-instruct",
+      nvidiaTtsModel: process.env.NVIDIA_TTS_MODEL || "nvidia/magpie-multilingual",
+      nvidiaTtsVoice: process.env.NVIDIA_TTS_VOICE || "Magpie-Multilingual.EN-US.Aria",
       llmTimeoutMs: process.env.LLM_TIMEOUT_MS || "default",
       llmTtsTimeoutMs: process.env.LLM_TTS_TIMEOUT_MS || "default",
       hasAdminPasscode: Boolean(process.env.ADMIN_PASSCODE),

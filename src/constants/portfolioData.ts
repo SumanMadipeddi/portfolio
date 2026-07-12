@@ -40,14 +40,14 @@ Key facts:
 - Shipped multi-agent LangGraph pipelines, RAG over 10M+ docs, LLaMA fine-tuning (10x cost reduction)
 - Full production stack: LangSmith observability, agentic evals, vLLM inference, Pinecone/Weaviate
 - Projects: Atimuss Flow, Atimuss (Helios), GraphRAG multi-agent, MobileQA agent, RAG Voice AI, fine-tuning pipeline.
-- Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-first startups.
+- Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-Native startups.
 - Location: San Jose CA, open to remote and relocation
 - Email: smadiped@asu.edu
 - LinkedIn: linkedin.com/in/suman-madipeddi
 - GitHub: github.com/SumanMadipeddi
 - Medium: medium.com/@madipeddisuman
 
-Target companies: AI-first startups, Series A/B building agentic products, companies that need someone who can go 0→1 on AI infrastructure.
+Target companies: AI-Native startups, Series A/B building agentic products, companies that need someone who can go 0→1 on AI infrastructure.
 
 Be confident and specific. Never vague.`;
 
@@ -137,7 +137,7 @@ export const techStack = [
   "PyTorch",
   "LangChain",
   "LangGraph",
-  "Gemini API",
+  "NVIDIA API",
   "Claude API",
   "Pinecone",
   "FastAPI",
