@@ -149,7 +149,7 @@ export const techStack = [
 ];
 
 export const stats = [
-  { value: 3, suffix: "+", label: "Years in AI/ML" },
+  { value: 3, suffix: "", label: "Years in AI/ML" },
   { value: 10, suffix: "K+", label: "Served via SDK & APIs" },
   { value: 9, suffix: "+", label: "AI systems shipped" },
   { value: 3, suffix: "", label: "Founding/early roles" },

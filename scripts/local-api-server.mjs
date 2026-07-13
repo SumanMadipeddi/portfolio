@@ -269,23 +269,32 @@ const server = http.createServer(async (req, res) => {
           return json(res, 400, { error: "audioBase64 or client transcript is required." });
         }
 
+        const mergedPromptForJson = [
+          DEFAULT_SYSTEM_PROMPT,
+          OUTPUT_STYLE_PROMPT,
+          requestPrompt,
+          loadDataContext(),
+          "You are a multimodal transcription and assistant system. You must output a JSON object containing two fields:\n1. 'transcription': The exact text of the user's voice in the audio.\n2. 'reply': Your assistant response to the user's request."
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
         userQuery = "(Audio Input)";
         const controller = new AbortController();
         const timeoutId = PROVIDER_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS) : null;
         let response;
         try {
           const messages = [
-            { role: "system", content: mergedPrompt },
+            { role: "system", content: mergedPromptForJson },
             ...history,
             {
               role: "user",
               content: [
-                { type: "text", text: "Answer the user's spoken request in the attached audio." },
+                { type: "text", text: "Transcribe the audio and reply to the user's request in the requested JSON format." },
                 {
-                  type: "input_audio",
-                  input_audio: {
-                    data: audioBase64,
-                    format: mimeType.includes("mp4") ? "mp4" : "wav"
+                  type: "audio_url",
+                  audio_url: {
+                    url: `data:${mimeType};base64,${audioBase64}`
                   }
                 }
               ]
@@ -301,6 +310,7 @@ const server = http.createServer(async (req, res) => {
             signal: controller.signal,
             body: JSON.stringify({
               model: process.env.NVIDIA_MULTIMODAL_MODEL || NVIDIA_MULTIMODAL_MODEL,
+              response_format: { type: "json_object" },
               messages,
               max_tokens: 700,
               temperature: 0.25,
@@ -321,7 +331,15 @@ const server = http.createServer(async (req, res) => {
         }
 
         const data = await response.json();
-        reply = String(data?.choices?.[0]?.message?.content || "").trim();
+        const content = String(data?.choices?.[0]?.message?.content || "").trim();
+        try {
+          const parsed = JSON.parse(content);
+          reply = String(parsed?.reply || "").trim();
+          userQuery = String(parsed?.transcription || "(Audio Input)").trim();
+        } catch {
+          reply = content;
+          userQuery = "(Audio Input)";
+        }
       }
 
       if (!reply) {

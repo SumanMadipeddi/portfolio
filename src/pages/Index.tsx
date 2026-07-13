@@ -102,6 +102,38 @@ function bufferToWav(buffer: AudioBuffer): ArrayBuffer {
   return result;
 }
 
+function encodeWav(samples: Float32Array, sourceSampleRate: number): ArrayBuffer {
+  const sampleRate = 16000;
+  const ratio = sourceSampleRate / sampleRate;
+  const newLength = Math.round(samples.length / ratio);
+  const resampled = new Float32Array(newLength);
+  
+  for (let i = 0; i < newLength; i++) {
+    resampled[i] = samples[Math.round(i * ratio)];
+  }
+
+  const result = new ArrayBuffer(44 + resampled.length * 2);
+  const view = new DataView(result);
+
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + resampled.length * 2, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, "data");
+  view.setUint32(40, resampled.length * 2, true);
+
+  floatTo16BitPCM(view, 44, resampled);
+
+  return result;
+}
+
 const Index = () => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
@@ -171,6 +203,8 @@ const Index = () => {
   const utteranceLastVoiceAtRef = useRef<number>(0);
   const resumeListeningAtRef = useRef<number>(0);
   const selectedRecorderMimeRef = useRef<string>("");
+  const pcmSamplesRef = useRef<number[]>([]);
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
 
   const aboutWordTop = useCyclingWord(ABOUT_WORDS_TOP);
   const aboutWordBottom = useCyclingWord(ABOUT_WORDS_BOTTOM);
@@ -833,18 +867,30 @@ const Index = () => {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (autoStopTimerRef.current) {
       window.clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
     }
-    const recorder = mediaRecorderRef.current;
-    if (recorder && recorder.state === "recording") {
-      isUtteranceRecordingRef.current = false;
+    if (!isUtteranceRecordingRef.current) return;
+    isUtteranceRecordingRef.current = false;
+    stopLiveTranscription();
+
+    if (!voiceSessionActiveRef.current) return;
+    const transcriptText = voiceLiveTextRef.current.trim();
+    setVoiceLiveText("");
+
+    const samples = new Float32Array(pcmSamplesRef.current);
+    pcmSamplesRef.current = [];
+
+    if (samples.length > 0) {
       try {
-        recorder.stop();
-      } catch {
-        // noop
+        const sourceSR = audioContextRef.current?.sampleRate || 48000;
+        const wavBuffer = encodeWav(samples, sourceSR);
+        const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
+        await sendVoiceBlob(wavBlob, "audio/wav", transcriptText);
+      } catch (err) {
+        console.error("Failed to package PCM WAV:", err);
       }
     }
   };
@@ -881,7 +927,9 @@ const Index = () => {
       for (let i = 0; i < event.results.length; i += 1) {
         transcript += event.results[i][0]?.transcript || "";
       }
-      setVoiceLiveText(transcript.trim());
+      const trimmed = transcript.trim();
+      setVoiceLiveText(trimmed);
+      voiceLiveTextRef.current = trimmed;
     };
 
     recognition.onerror = () => {
@@ -917,6 +965,14 @@ const Index = () => {
     if (vadRafRef.current) {
       window.cancelAnimationFrame(vadRafRef.current);
       vadRafRef.current = null;
+    }
+    if (scriptProcessorRef.current) {
+      try {
+        scriptProcessorRef.current.disconnect();
+      } catch {
+        // noop
+      }
+      scriptProcessorRef.current = null;
     }
     if (audioSourceNodeRef.current) {
       try {
@@ -1097,6 +1153,14 @@ const Index = () => {
               setIsAiSpeaking(false);
               resolve();
             };
+            if (window.speechSynthesis.paused) {
+              try {
+                window.speechSynthesis.resume();
+              } catch {
+                // noop
+              }
+            }
+            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
           });
         } else {
@@ -1148,6 +1212,14 @@ const Index = () => {
       return;
     }
 
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+      } catch {
+        // noop
+      }
+    }
+
     if (voiceSessionActiveRef.current) {
       stopVoiceSession();
       return;
@@ -1170,15 +1242,6 @@ const Index = () => {
       setVoiceToast("Listening...");
       voiceSessionActiveRef.current = true;
 
-      const mimeCandidates = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/mp4",
-        "audio/ogg;codecs=opus",
-      ];
-      selectedRecorderMimeRef.current =
-        mimeCandidates.find((m) => (window as any).MediaRecorder?.isTypeSupported?.(m)) || "";
-
       const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
       const audioContext = new Ctx();
       const analyser = audioContext.createAnalyser();
@@ -1190,65 +1253,31 @@ const Index = () => {
       analyserRef.current = analyser;
       audioSourceNodeRef.current = source;
 
+      // Initialize ScriptProcessorNode for Safari/Chrome PCM capture
+      const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+      scriptProcessor.onaudioprocess = (event) => {
+        if (!voiceSessionActiveRef.current || voiceTurnBusyRef.current || !isUtteranceRecordingRef.current) return;
+        const inputData = event.inputBuffer.getChannelData(0);
+        for (let i = 0; i < inputData.length; i++) {
+          pcmSamplesRef.current.push(inputData[i]);
+        }
+      };
+      source.connect(scriptProcessor);
+      scriptProcessor.connect(audioContext.destination);
+      scriptProcessorRef.current = scriptProcessor;
+
       const startUtteranceRecorder = () => {
         if (!voiceSessionActiveRef.current || voiceTurnBusyRef.current || isUtteranceRecordingRef.current) return;
-        audioChunksRef.current = [];
-        const recorder = selectedRecorderMimeRef.current
-          ? new MediaRecorder(stream, { mimeType: selectedRecorderMimeRef.current })
-          : new MediaRecorder(stream);
-        mediaRecorderRef.current = recorder;
+        pcmSamplesRef.current = [];
         isUtteranceRecordingRef.current = true;
         utteranceSpeechStartRef.current = performance.now();
         utteranceLastVoiceAtRef.current = performance.now();
         setVoiceLiveText("");
         startLiveTranscription();
-
-        recorder.ondataavailable = (event) => {
-          if (event.data && event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        recorder.onerror = () => {
-          isUtteranceRecordingRef.current = false;
-        };
-
-        recorder.onstop = async () => {
-          stopLiveTranscription();
-          const blobType = selectedRecorderMimeRef.current || recorder.mimeType || "audio/webm";
-          const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
-          audioChunksRef.current = [];
-          isUtteranceRecordingRef.current = false;
-          if (!voiceSessionActiveRef.current) return;
-          const transcriptText = voiceLiveTextRef.current.trim();
-          setVoiceLiveText("");
-          
-          let processedBlob = audioBlob;
-          let processedMime = blobType;
-          
-          if (!transcriptText && audioBlob.size > 0) {
-            try {
-              const arrayBuffer = await audioBlob.arrayBuffer();
-              const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-              const audioCtx = new Ctx();
-              const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-              const wavBuffer = bufferToWav(decodedBuffer);
-              processedBlob = new Blob([wavBuffer], { type: "audio/wav" });
-              processedMime = "audio/wav";
-              await audioCtx.close();
-            } catch (err) {
-              console.error("Client side WAV conversion failed, falling back to raw blob:", err);
-            }
-          }
-          
-          await sendVoiceBlob(processedBlob, processedMime, transcriptText);
-        };
-
-        recorder.start(200);
       };
 
       const data = new Uint8Array(analyser.fftSize);
-      const VAD_THRESHOLD = 0.028;
+      const VAD_THRESHOLD = 0.015;
       const SPEECH_START_MS = 140;
       const SILENCE_END_MS = 850;
       const MIN_UTTERANCE_MS = 350;
