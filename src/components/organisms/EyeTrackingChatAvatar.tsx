@@ -56,9 +56,9 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
       const distance = Math.hypot(dx, dy);
 
       const maxDistance = 450;
-      // Offset limits tuned for vertical oval eyes
-      const maxPupilOffsetX = 7.2;
-      const maxPupilOffsetY = 11.5;
+      // Offset limits tuned for slightly smaller vertical oval eyes
+      const maxPupilOffsetX = 6.2;
+      const maxPupilOffsetY = 9.5;
 
       const clampedDist = Math.min(distance / maxDistance, 1);
 
@@ -101,7 +101,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
       {/* Ambient background glow border */}
       <div className="vertical-oval-eye-glow" />
 
-      {/* Main Squircle Container */}
+      {/* Main Pill Container */}
       <div className="vertical-oval-eye-card">
         {/* Content Row: Dual Vertical Oval Eyes */}
         <div className="vertical-oval-eyes-row">
@@ -122,7 +122,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
                 <circle
                   cx={pupilX}
                   cy={pupilY}
-                  r={isHovered ? 5.8 : 5.0}
+                  r={isHovered ? 5.6 : 4.8}
                   className="vertical-pupil-circle"
                 />
               </g>
@@ -146,7 +146,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
                 <circle
                   cx={pupilX}
                   cy={pupilY}
-                  r={isHovered ? 5.8 : 5.0}
+                  r={isHovered ? 5.6 : 4.8}
                   className="vertical-pupil-circle"
                 />
               </g>

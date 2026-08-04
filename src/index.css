@@ -1449,12 +1449,12 @@ html:not(.dark) .dither-btn__label {
 /* VERTICAL OVAL EYE MASCOT STYLING */
 .v2 .vertical-oval-eye-avatar {
   position: relative;
-  width: 104px;
-  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 22px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 9999px;
   cursor: pointer;
   user-select: none;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1462,11 +1462,11 @@ html:not(.dark) .dither-btn__label {
 
 .v2 .vertical-oval-eye-glow {
   position: absolute;
-  inset: -3px;
-  border-radius: 24px;
+  inset: -2px;
+  border-radius: 9999px;
   background: linear-gradient(135deg, var(--accent), var(--purple));
   opacity: 0.3;
-  filter: blur(8px);
+  filter: blur(5px);
   pointer-events: none;
   transition: opacity 0.35s ease;
   z-index: 1;
@@ -1475,60 +1475,68 @@ html:not(.dark) .dither-btn__label {
 .v2 .vertical-oval-eye-card {
   width: 100%;
   height: 100%;
-  border-radius: 22px;
-  background: #000000;
-  border: 1.5px solid var(--border-hover);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 18px var(--accent-glow);
+  border-radius: 9999px;
+  background: rgba(11, 15, 25, 0.96);
+  border: 1.5px solid rgba(41, 151, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(10, 15, 30, 0.25), 0 0 14px rgba(41, 151, 255, 0.2);
+  backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 2;
   overflow: hidden;
+  padding: 0 10px;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark .v2 .vertical-oval-eye-card {
-  background: #000000;
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 20px var(--accent-glow);
+  background: rgba(10, 12, 18, 0.98);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 18px rgba(41, 151, 255, 0.35);
 }
 
 .v2 .vertical-oval-eye-avatar.hovered {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px) scale(1.06);
 }
 
 .v2 .vertical-oval-eye-avatar.hovered .vertical-oval-eye-card {
   border-color: var(--accent);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), 0 0 25px var(--accent-glow);
+  box-shadow: 0 12px 32px rgba(10, 15, 30, 0.35), 0 0 20px rgba(41, 151, 255, 0.4);
+}
+
+.dark .v2 .vertical-oval-eye-avatar.hovered .vertical-oval-eye-card {
+  border-color: var(--accent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(41, 151, 255, 0.5);
 }
 
 .v2 .vertical-oval-eye-avatar.hovered .vertical-oval-eye-glow {
   opacity: 0.65;
-  filter: blur(10px);
+  filter: blur(7px);
 }
 
 .v2 .vertical-oval-eye-avatar.open .vertical-oval-eye-card {
   border-color: var(--purple);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(191, 90, 242, 0.4);
+  box-shadow: 0 12px 32px rgba(10, 15, 30, 0.4), 0 0 24px rgba(191, 90, 242, 0.45);
 }
 
 .v2 .vertical-oval-eyes-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   height: 100%;
 }
 
 .v2 .vertical-eye-wrapper {
-  width: 32px;
-  height: 44px;
+  width: 25px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.12s ease;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
 }
 
 .v2 .vertical-eye-wrapper.blink {
@@ -1542,7 +1550,11 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .vertical-pupil-circle {
-  fill: #000000;
+  fill: #0b0f19;
+}
+
+.dark .v2 .vertical-pupil-circle {
+  fill: #0b0f19;
 }
 
 .v2 .chat-panel {
@@ -1717,8 +1729,10 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .msg-user {
-  background: var(--accent);
-  color: white;
+  background: rgba(11, 15, 25, 0.96);
+  color: #ffffff;
+  border: 1px solid rgba(41, 151, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(10, 15, 30, 0.25), 0 0 14px rgba(41, 151, 255, 0.25);
   border-bottom-right-radius: 4px;
   align-self: flex-end;
 }
@@ -1813,21 +1827,24 @@ html:not(.dark) .dither-btn__label {
 .v2 .chat-send {
   width: 36px;
   height: 36px;
-  background: var(--accent);
-  border: none;
+  background: rgba(11, 15, 25, 0.96);
+  border: 1.5px solid rgba(41, 151, 255, 0.4);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), 0 0 12px rgba(41, 151, 255, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
   color: white;
 }
 
 .v2 .chat-send:hover {
-  background: #0a84ff;
-  transform: scale(1.05);
+  background: rgba(15, 23, 42, 0.98);
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 18px var(--accent-glow);
+  transform: scale(1.08);
 }
 
 .v2 .chat-voice-toggle {

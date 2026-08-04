@@ -1514,18 +1514,18 @@ const Index = () => {
             </p>
             <div className="hero-chips flex flex-wrap gap-4" style={{ marginTop: "24px" }}>
               <KeyCap
-                href="https://atimuss.com/"
+                href="https://applyloom.atimuss.com/"
                 external
                 icon={ExternalLink}
-                label="Atimuss"
+                label="ApplyLoom"
                 wide
                 className="atimuss"
               />
               <KeyCap
-                href="https://helios.atimuss.com/"
+                href="https://atimuss.com/"
                 external
                 icon={ExternalLink}
-                label="Helios"
+                label="Atimuss"
                 wide
                 className="siri"
               />
