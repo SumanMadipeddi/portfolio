@@ -47,7 +47,6 @@ import { isBrowser, formatAssistantMessage } from "@/utils/chatHelpers";
 
 // Components
 import { XIcon, MediumIcon } from "@/components/atoms/Icons";
-import { KeyCap } from "@/components/atoms/KeyCap";
 import { DitheringShader } from "@/components/ui/dithering-shader";
 import { TechStack } from "@/components/organisms/TechStack";
 import { GithubContributions } from "@/components/organisms/GithubContributions";
@@ -1512,29 +1511,79 @@ const Index = () => {
             <p className="hero-desc">
               Founding AI Engineer specializing in agentic systems, LLM Evals, and production AI/ML. I turn research into scalable products.
             </p>
-            <div className="hero-chips flex flex-wrap gap-4" style={{ marginTop: "24px" }}>
-              <KeyCap
+            <div className="hero-chips flex flex-wrap gap-3" style={{ marginTop: "16px" }}>
+              <a
                 href="https://applyloom.atimuss.com/"
-                external
-                icon={ExternalLink}
-                label="ApplyLoom"
-                wide
-                className="atimuss"
-              />
-              <KeyCap
+                target="_blank"
+                rel="noreferrer"
+                className="dither-btn"
+                aria-label="ApplyLoom"
+              >
+                <span className="dither-btn__bg" aria-hidden="true">
+                  <DitheringShader
+                    shape="sphere"
+                    type="4x4"
+                    colorBack={theme === "dark" ? "#000000" : "#ffffff"}
+                    colorFront="#2997ff"
+                    pxSize={1.25}
+                    speed={1.5}
+                    fit="cover"
+                    scale={1.05}
+                    offsetY={0}
+                  />
+                </span>
+                <span className="dither-btn__label flex items-center gap-1.5">
+                  ApplyLoom <ExternalLink size={13} />
+                </span>
+              </a>
+
+              <a
                 href="https://atimuss.com/"
-                external
-                icon={ExternalLink}
-                label="Atimuss"
-                wide
-                className="siri"
-              />
-              <KeyCap
+                target="_blank"
+                rel="noreferrer"
+                className="dither-btn"
+                aria-label="Atimuss"
+              >
+                <span className="dither-btn__bg" aria-hidden="true">
+                  <DitheringShader
+                    shape="sphere"
+                    type="4x4"
+                    colorBack={theme === "dark" ? "#000000" : "#ffffff"}
+                    colorFront="#bf5af2"
+                    pxSize={1.25}
+                    speed={1.5}
+                    fit="cover"
+                    scale={1.05}
+                    offsetY={0}
+                  />
+                </span>
+                <span className="dither-btn__label flex items-center gap-1.5">
+                  Atimuss <ExternalLink size={13} />
+                </span>
+              </a>
+
+              <button
                 onClick={openResume}
-                label="View Resume"
-                wide
-                className="resume-chip"
-              />
+                className="dither-btn"
+                aria-label="View Resume"
+              >
+                <span className="dither-btn__bg" aria-hidden="true">
+                  <DitheringShader
+                    shape="sphere"
+                    type="4x4"
+                    colorBack={theme === "dark" ? "#000000" : "#ffffff"}
+                    colorFront="#2997ff"
+                    pxSize={1.25}
+                    speed={1.5}
+                    fit="cover"
+                    scale={1.05}
+                    offsetY={0}
+                  />
+                </span>
+                <span className="dither-btn__label flex items-center gap-1.5">
+                  View Resume <Download size={13} />
+                </span>
+              </button>
             </div>
 
 

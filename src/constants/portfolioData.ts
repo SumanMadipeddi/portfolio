@@ -157,6 +157,8 @@ export const stats = [
 ];
 
 export const terminalSkillLines: TerminalSkillLine[] = [
+  { prompt: "$", text: "open-source --active" },
+  { prompt: ">", text: "Contributor: OpenWork & Dimos (Multi-Agent RAG & Orchestration)" },
   { prompt: ">", text: "Agent orchestration and LLM systems  [online]" },
   { prompt: ">", text: "Observability, tracing, agentic evals [active]" },
   { prompt: ">", text: "RAG and vector search at scale      [indexed]" },
