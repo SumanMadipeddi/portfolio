@@ -25,7 +25,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
     let animFrameId: number;
 
     const updatePosition = () => {
-      const ease = 0.2;
+      const ease = 0.22;
       currentPos.current.x += (targetPos.current.x - currentPos.current.x) * ease;
       currentPos.current.y += (targetPos.current.y - currentPos.current.y) * ease;
 
@@ -56,8 +56,9 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
       const distance = Math.hypot(dx, dy);
 
       const maxDistance = 450;
-      const maxPupilOffsetX = 7.0;
-      const maxPupilOffsetY = 4.8;
+      // Offset limits tuned for vertical oval eyes
+      const maxPupilOffsetX = 7.2;
+      const maxPupilOffsetY = 11.5;
 
       const clampedDist = Math.min(distance / maxDistance, 1);
 
@@ -87,92 +88,70 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  const pupilX = 18 + pupilPos.x;
-  const pupilY = 11 + pupilPos.y;
+  const pupilX = 16 + pupilPos.x;
+  const pupilY = 22 + pupilPos.y;
 
   return (
     <div
       ref={containerRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`pill-eye-avatar ${isHovered ? "hovered" : ""} ${isOpen ? "open" : ""} ${className}`}
+      className={`vertical-oval-eye-avatar ${isHovered ? "hovered" : ""} ${isOpen ? "open" : ""} ${className}`}
     >
-      {/* Outer ambient border ring */}
-      <div className="pill-eye-border-glow" />
+      {/* Ambient background glow border */}
+      <div className="vertical-oval-eye-glow" />
 
-      {/* Top Glass Surface Reflection */}
-      <div className="pill-eye-gloss" />
+      {/* Main Squircle Container */}
+      <div className="vertical-oval-eye-card">
+        {/* Content Row: Dual Vertical Oval Eyes */}
+        <div className="vertical-oval-eyes-row">
+          {/* Left Vertical Oval Eye */}
+          <div className={`vertical-eye-wrapper ${isBlinking ? "blink" : ""}`}>
+            <svg viewBox="0 0 32 44" className="vertical-eye-svg">
+              <defs>
+                <clipPath id="vertical-left-eye-clip">
+                  <ellipse cx="16" cy="22" rx="14" ry="20" />
+                </clipPath>
+              </defs>
 
-      {/* Content Row: ONLY Eyes Centered */}
-      <div className="pill-eye-content">
-        {/* Left Almond Eye */}
-        <div className={`almond-eye-wrapper ${isBlinking ? "blink" : ""}`}>
-          <svg viewBox="0 0 36 22" className="almond-eye-svg">
-            <defs>
-              <clipPath id="left-eye-clip">
-                <path d="M 2 11 C 7 3 29 3 34 11 C 29 19 7 19 2 11 Z" />
-              </clipPath>
-            </defs>
+              {/* White Sclera Vertical Oval Base */}
+              <ellipse cx="16" cy="22" rx="14" ry="20" fill="#ffffff" />
 
-            {/* Sclera White Base */}
-            <path
-              d="M 2 11 C 7 3 29 3 34 11 C 29 19 7 19 2 11 Z"
-              fill="#ffffff"
-            />
+              {/* Clipped Black Pupil */}
+              <g clipPath="url(#vertical-left-eye-clip)">
+                <circle
+                  cx={pupilX}
+                  cy={pupilY}
+                  r={isHovered ? 5.8 : 5.0}
+                  className="vertical-pupil-circle"
+                />
+              </g>
+            </svg>
+          </div>
 
-            {/* Clipped Pupil & Catchlight */}
-            <g clipPath="url(#left-eye-clip)">
-              {/* Pupil */}
-              <circle
-                cx={pupilX}
-                cy={pupilY}
-                r={isHovered ? 5.6 : 4.8}
-                className="eye-pupil-circle"
-              />
-              {/* Catchlight */}
-              <circle
-                cx={pupilX - 1.6}
-                cy={pupilY - 1.6}
-                r={1.6}
-                fill="#ffffff"
-              />
-            </g>
-          </svg>
-        </div>
+          {/* Right Vertical Oval Eye */}
+          <div className={`vertical-eye-wrapper ${isBlinking ? "blink" : ""}`}>
+            <svg viewBox="0 0 32 44" className="vertical-eye-svg">
+              <defs>
+                <clipPath id="vertical-right-eye-clip">
+                  <ellipse cx="16" cy="22" rx="14" ry="20" />
+                </clipPath>
+              </defs>
 
-        {/* Right Almond Eye */}
-        <div className={`almond-eye-wrapper ${isBlinking ? "blink" : ""}`}>
-          <svg viewBox="0 0 36 22" className="almond-eye-svg">
-            <defs>
-              <clipPath id="right-eye-clip">
-                <path d="M 2 11 C 7 3 29 3 34 11 C 29 19 7 19 2 11 Z" />
-              </clipPath>
-            </defs>
+              {/* White Sclera Vertical Oval Base */}
+              <ellipse cx="16" cy="22" rx="14" ry="20" fill="#ffffff" />
 
-            {/* Sclera White Base */}
-            <path
-              d="M 2 11 C 7 3 29 3 34 11 C 29 19 7 19 2 11 Z"
-              fill="#ffffff"
-            />
-
-            {/* Clipped Pupil & Catchlight */}
-            <g clipPath="url(#right-eye-clip)">
-              {/* Pupil */}
-              <circle
-                cx={pupilX}
-                cy={pupilY}
-                r={isHovered ? 5.6 : 4.8}
-                className="eye-pupil-circle"
-              />
-              {/* Catchlight */}
-              <circle
-                cx={pupilX - 1.6}
-                cy={pupilY - 1.6}
-                r={1.6}
-                fill="#ffffff"
-              />
-            </g>
-          </svg>
+              {/* Clipped Black Pupil */}
+              <g clipPath="url(#vertical-right-eye-clip)">
+                <circle
+                  cx={pupilX}
+                  cy={pupilY}
+                  r={isHovered ? 5.8 : 5.0}
+                  className="vertical-pupil-circle"
+                />
+              </g>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
