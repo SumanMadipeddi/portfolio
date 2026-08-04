@@ -14,6 +14,7 @@
     "ngrok": "npm run build && npx http-server dist -p 3000 -o"
   },
   "dependencies": {
+    "@paper-design/shaders-react": "^0.0.78",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-toast": "^1.2.14",

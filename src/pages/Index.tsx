@@ -48,8 +48,10 @@ import { isBrowser, formatAssistantMessage } from "@/utils/chatHelpers";
 // Components
 import { XIcon, MediumIcon } from "@/components/atoms/Icons";
 import { KeyCap } from "@/components/atoms/KeyCap";
+import { DitheringShader } from "@/components/ui/dithering-shader";
 import { TechStack } from "@/components/organisms/TechStack";
 import { GithubContributions } from "@/components/organisms/GithubContributions";
+import { EyeTrackingChatAvatar } from "@/components/organisms/EyeTrackingChatAvatar";
 
 function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
   for (let i = 0; i < input.length; i++, offset += 2) {
@@ -154,7 +156,6 @@ const Index = () => {
     },
   ]);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -174,6 +175,9 @@ const Index = () => {
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
 
   const lastScrollY = useRef(0);
+  const isCollapsedRef = useRef(false);
+  const isScrolledRef = useRef(false);
+  const navProgressRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
@@ -362,25 +366,45 @@ const Index = () => {
   useEffect(() => {
     if (!isBrowser) return;
 
+    const COLLAPSE_OFFSET = 80;
+    const SCROLL_DELTA = 12;
+
+    const setCollapsed = (next: boolean) => {
+      if (isCollapsedRef.current === next) return;
+      isCollapsedRef.current = next;
+      setIsCollapsed(next);
+    };
+
+    const setScrolled = (next: boolean) => {
+      if (isScrolledRef.current === next) return;
+      isScrolledRef.current = next;
+      setIsScrolled(next);
+    };
+
     const onScroll = () => {
       const currentScrollY = window.scrollY;
       const max = document.body.scrollHeight - window.innerHeight;
-      const p = max > 0 ? (currentScrollY / max) * 100 : 0;
-      setScrollProgress(Math.min(100, Math.max(0, p)));
-      setIsScrolled(currentScrollY > 60);
+      const progress = max > 0 ? Math.min(1, Math.max(0, currentScrollY / max)) : 0;
 
-      // Detect scroll direction (shrink on scroll DOWN, expand on scroll UP)
-      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
-        // Scrolling DOWN
-        setIsCollapsed(true);
-      } else if (currentScrollY < lastScrollY.current && currentScrollY > 60) {
-        // Scrolling UP
-        setIsCollapsed(false);
-      } else if (currentScrollY <= 60) {
-        // Reset to normal/expanded at top of page
-        setIsCollapsed(false);
+      // Drive progress bar without React re-renders every frame
+      if (navProgressRef.current) {
+        navProgressRef.current.style.transform = `scaleX(${progress})`;
       }
 
+      setScrolled(currentScrollY > COLLAPSE_OFFSET);
+
+      const delta = currentScrollY - lastScrollY.current;
+
+      if (currentScrollY <= COLLAPSE_OFFSET) {
+        setCollapsed(false);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      // Ignore tiny trackpad jitter so collapse/expand doesn't thrash
+      if (Math.abs(delta) < SCROLL_DELTA) return;
+
+      setCollapsed(delta > 0);
       lastScrollY.current = currentScrollY;
     };
 
@@ -1411,9 +1435,9 @@ const Index = () => {
   return (
     <div className="v2">
       <canvas id="particleCanvas" ref={canvasRef} />
-      <nav id="navbar" className={`${isScrolled ? "scrolled" : ""} ${isCollapsed ? "collapsed" : ""}`} style={{ background: isScrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)" }}>
+      <nav id="navbar" className={`${isScrolled ? "scrolled" : ""} ${isCollapsed ? "collapsed" : ""}`}>
         {/* Inset floating page scroll progress indicator */}
-        <div className="nav-scroll-progress" style={{ transform: `scaleX(${scrollProgress / 100})` }} />
+        <div className="nav-scroll-progress" ref={navProgressRef} />
 
         <div className="nav-logo">
           <a href="#hero" className="hero-photo-wrap nav-photo-wrap cursor-pointer" aria-label="Go to top">
@@ -1436,21 +1460,38 @@ const Index = () => {
           <li><a href="#contact">Contact</a></li>
         </ul>
         <div className="nav-actions">
-          <div className="nav-social-pill">
-            <a href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="LinkedIn">
-              <Linkedin size={16} />
-            </a>
-            <a href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="GitHub">
-              <Github size={16} />
-            </a>
-            <a href="https://medium.com/@madipeddisuman" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="Medium">
-              <MediumIcon size={16} />
-            </a>
+          <div className="nav-actions-inner">
+            <div className="nav-social-pill">
+              <a href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="LinkedIn">
+                <Linkedin size={16} />
+              </a>
+              <a href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="GitHub">
+                <Github size={16} />
+              </a>
+              <a href="https://medium.com/@madipeddisuman" target="_blank" rel="noreferrer" className="nav-social-btn" aria-label="Medium">
+                <MediumIcon size={16} />
+              </a>
+            </div>
+            <button className="theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button className="dither-btn" onClick={() => setIsChatOpen((v) => !v)}>
+              <span className="dither-btn__bg" aria-hidden="true">
+                <DitheringShader
+                  shape="sphere"
+                  type="4x4"
+                  colorBack={theme === "dark" ? "#000000" : "#ffffff"}
+                  colorFront="#2997ff"
+                  pxSize={1.25}
+                  speed={1.5}
+                  fit="cover"
+                  scale={1.05}
+                  offsetY={0}
+                />
+              </span>
+              <span className="dither-btn__label">Ask me anything</span>
+            </button>
           </div>
-          <button className="theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button className="nav-cta" onClick={() => setIsChatOpen((v) => !v)}>Ask me anything</button>
         </div>
       </nav>
 
@@ -1877,18 +1918,8 @@ const Index = () => {
           </div>
         </div>
 
-        <button ref={chatBubbleRef} className="chat-bubble" id="chatBubble" onClick={() => setIsChatOpen((v) => !v)}>
-          <div className="pulse-ring" />
-          {avatarImageError ? (
-            <div className="chat-bubble-fallback">SM</div>
-          ) : (
-            <img
-              src={profileImage}
-              alt="Suman chat"
-              className="chat-bubble-photo"
-              onError={() => setAvatarImageError(true)}
-            />
-          )}
+        <button ref={chatBubbleRef} className="chat-bubble" id="chatBubble" onClick={() => setIsChatOpen((v) => !v)} aria-label="Open AI Chatbot">
+          <EyeTrackingChatAvatar isOpen={isChatOpen} />
         </button>
       </div>
 
