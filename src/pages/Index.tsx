@@ -831,7 +831,7 @@ const Index = () => {
     try {
       const endpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) || "/api/chat";
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 30000);
+      const timeoutId = window.setTimeout(() => controller.abort(), 6000);
       try {
         const response = await fetch(endpoint, {
           method: "POST",

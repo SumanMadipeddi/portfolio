@@ -25,7 +25,7 @@ const OUTPUT_STYLE_PROMPT =
 
 const NVIDIA_API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
 const DEFAULT_NVIDIA_LLM_MODEL = process.env.NVIDIA_LLM_MODEL || "meta/llama-3.1-70b-instruct";
-const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
+const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS ?? 6000);
 const DATA_FILE = path.join(process.cwd(), "data", "ai-data.txt");
 
 const setCors = (res: VercelResponse) => {
@@ -61,7 +61,7 @@ const callNvidiaChat = async (params: {
 }) => {
   const { apiKey, model, systemPrompt, history, message } = params;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId = PROVIDER_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS) : null;
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -94,7 +94,7 @@ const callNvidiaChat = async (params: {
     }
     throw error;
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   if (!response.ok) {

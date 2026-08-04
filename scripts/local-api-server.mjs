@@ -84,8 +84,8 @@ const DEFAULT_SYSTEM_PROMPT =
   "You are Suman Madipeddi's AI assistant on his portfolio website. Be concise, warm, and truthful.";
 const OUTPUT_STYLE_PROMPT =
   "Formatting rules: keep answers complete (never cut mid-sentence). When user asks for N points/strengths/steps, return exactly N numbered lines (1., 2., 3...) with one point per line. Avoid markdown bold unless explicitly requested.";
-const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 15000);
-const TTS_TIMEOUT_MS = Number(process.env.LLM_TTS_TIMEOUT_MS || 30000);
+const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS ?? 6000);
+const TTS_TIMEOUT_MS = Number(process.env.LLM_TTS_TIMEOUT_MS ?? 6000);
 
 const NVIDIA_API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
 const NVIDIA_STT_MODEL = process.env.NVIDIA_STT_MODEL || "openai/whisper-large-v3";
@@ -96,7 +96,7 @@ const NVIDIA_TTS_VOICE = process.env.NVIDIA_TTS_VOICE || "Magpie-Multilingual.EN
 
 const callNvidiaChat = async ({ apiKey, model, systemPrompt, history, message }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeoutId = PROVIDER_TIMEOUT_MS > 0 ? setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS) : null;
   const messages = [
     { role: "system", content: systemPrompt },
     ...history,
