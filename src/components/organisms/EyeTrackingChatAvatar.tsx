@@ -122,7 +122,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
                 <circle
                   cx={pupilX}
                   cy={pupilY}
-                  r={isHovered ? 5.6 : 4.8}
+                  r={isHovered ? 7 : 6}
                   className="vertical-pupil-circle"
                 />
               </g>
@@ -146,7 +146,7 @@ export const EyeTrackingChatAvatar: React.FC<EyeTrackingChatAvatarProps> = ({
                 <circle
                   cx={pupilX}
                   cy={pupilY}
-                  r={isHovered ? 5.6 : 4.8}
+                  r={isHovered ? 7 : 6}
                   className="vertical-pupil-circle"
                 />
               </g>
