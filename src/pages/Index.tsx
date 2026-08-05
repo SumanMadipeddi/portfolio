@@ -1771,24 +1771,44 @@ const Index = () => {
               <div className="project-media-wrap">
                 <img src={project.image} alt={project.name} className="project-image" />
                 <div className="project-links">
-                  <a
-                    href={project.githubLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="project-link-btn"
-                    aria-label={`${project.name} GitHub`}
-                  >
-                    <Github size={14} />
-                  </a>
-                  <a
-                    href={project.demoLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="project-link-btn"
-                    aria-label={`${project.name} Demo`}
-                  >
-                    <ExternalLink size={14} />
-                  </a>
+                  {project.githubLink && (
+                    <a
+                      href={project.githubLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="project-link-btn"
+                      aria-label={`${project.name} Link`}
+                      title={project.githubLink.includes("linkedin.com") ? "LinkedIn Post" : project.githubLink.includes("medium.com") ? "Medium Article" : "GitHub Repository"}
+                    >
+                      {project.githubLink.includes("linkedin.com") ? (
+                        <Linkedin size={14} />
+                      ) : project.githubLink.includes("medium.com") ? (
+                        <MediumIcon size={14} />
+                      ) : (
+                        <Github size={14} />
+                      )}
+                    </a>
+                  )}
+                  {project.demoLink && (
+                    <a
+                      href={project.demoLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="project-link-btn"
+                      aria-label={`${project.name} Demo`}
+                      title={project.demoLink.includes("medium.com") ? "Medium Article" : project.demoLink.includes("linkedin.com") ? "LinkedIn Post" : "Live Demo"}
+                    >
+                      {project.demoLink.includes("medium.com") ? (
+                        <MediumIcon size={14} />
+                      ) : project.demoLink.includes("linkedin.com") ? (
+                        <Linkedin size={14} />
+                      ) : project.demoLink.includes("github.com") ? (
+                        <Github size={14} />
+                      ) : (
+                        <ExternalLink size={14} />
+                      )}
+                    </a>
+                  )}
                 </div>
               </div>
               <div className="project-name">{project.name}</div>

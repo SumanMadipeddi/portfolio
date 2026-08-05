@@ -4,6 +4,8 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
+import aiEnvironmentsImage from "@/assets/ai_environments.png";
+import rlOption3Image from "@/assets/rl_env.png";
 import { Project, TerminalSkillLine } from "@/types/portfolio";
 
 export const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant.
@@ -83,6 +85,14 @@ Developed the voice interaction layer around raw Intelligence and Emotional Inte
 
 export const projects: Project[] = [
   {
+    name: "Building RL Environments Frontier Models",
+    desc: "Architecture & systems insight on building synthetic RL environments, reward loops, and benchmark sandboxes for frontier LLMs like Claude Opus.",
+    stack: ["RL Environments", "Frontier LLMs", "Reward Modeling", "Agent Evals"],
+    image: rlOption3Image,
+    githubLink: "https://www.linkedin.com/feed/update/urn:li:activity:7475300633395347456/",
+    demoLink: "https://medium.com/@madipeddisuman/the-next-ai-bottleneck-isnt-models-it-s-environments-b7fa0b632bc4",
+  },
+  {
     name: "GraphRAG Multi Agent",
     desc: "Knowledge Graph extraction from unstructured PDFs using multi-agent workflows for multi hop reasoning.",
     stack: ["LangGraph", "LangChain", "Supabase", "TypeScript"],
@@ -122,14 +132,14 @@ export const projects: Project[] = [
     githubLink: "https://github.com/SumanMadipeddi/Object-Segmentation-on-ARMBENCH",
     demoLink: "https://www.linkedin.com/feed/update/urn:li:activity:7195244374438424577/",
   },
-  {
-    name: "Realtime Crypto Stream",
-    desc: "Realtime crypto tracking with web automation, streaming transport, and interactive data viss.",
-    stack: ["Playwright", "Next.js", "Express", "WebSocket"],
-    image: cryptoStreamImage,
-    githubLink: "https://github.com/SumanMadipeddi/CryptoStream",
-    demoLink: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link",
-  },
+  // {
+  //   name: "Realtime Crypto Stream",
+  //   desc: "Realtime crypto tracking with web automation, streaming transport, and interactive data viss.",
+  //   stack: ["Playwright", "Next.js", "Express", "WebSocket"],
+  //   image: cryptoStreamImage,
+  //   githubLink: "https://github.com/SumanMadipeddi/CryptoStream",
+  //   demoLink: "https://drive.google.com/file/d/1bn_vYEWu2fOZ9z2U2BSRdlxKyTWM1hxi/view?usp=drive_link",
+  // },
 ];
 
 export const techStack = [
