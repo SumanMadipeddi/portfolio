@@ -179,15 +179,41 @@ function renderColoredTerminalLine(text: string, lineIndex: number) {
         );
       } else if (/^Op/i.test(matchedStr)) {
         parts.push(
-          <span key={`m-${match.index}`} style={{ color: "#30d158", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+          <a
+            key={`m-${match.index}`}
+            href="https://github.com/different-ai/openwork"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="terminal-link"
+            style={{
+              color: "#30d158",
+              fontWeight: 600,
+              textDecoration: "underline",
+              textUnderlineOffset: "3px",
+              cursor: "pointer",
+            }}
+          >
             {matchedStr}
-          </span>
+          </a>
         );
       } else if (/^Di/i.test(matchedStr)) {
         parts.push(
-          <span key={`m-${match.index}`} style={{ color: "#ff9f0a", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+          <a
+            key={`m-${match.index}`}
+            href="https://github.com/dimensionalOS/dimos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="terminal-link"
+            style={{
+              color: "#ff9f0a",
+              fontWeight: 600,
+              textDecoration: "underline",
+              textUnderlineOffset: "3px",
+              cursor: "pointer",
+            }}
+          >
             {matchedStr}
-          </span>
+          </a>
         );
       } else if (matchedStr.startsWith("(")) {
         parts.push(

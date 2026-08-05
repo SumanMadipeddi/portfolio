@@ -562,15 +562,26 @@ html:not(.dark) .dither-btn__label {
   color: var(--text);
 }
 
-.v2 .t-cur {
+.v2 .t-cur,
+.hero-tw-cursor {
   display: inline-block;
-  width: 7px;
-  height: 12px;
+  width: 2px;
+  height: 14px;
   background: var(--accent);
   border-radius: 1px;
-  vertical-align: text-bottom;
-  margin-left: 1px;
-  animation: v2-blink 1s infinite;
+  vertical-align: -2px;
+  margin-left: 2px;
+  animation: v2-blink 0.85s infinite;
+  box-shadow: 0 0 6px rgba(41, 151, 255, 0.4);
+}
+
+.terminal-link {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.terminal-link:hover {
+  opacity: 0.8;
+  filter: brightness(1.25);
 }
 
 .v2 .hero-eyebrow {
