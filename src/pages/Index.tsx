@@ -135,6 +135,82 @@ function encodeWav(samples: Float32Array, sourceSampleRate: number): ArrayBuffer
   return result;
 }
 
+function renderColoredTerminalLine(text: string, lineIndex: number) {
+  if (!text) return null;
+
+  // Line 0: "open-source --active"
+  if (lineIndex === 0) {
+    const spaceIdx = text.indexOf(" ");
+    if (spaceIdx === -1) {
+      return (
+        <span style={{ color: "#2997ff", fontWeight: 600 }}>
+          {text}
+        </span>
+      );
+    } else {
+      const commandPart = text.substring(0, spaceIdx);
+      const rest = text.substring(spaceIdx);
+      return (
+        <>
+          <span style={{ color: "#2997ff", fontWeight: 600 }}>{commandPart}</span>
+          <span style={{ color: "#30d158", fontWeight: 600 }}>{rest}</span>
+        </>
+      );
+    }
+  }
+
+  // Line 1: "Contributor: OpenWork & Dimos (Multi-Agent RAG & Orchestration)"
+  if (lineIndex === 1) {
+    const parts: React.ReactNode[] = [];
+    const regex = /(Contributor:?|Contrib|Contri|Contr|Cont|Con)|(OpenWork|OpenWor|OpenWo|OpenW|Open|Ope|Op)|(Dimos|Dimo|Dim|Di)|(\([^)]*\)?)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+      const matchedStr = match[0];
+      if (/^Contr/i.test(matchedStr) || /^Con/i.test(matchedStr)) {
+        parts.push(
+          <span key={`m-${match.index}`} style={{ color: "#bf5af2", fontWeight: 600 }}>
+            {matchedStr}
+          </span>
+        );
+      } else if (/^Op/i.test(matchedStr)) {
+        parts.push(
+          <span key={`m-${match.index}`} style={{ color: "#30d158", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+            {matchedStr}
+          </span>
+        );
+      } else if (/^Di/i.test(matchedStr)) {
+        parts.push(
+          <span key={`m-${match.index}`} style={{ color: "#ff9f0a", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+            {matchedStr}
+          </span>
+        );
+      } else if (matchedStr.startsWith("(")) {
+        parts.push(
+          <span key={`m-${match.index}`} style={{ color: "#64d2ff", fontWeight: 400 }}>
+            {matchedStr}
+          </span>
+        );
+      } else {
+        parts.push(matchedStr);
+      }
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts;
+  }
+
+  return text;
+}
+
 const Index = () => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
@@ -1615,7 +1691,7 @@ const Index = () => {
                     <div className="t-line show" key={`skill-line-${idx}`}>
                       <span className={prompt === "#" ? "t-p-ok" : "t-p"}>{prompt}</span>
                       <span className={`t-txt ${idx === activeSkillLineIndex ? "active" : ""}`}>
-                        {line}
+                        {renderColoredTerminalLine(line, idx)}
                         {idx === activeSkillLineIndex && <span className="t-cur" />}
                       </span>
                     </div>
