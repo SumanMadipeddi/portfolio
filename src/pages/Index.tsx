@@ -264,14 +264,6 @@ const Index = () => {
   const [voiceLiveText, setVoiceLiveText] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [avatarImageError, setAvatarImageError] = useState(false);
-  const [contactStatus, setContactStatus] = useState("");
-  const [isContactSending, setIsContactSending] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
   const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
   const [activeNavSection, setActiveNavSection] = useState<string>("hero");
@@ -967,7 +959,7 @@ const Index = () => {
     try {
       const endpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) || "/api/chat";
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+      const timeoutId = window.setTimeout(() => controller.abort(), 10000);
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -1990,69 +1982,41 @@ const Index = () => {
         </h2>
 
         <div className="bento contact-bento">
-          <div className="card card-span-8 reveal contact-main-card">
-            <div className="card-title" style={{ fontSize: 28, marginBottom: 16 }}>Send me a message</div>
-            <form className="contact-form" onSubmit={handleContactSubmit}>
-              <div className="contact-row">
-                <input
-                  className="contact-input"
-                  type="text"
-                  placeholder="Your name"
-                  value={contactForm.name}
-                  onChange={(e) => {
-                    setContactStatus("");
-                    setContactForm((prev) => ({ ...prev, name: e.target.value }));
-                  }}
-                  required
-                />
-                <input
-                  className="contact-input"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={contactForm.email}
-                  onChange={(e) => {
-                    setContactStatus("");
-                    setContactForm((prev) => ({ ...prev, email: e.target.value }));
-                  }}
-                  required
-                />
+          <a
+            href="https://maps.google.com/?q=San+Jose,CA"
+            target="_blank"
+            rel="noreferrer"
+            className="card card-span-7 reveal location-card-link"
+          >
+            <div>
+              <div className="card-tag flex items-center gap-1.5" style={{ width: "fit-content" }}>
+                <MapPin size={13} /> Location
               </div>
-              <input
-                className="contact-input"
-                type="text"
-                placeholder="Subject"
-                value={contactForm.subject}
-                onChange={(e) => {
-                  setContactStatus("");
-                  setContactForm((prev) => ({ ...prev, subject: e.target.value }));
-                }}
-                required
-              />
-              <textarea
-                className="contact-textarea"
-                placeholder="Tell me about your project or idea..."
-                value={contactForm.message}
-                onChange={(e) => {
-                  setContactStatus("");
-                  setContactForm((prev) => ({ ...prev, message: e.target.value }));
-                }}
-                rows={5}
-                required
-              />
-              <button className="btn-primary" type="submit" disabled={isContactSending}>
-                <Send size={16} />
-                {isContactSending ? "Sending..." : "Send Message"}
-              </button>
-              {contactStatus && <div className="contact-status">{contactStatus}</div>}
-            </form>
-          </div>
+              <div className="card-title" style={{ fontSize: 32, fontWeight: 600, marginTop: 14, marginBottom: 4 }}>
+                San Jose
+              </div>
+              <div style={{ color: "var(--text2)", fontSize: 16, fontWeight: 400, marginBottom: 12 }}>
+                California, USA
+              </div>
+              <div style={{ color: "var(--text3)", fontSize: 14, lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                Building and scaling AI-native agentic systems in the San Francisco Bay Area.
+              </div>
+            </div>
 
-          <div className="card card-span-4 reveal reveal-delay-1 contact-side-card">
+            <div className="location-map-grid">
+              <iframe
+                title="San Jose Map"
+                src="https://maps.google.com/maps?q=San%20Jose,%20CA&t=&z=11&ie=UTF8&iwloc=&output=embed"
+                loading="lazy"
+              />
+            </div>
+          </a>
+
+          <div className="card card-span-5 reveal reveal-delay-1 contact-side-card">
             <div className="card-tag">Get in touch</div>
             <div className="contact-links">
               <a className="quick-link" href="mailto:smadiped@asu.edu"><span className="quick-link-left"><Mail size={15} />smadiped@asu.edu</span></a>
               <a className="quick-link" href="tel:+16025659192"><span className="quick-link-left"><Phone size={15} />+1 (602) 565-9192</span></a>
-              <a className="quick-link" href="https://maps.google.com/?q=San+Jose,CA" target="_blank" rel="noreferrer"><span className="quick-link-left"><MapPin size={15} />San Jose, CA</span><span>↗</span></a>
               <a className="quick-link" href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Linkedin size={15} />LinkedIn</span><span>↗</span></a>
               <a className="quick-link" href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Github size={15} />GitHub</span><span>↗</span></a>
               <a className="quick-link" href="https://medium.com/@madipeddisuman" target="_blank" rel="noreferrer"><span className="quick-link-left"><MediumIcon size={15} />Medium</span><span>↗</span></a>

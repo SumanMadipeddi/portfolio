@@ -42,10 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       llmTimeoutMs: process.env.LLM_TIMEOUT_MS || "default",
       llmTtsTimeoutMs: process.env.LLM_TTS_TIMEOUT_MS || "default",
       hasAdminPasscode: Boolean(process.env.ADMIN_PASSCODE),
-      hasJsonbinKey: Boolean(process.env.JSONBIN_API_KEY),
-      hasEmailJsService: Boolean(process.env.VITE_EMAILJS_SERVICE_ID),
-      hasEmailJsTemplate: Boolean(process.env.VITE_EMAILJS_TEMPLATE_ID),
-      hasEmailJsPublicKey: Boolean(process.env.VITE_EMAILJS_PUBLIC_KEY),
     },
   });
 }

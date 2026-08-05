@@ -25,7 +25,7 @@ const OUTPUT_STYLE_PROMPT =
 
 const NVIDIA_API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
 const DEFAULT_NVIDIA_LLM_MODEL = process.env.NVIDIA_LLM_MODEL || "meta/llama-3.1-70b-instruct";
-const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS ?? 6000);
+const PROVIDER_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS ?? 10000);
 const DATA_FILE = path.join(process.cwd(), "data", "ai-data.txt");
 
 const setCors = (res: VercelResponse) => {

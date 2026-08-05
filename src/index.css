@@ -1358,6 +1358,119 @@ html:not(.dark) .dither-btn__label {
   align-items: stretch;
 }
 
+.v2 .location-card-link {
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  cursor: pointer;
+  padding: 28px 32px;
+}
+
+.v2 .location-card-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+.v2 .location-map-grid {
+  position: relative;
+  width: 100%;
+  height: 185px;
+  border-radius: 16px;
+  background: rgba(10, 15, 25, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.v2 .location-map-grid iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+  opacity: 0.92;
+}
+
+.dark .v2 .location-map-grid iframe {
+  filter: invert(90%) hue-rotate(180deg) contrast(1.15) opacity(0.88);
+}
+
+.v2 .location-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  mask-image: radial-gradient(circle at center, black 40%, transparent 95%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 95%);
+}
+
+.v2 .location-radar-pulse {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.v2 .location-radar-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #30d158;
+  box-shadow: 0 0 12px #30d158, 0 0 24px rgba(48, 209, 88, 0.6);
+  z-index: 3;
+}
+
+.v2 .location-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(48, 209, 88, 0.5);
+  background: rgba(48, 209, 88, 0.1);
+  animation: location-ripple 2.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.v2 .location-radar-ring.ring-2 {
+  animation-delay: 1.25s;
+}
+
+@keyframes location-ripple {
+  0% {
+    width: 12px;
+    height: 12px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 70px;
+    height: 70px;
+    opacity: 0;
+  }
+}
+
+.v2 .location-coords {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  font-family: "SF Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  opacity: 0.9;
+  z-index: 2;
+}
+
 .v2 .contact-main-card {
   background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
 }
