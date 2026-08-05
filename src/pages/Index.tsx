@@ -275,11 +275,13 @@ const Index = () => {
   const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
   const [activeNavSection, setActiveNavSection] = useState<string>("hero");
+  const [navIndicatorPos, setNavIndicatorPos] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
 
   const lastScrollY = useRef(0);
   const isCollapsedRef = useRef(false);
   const isScrolledRef = useRef(false);
   const navProgressRef = useRef<HTMLDivElement | null>(null);
+  const navLinksRef = useRef<HTMLUListElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
@@ -521,6 +523,30 @@ const Index = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isBrowser) return;
+
+    const updateIndicator = () => {
+      if (!navLinksRef.current) return;
+      const activeLink = navLinksRef.current.querySelector<HTMLAnchorElement>(
+        `a[href="#${activeNavSection}"]`
+      );
+
+      if (activeLink) {
+        setNavIndicatorPos({
+          left: activeLink.offsetLeft,
+          width: activeLink.offsetWidth,
+        });
+      } else {
+        setNavIndicatorPos({ left: 0, width: 0 });
+      }
+    };
+
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeNavSection]);
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -1562,7 +1588,15 @@ const Index = () => {
             )}
           </a>
         </div>
-        <ul className="nav-links">
+        <ul className="nav-links" ref={navLinksRef}>
+          <li
+            className="nav-active-line"
+            style={{
+              transform: `translateX(${navIndicatorPos.left}px)`,
+              width: `${navIndicatorPos.width}px`,
+              opacity: navIndicatorPos.width > 0 ? 1 : 0,
+            }}
+          />
           <li>
             <a href="#about" className={activeNavSection === "about" ? "active" : ""}>
               About

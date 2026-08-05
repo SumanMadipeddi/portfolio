@@ -230,11 +230,27 @@
 }
 
 .v2 .nav-links {
+  position: relative;
   display: flex;
   gap: 32px;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.v2 .nav-active-line {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  border-radius: 999px;
+  pointer-events: none;
+  transition:
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
+  z-index: 5;
 }
 
 .v2 .nav-links a {
@@ -248,29 +264,8 @@
   text-decoration: none;
 }
 
-.v2 .nav-links a::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--purple));
-  border-radius: 999px;
-  opacity: 0;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
-}
-
 .v2 .nav-links a:hover {
   color: var(--text);
-}
-
-.v2 .nav-links a:hover::after,
-.v2 .nav-links a.active::after {
-  opacity: 1;
-  transform: scaleX(1);
 }
 
 .v2 .nav-links a.active {
