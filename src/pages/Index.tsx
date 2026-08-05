@@ -956,6 +956,54 @@ const Index = () => {
     const nextHistory = [...chatHistory, nextUserMessage];
     setChatMessages((prev) => [...prev, nextUserMessage]);
 
+const getSmartFallbackResponse = (userQuery: string): string => {
+  const query = userQuery.toLowerCase().trim();
+
+  if (
+    query.includes("open to work") ||
+    query.includes("hiring") ||
+    query.includes("open for") ||
+    query.includes("role") ||
+    query.includes("job") ||
+    query.includes("available") ||
+    query.includes("opportunity") ||
+    query.includes("opportunities")
+  ) {
+    return `Suman is open to Founding AI Engineer and Senior AI Software Engineer roles at AI-Native startups and fast-growing teams in the SF Bay Area (San Jose, CA) or remote. Feel free to reach out directly at smadiped@asu.edu or via LinkedIn!`;
+  }
+
+  if (
+    query.includes("specialize") ||
+    query.includes("specialty") ||
+    query.includes("strengths") ||
+    query.includes("skills") ||
+    query.includes("background")
+  ) {
+    return `1. Founding AI Engineer: Owns architecture, ML infra, and product roadmap from day one.
+2. Agentic Systems & Multi-Agent Orchestration: LangGraph, GraphRAG, and autonomous decision pipelines.
+3. Production LLM Scale: Shipped to 100K+ users, 1M+ queries/month, 10x cost reduction via vLLM quantization, full LangSmith observability.`;
+  }
+
+  if (
+    query.includes("project") ||
+    query.includes("projects") ||
+    query.includes("built") ||
+    query.includes("portfolio") ||
+    query.includes("past work")
+  ) {
+    return `1. RL Environments & Multi-Agent Sandboxes: Research infrastructure for long-horizon learning and strategy evaluation of frontier LLMs.
+2. Financial Decision Infrastructure: Finance-grade AI for chargeback disputes, reconciliation, and audit trails.
+3. Atimuss Flow: Local-first voice agent with sub-500ms latency and EQ/IQ personal assistant intelligence.
+4. GraphRAG & MobileQA Agents: Multi-agent knowledge graph extraction and vision-grounded mobile QA automation.`;
+  }
+
+  if (query.includes("contact") || query.includes("email") || query.includes("reach") || query.includes("phone")) {
+    return `You can reach Suman Madipeddi directly via email at smadiped@asu.edu, phone at +1 (602) 565-9192, or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
+  }
+
+  return `Suman is a Founding AI Engineer specializing in agentic AI systems, LLM infrastructure, and production ML. You can reach out directly at smadiped@asu.edu or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
+};
+
     try {
       const endpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) || "/api/chat";
       const controller = new AbortController();
@@ -984,8 +1032,8 @@ const Index = () => {
             throw new Error("Received an invalid response from chat API.");
           }
         }
-        if (!response.ok) {
-          throw new Error(data?.error || `Unable to get reply right now (status ${response.status}).`);
+        if (!response.ok || !data?.reply) {
+          throw new Error(data?.error || `Unable to get reply right now.`);
         }
 
         const replyText = formatAssistantMessage(String(data?.reply || "").trim());
@@ -993,24 +1041,19 @@ const Index = () => {
           ...prev,
           {
             role: "assistant",
-            content: replyText || "I could not generate a response right now. Please reach Suman via email or LinkedIn.",
+            content: replyText || getSmartFallbackResponse(content),
           },
         ]);
       } finally {
         window.clearTimeout(timeoutId);
       }
-    } catch (error) {
-      const errorMessage =
-        error instanceof DOMException && error.name === "AbortError"
-          ? "Request timed out. Please try again."
-          : error instanceof Error && error.message
-            ? error.message
-            : "Connection issue right now. Please contact Suman at smadiped@asu.edu.";
+    } catch (_error) {
+      const fallbackReply = getSmartFallbackResponse(content);
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: errorMessage,
+          content: fallbackReply,
         },
       ]);
     } finally {
@@ -2070,9 +2113,12 @@ const Index = () => {
             )}
             {isThinking && (
               <div className="typing-indicator" id="typingIndicator">
-                <div className="typing-dot" />
-                <div className="typing-dot" />
-                <div className="typing-dot" />
+                <span className="thinking-text">Thinking</span>
+                <span className="typing-dots">
+                  <div className="typing-dot" />
+                  <div className="typing-dot" />
+                  <div className="typing-dot" />
+                </span>
               </div>
             )}
           </div>

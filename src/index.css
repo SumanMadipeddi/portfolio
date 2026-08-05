@@ -1897,9 +1897,9 @@ html:not(.dark) .dither-btn__label {
 
 .v2 .typing-indicator {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 10px 14px;
   background: var(--bg3);
   border-radius: 16px;
   border-bottom-left-radius: 4px;
@@ -1907,10 +1907,23 @@ html:not(.dark) .dither-btn__label {
   width: fit-content;
 }
 
+.v2 .thinking-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.2px;
+}
+
+.v2 .typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
 .v2 .typing-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--text3);
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
   border-radius: 50%;
   animation: v2-typing-dot 1.2s ease-in-out infinite;
 }
