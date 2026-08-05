@@ -274,6 +274,7 @@ const Index = () => {
   });
   const [typedSkillLines, setTypedSkillLines] = useState<string[]>([]);
   const [activeSkillLineIndex, setActiveSkillLineIndex] = useState<number>(-1);
+  const [activeNavSection, setActiveNavSection] = useState<string>("hero");
 
   const lastScrollY = useRef(0);
   const isCollapsedRef = useRef(false);
@@ -484,13 +485,20 @@ const Index = () => {
 
     const onScroll = () => {
       const currentScrollY = window.scrollY;
-      const max = document.body.scrollHeight - window.innerHeight;
-      const progress = max > 0 ? Math.min(1, Math.max(0, currentScrollY / max)) : 0;
 
-      // Drive progress bar without React re-renders every frame
-      if (navProgressRef.current) {
-        navProgressRef.current.style.transform = `scaleX(${progress})`;
+      // Track active navbar section based on scroll position
+      const sections = ["about", "experience", "projects", "contact"];
+      const offsetPos = currentScrollY + 280;
+      let currentSection = "hero";
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const secId = sections[i];
+        const el = document.getElementById(secId);
+        if (el && offsetPos >= el.offsetTop) {
+          currentSection = secId;
+          break;
+        }
       }
+      setActiveNavSection(currentSection);
 
       setScrolled(currentScrollY > COLLAPSE_OFFSET);
 
@@ -1555,10 +1563,26 @@ const Index = () => {
           </a>
         </div>
         <ul className="nav-links">
-          <li><a href="#about">About</a></li>
-          <li><a href="#experience">Experience</a></li>
-          <li><a href="#projects">Research & Projects</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li>
+            <a href="#about" className={activeNavSection === "about" ? "active" : ""}>
+              About
+            </a>
+          </li>
+          <li>
+            <a href="#experience" className={activeNavSection === "experience" ? "active" : ""}>
+              Experience
+            </a>
+          </li>
+          <li>
+            <a href="#projects" className={activeNavSection === "projects" ? "active" : ""}>
+              Research & Projects
+            </a>
+          </li>
+          <li>
+            <a href="#contact" className={activeNavSection === "contact" ? "active" : ""}>
+              Contact
+            </a>
+          </li>
         </ul>
         <div className="nav-actions">
           <div className="nav-actions-inner">
@@ -1891,7 +1915,7 @@ const Index = () => {
                       )}
                     </a>
                   )}
-                  {project.demoLink && (
+                  {project.demoLink && project.demoLink !== project.githubLink && (
                     <a
                       href={project.demoLink}
                       target="_blank"

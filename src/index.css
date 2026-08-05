@@ -238,15 +238,44 @@
 }
 
 .v2 .nav-links a {
+  position: relative;
   color: var(--text2);
   font-size: 14px;
   font-weight: 400;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
   letter-spacing: -0.1px;
+  padding: 4px 0;
+  text-decoration: none;
+}
+
+.v2 .nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  border-radius: 999px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
 }
 
 .v2 .nav-links a:hover {
   color: var(--text);
+}
+
+.v2 .nav-links a:hover::after,
+.v2 .nav-links a.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.v2 .nav-links a.active {
+  color: var(--text);
+  font-weight: 500;
 }
 
 .v2 .nav-actions {
@@ -1992,17 +2021,7 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .nav-scroll-progress {
-  position: absolute;
-  bottom: 0;
-  left: 24px;
-  right: 24px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--purple));
-  border-radius: 999px;
-  transform: scaleX(0);
-  transform-origin: left;
-  will-change: transform;
-  z-index: 10;
+  display: none;
 }
 
 .v2 .hero-chips {

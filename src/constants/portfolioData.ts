@@ -4,8 +4,8 @@ import ragVoiceImage from "@/assets/rag_voice_agent.png";
 import fineTuningImage from "@/assets/finetuning.jpg";
 import objectSegImage from "@/assets/ObjectSegmentation.jpg";
 import cryptoStreamImage from "@/assets/crypto_stream.png";
-import aiEnvironmentsImage from "@/assets/ai_environments.png";
-import rlOption3Image from "@/assets/rl_env.png";
+import rlEnvImage from "@/assets/rl_env.jpg";
+import financialInfraImage from "@/assets/financial_infra.jpg";
 import { Project, TerminalSkillLine } from "@/types/portfolio";
 
 export const SYSTEM_PROMPT = `You are Suman Madipeddi's AI assistant.
@@ -86,11 +86,19 @@ Developed the voice interaction layer around raw Intelligence and Emotional Inte
 export const projects: Project[] = [
   {
     name: "Building RL Environments Frontier Models",
-    desc: "Architecture & systems insight on building synthetic RL environments, reward loops, and benchmark sandboxes for frontier LLMs like Claude Opus.",
-    stack: ["RL Environments", "Frontier LLMs", "Reward Modeling", "Agent Evals"],
-    image: rlOption3Image,
-    githubLink: "https://www.linkedin.com/feed/update/urn:li:activity:7475300633395347456/",
-    demoLink: "https://medium.com/@madipeddisuman/the-next-ai-bottleneck-isnt-models-it-s-environments-b7fa0b632bc4",
+    desc: "Research infrastructure for long-horizon learning, simulation, strategy evaluation, and benchmarking autonomous AI agents.",
+    stack: ["RL Environments", "Multi-Agent Sandboxes", "Reward Learning", "Agent Evals"],
+    image: rlEnvImage,
+    githubLink: "https://medium.com/@madipeddisuman/the-next-ai-bottleneck-isnt-models-it-s-environments-b7fa0b632bc4",
+    demoLink: "https://www.linkedin.com/feed/update/urn:li:activity:7475300633395347456/",
+  },
+  {
+    name: "Financial Decision Infrastructure",
+    desc: "Finance-grade AI infra for chargebacks, dispute evidence reconciliation, deterministic controls, and human-in-the-loop financial operations.",
+    stack: ["Financial AI", "LangGraph", "FastAPI", "Python", "Evidence Graph", "OpenAI"],
+    image: financialInfraImage,
+    githubLink: "https://github.com/SumanMadipeddi/Financial-agent-chargebacks",
+    demoLink: "",
   },
   {
     name: "GraphRAG Multi Agent",
@@ -98,7 +106,7 @@ export const projects: Project[] = [
     stack: ["LangGraph", "LangChain", "Supabase", "TypeScript"],
     image: graphRagImage,
     githubLink: "https://github.com/SumanMadipeddi/graphRAG-Agent",
-    demoLink: "https://drive.google.com/file/d/1yu_3kWcr04DUCoJ8W04dtCgAta9hCPHp/view?usp=drive_link",
+    demoLink: "https://www.linkedin.com/feed/update/urn:li:activity:7409345312018071552/",
   },
   {
     name: "MobileQA Multi Agent",
@@ -106,7 +114,7 @@ export const projects: Project[] = [
     stack: ["Agent-S3", "LLM Orchestration", "Python", "Android"],
     image: mobileQaImage,
     githubLink: "https://github.com/SumanMadipeddi/mobile-QA-Agent",
-    demoLink: "https://drive.google.com/file/d/1vqaf3gtaYZeliB1yow5v4HuSNcNp-OAA/view?usp=sharing",
+    demoLink: "https://www.linkedin.com/feed/update/urn:li:activity:7434767722242138113/",
   },
   {
     name: "RAG Voice AI",
@@ -122,7 +130,7 @@ export const projects: Project[] = [
     stack: ["PyTorch", "PEFT", "vLLM", "Unsloth"],
     image: fineTuningImage,
     githubLink: "https://github.com/SumanMadipeddi/vllm-finetuned-inference-serving",
-    demoLink: "https://github.com/SumanMadipeddi/vllm-finetuned-inference-serving",
+    demoLink: "",
   },
   {
     name: "Object Segmentation",
