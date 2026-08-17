@@ -969,7 +969,7 @@ const getSmartFallbackResponse = (userQuery: string): string => {
     query.includes("opportunity") ||
     query.includes("opportunities")
   ) {
-    return `Suman is open to Founding AI Engineer and Senior AI Software Engineer roles at AI-Native startups and fast-growing teams in the SF Bay Area (San Jose, CA) or remote. Feel free to reach out directly at smadiped@asu.edu or via LinkedIn!`;
+    return `Suman is open to Founding AI Engineer and Senior AI Software Engineer roles at AI-Native startups and fast-growing teams in the SF Bay Area (San Jose, CA) or remote. Feel free to reach out directly at madipeddisuman@gmail.com or via LinkedIn!`;
   }
 
   if (
@@ -998,10 +998,10 @@ const getSmartFallbackResponse = (userQuery: string): string => {
   }
 
   if (query.includes("contact") || query.includes("email") || query.includes("reach") || query.includes("phone")) {
-    return `You can reach Suman Madipeddi directly via email at smadiped@asu.edu, phone at +1 (602) 565-9192, or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
+    return `You can reach Suman Madipeddi directly via email at madipeddisuman@gmail.com, phone at +1 (602) 565-9192, or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
   }
 
-  return `Suman is a Founding AI Engineer specializing in agentic AI systems, LLM infrastructure, and production ML. You can reach out directly at smadiped@asu.edu or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
+  return `Suman is a Founding AI Engineer specializing in agentic AI systems, LLM infrastructure, and production ML. You can reach out directly at madipeddisuman@gmail.com or connect on LinkedIn at linkedin.com/in/suman-madipeddi.`;
 };
 
     try {
@@ -2058,7 +2058,7 @@ const getSmartFallbackResponse = (userQuery: string): string => {
           <div className="card card-span-5 reveal reveal-delay-1 contact-side-card">
             <div className="card-tag">Get in touch</div>
             <div className="contact-links">
-              <a className="quick-link" href="mailto:smadiped@asu.edu"><span className="quick-link-left"><Mail size={15} />smadiped@asu.edu</span></a>
+              <a className="quick-link" href="mailto:madipeddisuman@gmail.com"><span className="quick-link-left"><Mail size={15} />madipeddisuman@gmail.com</span></a>
               <a className="quick-link" href="tel:+16025659192"><span className="quick-link-left"><Phone size={15} />+1 (602) 565-9192</span></a>
               <a className="quick-link" href="https://linkedin.com/in/suman-madipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Linkedin size={15} />LinkedIn</span><span>↗</span></a>
               <a className="quick-link" href="https://github.com/SumanMadipeddi" target="_blank" rel="noreferrer"><span className="quick-link-left"><Github size={15} />GitHub</span><span>↗</span></a>

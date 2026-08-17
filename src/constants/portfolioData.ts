@@ -36,7 +36,7 @@ Key facts:
 - Domain & Research Interests: Wearables & ambient AI, Healthcare AI Agents, Agentic Infrastructure Layer, Agent Harness & Evals, and Humanoid Robots / Embodied AI.
 - Open to: Founding AI Engineer, AI Software Engineer, Agentic AI roles at AI-Native startups.
 - Location: San Jose CA, open to remote and relocation.
-- Email: smadiped@asu.edu
+- Email: madipeddisuman@gmail.com
 - LinkedIn: linkedin.com/in/suman-madipeddi
 - GitHub: github.com/SumanMadipeddi
 - Medium: medium.com/@madipeddisuman

@@ -4,7 +4,7 @@ Identity:
 - Name: Suman Madipeddi
 - Role: Founding AI Engineer, AI/ML Engineer
 - Location: San Jose, CA
-- Email: smadiped@asu.edu
+- Email: madipeddisuman@gmail.com
 - LinkedIn: https://linkedin.com/in/suman-madipeddi
 - GitHub: https://github.com/SumanMadipeddi
 - Medium: https://medium.com/@madipeddisuman
