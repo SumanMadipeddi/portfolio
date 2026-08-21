@@ -153,7 +153,7 @@ function renderColoredTerminalLine(text: string, lineIndex: number) {
       return (
         <>
           <span style={{ color: "#2997ff", fontWeight: 600 }}>{commandPart}</span>
-          <span style={{ color: "#30d158", fontWeight: 600 }}>{rest}</span>
+          <span>{rest}</span>
         </>
       );
     }
@@ -186,7 +186,7 @@ function renderColoredTerminalLine(text: string, lineIndex: number) {
             rel="noopener noreferrer"
             className="terminal-link"
             style={{
-              color: "#30d158",
+              color: "#2997ff",
               fontWeight: 600,
               textDecoration: "underline",
               textUnderlineOffset: "3px",

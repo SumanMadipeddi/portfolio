@@ -20,6 +20,8 @@ export const ICONS: { slug: string; name: string }[] = [
   { slug: "googlecloud", name: "GCP" },
   { slug: "tailwindcss", name: "Tailwind" },
   { slug: "vercel", name: "Vercel" },
+  { slug: "firebase", name: "Firebase" },
+  { slug: "googleanalytics", name: "Google Analytics" },
   { slug: "livekit", name: "LiveKit" },
   { slug: "twilio", name: "Twilio" },
   { slug: "neo4j", name: "Neo4j" },
@@ -104,7 +106,7 @@ export const TechStack = () => {
             <div
               key={`${icon.slug}-${idx}`}
               title={icon.name}
-              className="flex shrink-0 items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 px-4 py-3 transition-all hover:border-emerald-500/40 dark:hover:border-emerald-500/40 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40"
+              className="flex shrink-0 items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 px-4 py-3 transition-all hover:border-[var(--accent)]/40 dark:hover:border-[var(--accent)]/40 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40"
             >
               {renderTechIcon(icon)}
               <span className="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">

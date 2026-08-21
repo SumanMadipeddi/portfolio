@@ -574,7 +574,7 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .t-p-ok {
-  color: var(--green);
+  color: var(--accent);
   flex-shrink: 0;
 }
 

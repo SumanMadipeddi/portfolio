@@ -156,6 +156,8 @@ export const techStack = [
   "Kubernetes",
   "React",
   "TypeScript",
+  "Firebase",
+  "Google Analytics",
 ];
 
 export const stats = [
