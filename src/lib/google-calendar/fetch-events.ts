@@ -1,16 +1,8 @@
 import { normalizeGoogleCalendarEvent, RawGoogleCalendarEvent } from "./normalize-event";
 import { InterviewEvent } from "@/types/interview";
+import { saveInterviewEvents, getInterviewEvents } from "@/lib/interview-storage";
 
-export interface GoogleAuthConfig {
-  clientId?: string;
-  scopes: string[];
-}
-
-export const GOOGLE_CALENDAR_SCOPES = [
-  "https://www.googleapis.com/auth/calendar.events.readonly",
-];
-
-export async function fetchGoogleCalendarEvents(accessToken: string): Promise<InterviewEvent[]> {
+export async function fetchLiveGoogleCalendarEvents(accessToken: string): Promise<InterviewEvent[]> {
   try {
     const response = await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
@@ -23,23 +15,38 @@ export async function fetchGoogleCalendarEvents(accessToken: string): Promise<In
     );
 
     if (!response.ok) {
-      throw new Error(`Google Calendar API Error ${response.status}: ${await response.text()}`);
+      const errText = await response.text();
+      throw new Error(`Google Calendar API error ${response.status}: ${errText.slice(0, 200)}`);
     }
 
     const data = await response.json();
     const items: RawGoogleCalendarEvent[] = data.items || [];
 
-    const normalizedEvents: InterviewEvent[] = [];
+    const fetchedEvents: InterviewEvent[] = [];
     items.forEach((item, index) => {
       const normalized = normalizeGoogleCalendarEvent(item, (index % 4) + 1, 4);
       if (normalized) {
-        normalizedEvents.push(normalized);
+        fetchedEvents.push(normalized);
       }
     });
 
-    return normalizedEvents;
+    if (fetchedEvents.length > 0) {
+      // Merge with existing events
+      const existing = getInterviewEvents();
+      const existingMap = new Map(existing.map((e) => [e.calendarEventId, e]));
+
+      fetchedEvents.forEach((fe) => {
+        existingMap.set(fe.calendarEventId, fe);
+      });
+
+      const merged = Array.from(existingMap.values());
+      saveInterviewEvents(merged);
+      return merged;
+    }
+
+    return getInterviewEvents();
   } catch (error) {
-    console.error("Failed to fetch Google Calendar events:", error);
+    console.error("Failed to fetch live Google Calendar events:", error);
     throw error;
   }
 }
