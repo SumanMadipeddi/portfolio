@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { InterviewEvent, FilterOptions } from "@/types/interview";
 import { getInterviewEvents, updateInterviewEvent, getCompaniesFromEvents } from "@/lib/interview-storage";
 import { computeOverallMetrics, filterInterviewEvents } from "@/lib/analytics/interviewMetrics";
+import { getFilterRangeStart, isInInterviewWindow } from "@/lib/interview-window";
 import { MetricCard } from "@/components/interviews/MetricCard";
 import { DashboardFilters } from "@/components/interviews/DashboardFilters";
 import { InterviewJourneyChart } from "@/components/interviews/InterviewJourneyChart";
@@ -12,7 +13,7 @@ import { UpcomingInterviews } from "@/components/interviews/UpcomingInterviews";
 import { InterviewDetailDrawer } from "@/components/interviews/InterviewDetailDrawer";
 import { verifyPasscode } from "@/lib/resume-api";
 import { requestGoogleCalendarAccessToken } from "@/lib/google-calendar/client";
-import { fetchLiveGoogleCalendarEvents } from "@/lib/google-calendar/fetch-events";
+import { fetchLiveGoogleCalendarEvents, fetchGoogleCalendarICalEvents } from "@/lib/google-calendar/fetch-events";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,31 +24,24 @@ import {
   Calendar,
   Trophy,
   Zap,
-  Shield,
   RefreshCw,
-  Sparkles,
   Lock,
   ArrowLeft,
   Eye,
   EyeOff,
   Loader2,
-  CheckCircle2,
-  AlertTriangle,
   LogOut,
-  Globe,
 } from "lucide-react";
 
 export default function Interviews() {
   const navigate = useNavigate();
 
-  // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [showPasscode, setShowPasscode] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
 
-  // Data & Dashboard State
   const [events, setEvents] = useState<InterviewEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<InterviewEvent | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -56,7 +50,7 @@ export default function Interviews() {
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<FilterOptions>({
-    dateRange: "all",
+    dateRange: "30d",
     companyId: "all",
     roleId: "all",
     category: "all",
@@ -66,17 +60,16 @@ export default function Interviews() {
   });
 
   useEffect(() => {
-    // Purge old mock data keys
+    localStorage.removeItem("interview_intelligence_events_live_v3");
     localStorage.removeItem("interview_intelligence_events_aug2024_v2");
     localStorage.removeItem("interview_intelligence_events_v1");
 
-    // Check if session is authenticated
     const authed = sessionStorage.getItem("interviews_auth_token");
     if (authed === "true") {
       setIsAuthenticated(true);
     }
 
-    const loaded = getInterviewEvents();
+    const loaded = getInterviewEvents().filter((event) => isInInterviewWindow(event.start));
     setEvents(loaded);
   }, []);
 
@@ -117,11 +110,9 @@ export default function Interviews() {
     setAuthMessage("");
   };
 
-  // Google OAuth Authorization & Calendar Fetch
   const handleConnectGoogleCalendar = async () => {
     setIsSyncing(true);
 
-    // 1. Check if secret iCal URL is set in .env
     const envIcalUrl = import.meta.env.VITE_GOOGLE_ICAL_URL;
     if (envIcalUrl) {
       try {
@@ -132,12 +123,11 @@ export default function Interviews() {
         setTimeout(() => setSyncStatusText(""), 3500);
         setIsSyncing(false);
         return;
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.warn("iCal sync error:", e);
       }
     }
 
-    // 2. OAuth Flow
     setSyncStatusText("Connecting to Google OAuth 2.0 Identity Services...");
 
     try {
@@ -151,45 +141,52 @@ export default function Interviews() {
 
       const freshEvents = await fetchLiveGoogleCalendarEvents(token);
       setEvents(freshEvents);
-      setSyncStatusText("Synced latest Google Calendar events!");
-      setTimeout(() => setSyncStatusText(""), 3500);
-    } catch (err: any) {
-      console.warn("Google OAuth popup error:", err);
-      
-      const userChoice = prompt(
-        "Google Calendar Sync Options:\n\n1. Paste your Google Secret iCal Link (From Google Calendar Settings -> Integrate Calendar -> Secret address in iCal format)\nOR\n2. Paste a Google OAuth Access Token:"
+      const upcomingCount = freshEvents.filter((e) => new Date(e.start) > new Date()).length;
+      setSyncStatusText(
+        upcomingCount > 0
+          ? `Synced ${freshEvents.length} interview events (${upcomingCount} upcoming).`
+          : `Synced ${freshEvents.length} interview events. No upcoming meetings found on the primary calendar.`
       );
-
-      if (userChoice && userChoice.trim()) {
-        const inputStr = userChoice.trim();
-        try {
-          if (inputStr.startsWith("http")) {
-            setSyncStatusText("Fetching events via Secret iCal URL...");
-            const fresh = await fetchGoogleCalendarICalEvents(inputStr);
-            setEvents(fresh);
-            setSyncStatusText("Synced Google Calendar events!");
-          } else {
-            setSyncStatusText("Fetching events via Google Access Token...");
-            const fresh = await fetchLiveGoogleCalendarEvents(inputStr);
-            setEvents(fresh);
-            setSyncStatusText("Synced Google Calendar events!");
-          }
-          setTimeout(() => setSyncStatusText(""), 3500);
-        } catch (e: any) {
-          setSyncStatusText(`Sync error: ${e.message || "Failed to sync calendar"}`);
-        }
-      } else {
-        setSyncStatusText("Calendar data ready.");
-        setTimeout(() => setSyncStatusText(""), 3000);
-      }
+      setTimeout(() => setSyncStatusText(""), 5000);
+    } catch (err: unknown) {
+      console.warn("Google OAuth popup error:", err);
+      const message = err instanceof Error ? err.message : "Google Calendar sign-in failed";
+      setSyncStatusText(
+        `${message}. In Google Cloud Console enable Calendar API, use a Web OAuth client, and add this site (http://localhost:3000) under Authorized JavaScript origins.`
+      );
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const filteredEvents = useMemo(() => filterInterviewEvents(events, filters), [events, filters]);
-  const metrics = useMemo(() => computeOverallMetrics(filteredEvents), [filteredEvents]);
-  const companies = useMemo(() => getCompaniesFromEvents(events), [events]);
+  const allTimeFilters = useMemo(
+    () => ({
+      ...filters,
+      searchQuery: "",
+      companyId: "all" as const,
+      roleId: "all",
+      dateRange: "all" as const,
+    }),
+    [filters.category, filters.stage, filters.status]
+  );
+  const allTimeEvents = useMemo(
+    () => filterInterviewEvents(events, allTimeFilters),
+    [events, allTimeFilters]
+  );
+  const filteredEvents = useMemo(
+    () => filterInterviewEvents(events, { ...filters, searchQuery: "" }),
+    [events, filters]
+  );
+  const metrics = useMemo(() => computeOverallMetrics(allTimeEvents), [allTimeEvents]);
+  const companies = useMemo(() => {
+    const list = getCompaniesFromEvents(allTimeEvents);
+    return [...list].sort((a, b) => {
+      const aCount = a.roles.reduce((sum, role) => sum + role.interviews.length, 0);
+      const bCount = b.roles.reduce((sum, role) => sum + role.interviews.length, 0);
+      return bCount - aCount || a.name.localeCompare(b.name);
+    });
+  }, [allTimeEvents]);
+  const timelineStart = useMemo(() => getFilterRangeStart(filters.dateRange), [filters.dateRange]);
 
   const handleSelectEvent = (evt: InterviewEvent) => {
     setSelectedEvent(evt);
@@ -202,68 +199,62 @@ export default function Interviews() {
     setSelectedEvent(updated);
   };
 
-  // Render Passcode Authentication Form if not logged in
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#070a0f] text-slate-100 font-sans flex items-center justify-center p-6 selection:bg-cyan-500 selection:text-slate-950">
-        <div className="w-full max-w-md space-y-6">
-          <div className="text-center space-y-2">
+      <div className="v2 iv-app min-h-screen py-20">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center mb-10">
             <button
               onClick={() => navigate("/")}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors mb-2"
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--text3)] hover:text-[var(--accent)] transition-colors mb-6"
             >
               <ArrowLeft className="h-4 w-4" />
               Return to Portfolio
             </button>
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 shadow-xl shadow-cyan-500/20 font-black mx-auto">
-              <Shield className="h-6 w-6" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Interview Intelligence Admin
+            <h1 className="text-4xl font-semibold tracking-tight mb-3" style={{ letterSpacing: "-1.5px" }}>
+              Interview Intelligence
             </h1>
-            <p className="text-xs text-slate-400">
-              Enter admin passcode to unlock the Job Search & Google Calendar Dashboard
-            </p>
           </div>
 
-          <Card className="bg-[#111622]/90 border border-slate-800/80 backdrop-blur-xl shadow-2xl p-2 rounded-2xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm text-slate-200">
-                <Lock className="h-4 w-4 text-cyan-400" />
-                Passcode Verification Required
+          <Card className="premium-card max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-[var(--text)]">
+                <Lock className="h-5 w-5 text-[var(--accent)]" />
+                Admin Access
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="passcode" className="text-xs text-slate-300">
-                  Admin Passcode
+                <Label htmlFor="passcode" className="text-[var(--text2)]">
+                  Enter Passcode
                 </Label>
                 <div className="relative mt-1">
                   <Input
                     id="passcode"
                     type={showPasscode ? "text" : "password"}
-                    placeholder="Enter passcode..."
+                    placeholder="Enter admin passcode"
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handlePasscodeVerification()}
-                    className="bg-[#0a0e17] border-slate-800 text-slate-100 pr-12 focus:border-cyan-500 text-sm py-2 rounded-xl"
+                    className="premium-input pr-12"
                   />
                   <button
                     type="button"
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 dark:hover:bg-black/10 transition-colors"
                     onClick={() => setShowPasscode(!showPasscode)}
                   >
-                    {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPasscode ? (
+                      <EyeOff className="h-4 w-4 text-[var(--text3)]" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-[var(--text3)]" />
+                    )}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-2">
-                  Enter your admin passcode (`Suman@0216`) to view interview metrics and sync calendar data.
-                </p>
               </div>
 
               <Button
                 onClick={handlePasscodeVerification}
-                className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-cyan-500/20 text-xs"
+                className="w-full btn-primary"
                 disabled={isVerifying}
               >
                 {isVerifying ? (
@@ -272,17 +263,17 @@ export default function Interviews() {
                     Verifying...
                   </>
                 ) : (
-                  "Unlock Dashboard Access"
+                  "Verify Access"
                 )}
               </Button>
 
               {authMessage && (
                 <div
-                  className={`py-2.5 px-4 rounded-xl text-xs border backdrop-blur-md transition-all text-center ${
+                  className={`py-2.5 px-6 rounded-full text-sm border backdrop-blur-md transition-all text-center ${
                     authMessage.toLowerCase().includes("granted") ||
                     authMessage.toLowerCase().includes("success")
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-500 border-rose-500/20"
                   }`}
                 >
                   {authMessage}
@@ -295,131 +286,108 @@ export default function Interviews() {
     );
   }
 
-  // Dashboard View when Authenticated
   return (
-    <div className="min-h-screen bg-[#070a0f] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950 pb-20">
-      {/* Top Banner Header */}
-      <header className="border-b border-slate-800/80 bg-[#0c1017]/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+    <div className="v2 iv-app pb-12">
+      <header className="iv-topbar">
+        <div className="max-w-[1300px] mx-auto px-6 py-2.5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate("/")}
-              className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              className="theme-btn"
               title="Return to Portfolio"
+              aria-label="Return to Portfolio"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 shadow-lg shadow-cyan-500/20 font-black">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="text-[18px] font-semibold tracking-tight text-[var(--text)] truncate">
                 Job Search & Interview Intelligence
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleConnectGoogleCalendar}
               disabled={isSyncing}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md shadow-cyan-500/20"
+              className="btn-primary text-xs sm:text-sm"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-              {isSyncing ? "Syncing Google Calendar..." : "Connect Google Calendar"}
+              {isSyncing ? "Syncing..." : "Sync Calendar"}
             </button>
-
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 transition-colors"
-              title="Lock Dashboard"
-            >
-              <LogOut className="h-4 w-4" />
+            <button onClick={handleLogout} className="btn-logout" title="Lock Dashboard">
+              <LogOut className="h-3.5 w-3.5 mr-1.5" />
+              Logout
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
+      <main className="max-w-[1300px] mx-auto px-6 pt-4 space-y-3">
         {syncStatusText && (
-          <div className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs px-4 py-3 rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
-            <Sparkles className="h-4 w-4 text-cyan-400 animate-spin" />
+          <div className="iv-card iv-card-sm flex items-center gap-2 text-sm text-[var(--accent)]">
+            <RefreshCw className="h-4 w-4 animate-spin" />
             {syncStatusText}
           </div>
         )}
 
-        {/* 5 Top KPI Cards */}
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
           <MetricCard
             title="Active Companies"
             value={metrics.activeCompanies}
-            subtext="In active pipeline"
-            change="+12.5%"
-            trend="up"
-            icon={<Building2 className="h-5 w-5" />}
+            subtext="Since Aug 2024 · unique companies"
+            icon={<Building2 className="h-4 w-4" />}
           />
           <MetricCard
             title="Active Roles"
             value={metrics.activeRoles}
-            subtext="Across candidate apps"
-            change="+8.7%"
-            trend="up"
-            icon={<Briefcase className="h-5 w-5" />}
+            subtext="Since Aug 2024 · unique roles"
+            icon={<Briefcase className="h-4 w-4" />}
           />
           <MetricCard
-            title="Interviews This Week"
+            title="This Week"
             value={metrics.interviewsThisWeek}
-            subtext="7 days scheduled"
-            change="+40%"
-            trend="up"
-            icon={<Calendar className="h-5 w-5" />}
+            subtext="Interviews scheduled"
+            icon={<Calendar className="h-4 w-4" />}
           />
           <MetricCard
             title="Final / Onsite"
             value={metrics.finalOrOnsiteCount}
             subtext="High intent rounds"
-            change="3 Total"
-            trend="neutral"
-            icon={<Zap className="h-5 w-5 text-amber-400" />}
-            accentColor="from-amber-500/20 to-orange-500/10"
+            icon={<Zap className="h-4 w-4" />}
+            accent="amber"
           />
           <MetricCard
-            title="Offers Received"
+            title="Offers"
             value={metrics.offersCount}
             subtext="Pending decision"
-            change="1 Offer"
-            trend="up"
-            icon={<Trophy className="h-5 w-5 text-emerald-400" />}
-            accentColor="from-emerald-500/20 to-teal-500/10"
+            icon={<Trophy className="h-4 w-4" />}
+            accent="green"
           />
         </section>
 
-        {/* Filter Toolbar */}
-        <DashboardFilters filters={filters} onChange={setFilters} companies={companies} />
+        <DashboardFilters
+          filters={filters}
+          onChange={setFilters}
+          companies={companies}
+          onSelectEvent={handleSelectEvent}
+        />
 
-        {/* HERO Visualization: Interview Journey Interactive Line Graph */}
-        <section>
-          <InterviewJourneyChart
-            events={filteredEvents}
-            onSelectEvent={handleSelectEvent}
-            onViewRole={(roleId) => navigate(`/roles/${roleId}`)}
-          />
-        </section>
+        <InterviewJourneyChart
+          events={filteredEvents}
+          rangeStart={timelineStart}
+          onSelectEvent={handleSelectEvent}
+          onViewRole={(roleId) => navigate(`/roles/${roleId}`)}
+        />
 
-        {/* Visualization 2: Interview Activity & Role Analytics */}
-        <section>
-          <RoleAnalyticsChart events={filteredEvents} />
-        </section>
+        <RoleAnalyticsChart events={filteredEvents} />
 
-        {/* Supporting Widgets Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           <NeedsAttention events={events} onSelectEvent={handleSelectEvent} />
           <UpcomingInterviews events={events} onSelectEvent={handleSelectEvent} />
         </section>
       </main>
 
-      {/* Slide-Over Interview Detail Drawer */}
       <InterviewDetailDrawer
         event={selectedEvent}
         isOpen={isDrawerOpen}

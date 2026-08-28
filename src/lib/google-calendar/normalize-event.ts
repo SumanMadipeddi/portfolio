@@ -1,5 +1,6 @@
 import { InterviewEvent, InterviewerInfo } from "@/types/interview";
 import { detectInterview } from "./detect-interview";
+import { resolveCalendarLocation } from "./location";
 
 export interface RawGoogleCalendarEvent {
   id: string;
@@ -13,6 +14,9 @@ export interface RawGoogleCalendarEvent {
   hangoutLink?: string;
   htmlLink?: string;
   status?: string;
+  conferenceData?: {
+    entryPoints?: Array<{ entryPointType?: string; uri?: string }>;
+  };
 }
 
 const CANDIDATE_EMAILS = [
@@ -20,84 +24,97 @@ const CANDIDATE_EMAILS = [
   "madipeddisuman",
   "suman.madipeddi",
   "sumanmadipeddi",
-  "suman"
 ];
 
-export function normalizeGoogleCalendarEvent(
-  raw: RawGoogleCalendarEvent,
-  stageIndex = 1,
-  totalStagesCount = 4
-): InterviewEvent | null {
+function slugify(value: string): string {
+  const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return slug || "unknown";
+}
+
+function extractMeetingUrl(raw: RawGoogleCalendarEvent): string | null {
+  if (raw.hangoutLink) return raw.hangoutLink;
+
+  const videoEntry = raw.conferenceData?.entryPoints?.find(
+    (entry) =>
+      entry.uri &&
+      (entry.entryPointType === "video" || /meet\.google|zoom\.us|teams\.microsoft/i.test(entry.uri))
+  );
+  if (videoEntry?.uri) return videoEntry.uri;
+
+  const location = raw.location?.trim() || "";
+  if (/^https?:\/\//i.test(location)) return location;
+
+  const description = raw.description || "";
+  const meetMatch = description.match(/https?:\/\/meet\.google\.com\/[a-z0-9-]+/i);
+  if (meetMatch) return meetMatch[0];
+  const zoomMatch = description.match(/https?:\/\/[\w.-]*zoom\.us\/[^\s<>"]+/i);
+  if (zoomMatch) return zoomMatch[0].replace(/[.,;)]+$/, "");
+  const teamsMatch = description.match(/https?:\/\/teams\.microsoft\.com\/[^\s<>"]+/i);
+  if (teamsMatch) return teamsMatch[0].replace(/[.,;)]+$/, "");
+
+  return null;
+}
+
+export function normalizeGoogleCalendarEvent(raw: RawGoogleCalendarEvent): InterviewEvent | null {
+  if (raw.status === "cancelled") return null;
+
   const organizerEmail = raw.organizer?.email;
   const attendeeEmails = (raw.attendees || []).map((a) => a.email);
+  const meetingUrl = extractMeetingUrl(raw);
 
   const detection = detectInterview({
     summary: raw.summary,
     description: raw.description,
     organizerEmail,
     attendeeEmails,
+    hasVideoMeeting: Boolean(meetingUrl),
   });
 
-  if (!detection.isInterview) {
-    return null;
-  }
+  if (!detection.isInterview) return null;
 
   const startTimeStr = raw.start?.dateTime || raw.start?.date || new Date().toISOString();
   const endTimeStr = raw.end?.dateTime || raw.end?.date || new Date().toISOString();
   const start = new Date(startTimeStr);
   const end = new Date(endTimeStr);
+  if (Number.isNaN(start.getTime())) return null;
 
-  const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60)) || 45;
+  const durationMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60)) || 45);
+  const company = detection.company;
+  const domain = detection.companyDomain;
 
-  const company = detection.company || "Target Company";
+  const interviewers: InterviewerInfo[] = (raw.attendees || [])
+    .filter((a) => {
+      if (!a.email) return false;
+      const emailLower = a.email.toLowerCase();
+      if (emailLower.includes("calendar.google.com")) return false;
+      return !CANDIDATE_EMAILS.some((cand) => emailLower.includes(cand));
+    })
+    .map((a) => ({
+      name: a.displayName || a.email.split("@")[0],
+      email: a.email,
+      title: a.email.split("@")[1] || undefined,
+    }));
 
-  // Filter out candidate's own email to extract real external interviewers
-  const externalAttendees = (raw.attendees || []).filter((a) => {
-    if (!a.email) return false;
-    const emailLower = a.email.toLowerCase();
-    if (emailLower.includes("calendar.google.com")) return false;
-    return !CANDIDATE_EMAILS.some((cand) => emailLower.includes(cand));
-  });
-
-  let interviewers: InterviewerInfo[] = externalAttendees.map((a) => ({
-    name: a.displayName || a.email.split("@")[0],
-    email: a.email,
-    title: `${company} Panelist`,
-    avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.displayName || a.email)}`,
-  }));
-
-  // Fallback if no external attendee email is present
-  if (interviewers.length === 0) {
-    interviewers = [
-      {
-        name: `${company} Interview Team`,
-        email: `careers@${company.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
-        title: "Hiring Panel",
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company)}`,
-      },
-    ];
-  }
-
-  const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "-");
-  const role = detection.role || "Full-Stack AI Engineer";
-  const roleSlug = role.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  const companySlug = slugify(company);
+  const role = detection.role;
+  const roleSlug = slugify(role);
 
   return {
     id: `evt-${raw.id}`,
     calendarEventId: raw.id,
     company,
     companyId: `comp-${companySlug}`,
-    companyDomain: `${companySlug}.com`,
-    companyWebsite: `https://${companySlug}.com`,
-    companyLogo: `https://logo.clearbit.com/${companySlug}.com`,
+    companyDomain: domain,
+    companyWebsite: domain ? `https://${domain}` : null,
+    companyLogo: domain ? `https://logo.clearbit.com/${domain}` : null,
 
     role,
     roleId: `role-${companySlug}-${roleSlug}`,
     roleCategory: detection.roleCategory,
 
     interviewType: detection.interviewType,
-    stage: stageIndex,
-    totalStages: totalStagesCount,
+    stage: 1,
+    totalStages: 1,
 
     interviewers,
     interviewerNames: interviewers.map((i) => i.name),
@@ -107,14 +124,17 @@ export function normalizeGoogleCalendarEvent(
     end,
     durationMinutes,
 
-    meetingUrl: raw.hangoutLink || raw.location || "https://meet.google.com",
-    location: raw.location || "Remote (Google Meet)",
+    meetingUrl,
+    location: resolveCalendarLocation({
+      location: raw.location,
+      description: raw.description,
+    }),
 
     status: start > new Date() ? "upcoming" : "completed",
-    outcome: start > new Date() ? "waiting" : "advanced",
+    outcome: start > new Date() ? "waiting" : "unknown",
 
     confidenceScore: detection.confidenceScore,
-    calendarDescription: raw.description || "No calendar description provided.",
-    notes: "Prepared background questions on architecture and systems design.",
+    calendarDescription: raw.description || "",
+    notes: "",
   };
 }

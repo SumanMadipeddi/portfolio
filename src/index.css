@@ -2141,6 +2141,420 @@ html:not(.dark) .dither-btn__label {
   color: var(--text);
 }
 
+/* Interview dashboard — same tokens, cards, and company-list structure as the rest of the site */
+.v2.iv-app {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.v2.iv-app section {
+  min-height: unset;
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.v2.iv-app .iv-card:not(.iv-modal-card) {
+  padding: 16px 18px;
+  border-radius: 18px;
+}
+
+.v2.iv-app .iv-card-sm {
+  padding: 16px 14px;
+  border-radius: 16px;
+}
+
+.v2.iv-app .iv-metric {
+  padding: 20px 16px;
+}
+
+.v2.iv-app .iv-input,
+.v2.iv-app .iv-select {
+  padding: 6px 12px;
+}
+
+.v2.iv-app .card-title {
+  font-size: 18px;
+}
+
+.v2 .iv-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  background: var(--nav-bg-scrolled);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+.v2 .iv-card {
+  background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  position: relative;
+  overflow: hidden;
+}
+
+.v2 .iv-card-sm {
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.v2 .iv-modal-overlay {
+  background: rgba(10, 15, 30, 0.14);
+}
+
+.dark .v2 .iv-modal-overlay {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.v2 .iv-card.iv-modal-card {
+  padding: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(247, 248, 251, 0.62));
+  box-shadow: 0 24px 64px rgba(18, 21, 33, 0.18);
+}
+
+.dark .v2 .iv-card.iv-modal-card {
+  background: linear-gradient(135deg, rgba(26, 30, 40, 0.82), rgba(18, 20, 28, 0.68));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.v2 .iv-scroll,
+.v2 .iv-dropdown-menu,
+.v2 .iv-search-results,
+.v2 .iv-textarea {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.v2 .iv-scroll::-webkit-scrollbar,
+.v2 .iv-dropdown-menu::-webkit-scrollbar,
+.v2 .iv-search-results::-webkit-scrollbar,
+.v2 .iv-textarea::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.v2 .iv-scroll::-webkit-scrollbar-track,
+.v2 .iv-dropdown-menu::-webkit-scrollbar-track,
+.v2 .iv-search-results::-webkit-scrollbar-track,
+.v2 .iv-textarea::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.v2 .iv-scroll::-webkit-scrollbar-thumb,
+.v2 .iv-dropdown-menu::-webkit-scrollbar-thumb,
+.v2 .iv-search-results::-webkit-scrollbar-thumb,
+.v2 .iv-textarea::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 99px;
+}
+
+.v2 .iv-scroll::-webkit-scrollbar-thumb:hover,
+.v2 .iv-dropdown-menu::-webkit-scrollbar-thumb:hover,
+.v2 .iv-search-results::-webkit-scrollbar-thumb:hover,
+.v2 .iv-textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--text3);
+}
+
+.v2 .iv-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.v2 .iv-activity-list {
+  max-height: calc(4 * 130px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.v2 .iv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.v2 .iv-row:last-child {
+  border-bottom: none;
+}
+
+.v2 .iv-row:hover .iv-row-title {
+  color: var(--accent);
+}
+
+.v2 .iv-row-title {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  transition: color 0.2s;
+}
+
+.v2 .iv-row-meta {
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 300;
+}
+
+.v2 .iv-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: rgba(41, 151, 255, 0.1);
+  border: 1px solid rgba(41, 151, 255, 0.15);
+  border-radius: 980px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.v2 .iv-company-count {
+  min-width: 7.75rem;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.v2 .iv-badge-green {
+  background: rgba(48, 209, 88, 0.1);
+  border-color: rgba(48, 209, 88, 0.2);
+  color: var(--green);
+}
+
+.v2 .iv-badge-purple {
+  background: rgba(191, 90, 242, 0.1);
+  border-color: rgba(191, 90, 242, 0.2);
+  color: var(--purple);
+}
+
+.v2 .iv-badge-amber {
+  background: rgba(255, 159, 10, 0.12);
+  border-color: rgba(255, 159, 10, 0.22);
+  color: #ff9f0a;
+}
+
+.v2 .iv-badge-rose {
+  background: rgba(255, 69, 58, 0.1);
+  border-color: rgba(255, 69, 58, 0.2);
+  color: #ff453a;
+}
+
+.v2 .iv-input,
+.v2 .iv-select,
+.v2 .iv-textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.v2 .iv-input:focus,
+.v2 .iv-select:focus,
+.v2 .iv-textarea:focus,
+.v2 .iv-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.v2 .iv-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: text;
+}
+
+.v2 .iv-search input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.v2 .iv-search input::placeholder {
+  color: var(--text3);
+}
+
+.v2 .iv-search-results {
+  margin-top: 12px;
+  max-height: 288px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.v2 .iv-search-row {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.v2 .iv-search-row:first-child {
+  padding-top: 12px;
+}
+
+.v2 .iv-search-row-static {
+  cursor: default;
+}
+
+.v2 .iv-search-selected {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.v2 .iv-search-selected .iv-search-row:first-child {
+  padding-top: 12px;
+}
+
+.v2 .iv-interview-results {
+  max-height: 288px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+}
+
+.v2 .iv-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+}
+
+.v2 .iv-search-clear:hover {
+  color: var(--text);
+  background: var(--bg3);
+}
+
+.v2 .iv-search-empty {
+  padding: 16px 4px 4px;
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.v2 .iv-select {
+  padding: 8px 12px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.v2 .iv-card.iv-filters {
+  overflow: visible;
+  z-index: 30;
+}
+
+.v2 .iv-dropdown {
+  position: relative;
+  width: 180px;
+  flex-shrink: 0;
+  z-index: 40;
+}
+
+.v2 .iv-dropdown {
+  position: relative;
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.v2 .iv-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.v2 .iv-dropdown-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2 .iv-dropdown-trigger.is-open,
+.v2 .iv-dropdown-trigger:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.v2 .iv-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  max-height: 152px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  box-shadow: var(--glass-shadow);
+}
+
+.v2 .iv-dropdown-item {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2 .iv-dropdown-item:hover {
+  background: rgba(41, 151, 255, 0.1);
+  color: var(--text);
+}
+
+.v2 .iv-dropdown-item.is-active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
 .v2 .nav-scroll-progress {
   display: none;
 }
@@ -2368,6 +2782,13 @@ html:not(.dark) .dither-btn__label {
 
   50% {
     opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .v2 .iv-row {
+    flex-wrap: wrap;
+    gap: 10px;
   }
 }
 

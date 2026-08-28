@@ -1,122 +1,117 @@
-import { useMemo, useState } from "react";
-import { InterviewEvent, RoleCategoryAnalytics } from "@/types/interview";
+import { useMemo } from "react";
+import { InterviewEvent } from "@/types/interview";
 import { computeRoleCategoryAnalytics } from "@/lib/analytics/roleMetrics";
-import { BarChart3, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface RoleAnalyticsChartProps {
   events: InterviewEvent[];
 }
 
 export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
-  const [hoveredCategory, setHoveredCategory] = useState<RoleCategoryAnalytics | null>(null);
+  const analytics = useMemo(() => {
+    return computeRoleCategoryAnalytics(events)
+      .map((item) => ({
+        ...item,
+        totalRounds: item.recruiterCount + item.technicalCount + item.finalCount + item.offerCount,
+      }))
+      .filter((item) => item.totalRounds > 0)
+      .sort((a, b) => b.totalRounds - a.totalRounds);
+  }, [events]);
 
-  const analytics = useMemo(() => computeRoleCategoryAnalytics(events), [events]);
-
-  const maxTotal = Math.max(
-    ...analytics.map((a) => a.recruiterCount + a.technicalCount + a.finalCount + a.offerCount),
-    1
-  );
+  const maxTotal = Math.max(...analytics.map((a) => a.totalRounds), 1);
 
   return (
-    <div className="bg-[#111622]/90 border border-slate-800/80 rounded-2xl p-6 shadow-2xl transition-all">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div className="iv-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-cyan-400" />
-            <h3 className="text-xl font-extrabold text-white tracking-tight">
-              Interview Activity & Role Analytics
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Stage volume breakdown across calendar roles (MTS, Founding Engineer, AI Engineer, etc.)
+          <div className="card-tag" style={{ marginBottom: 4 }}>Roles</div>
+          <h3 className="card-title">Interview Activity</h3>
+          <p className="card-body" style={{ marginTop: 2 }}>
+            Stage volume across extracted roles
           </p>
         </div>
 
-        {/* Bar Segment Legend without Blue Applications Bar */}
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="h-3 w-3 rounded bg-cyan-400" />
-            Recruiter Screens
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="h-3 w-3 rounded bg-purple-500" />
-            Technical Rounds
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="h-3 w-3 rounded bg-amber-400" />
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text2)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#2997ff]" />
+            Recruiter
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#bf5af2]" />
+            Technical
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff9f0a]" />
             Final / Onsite
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="h-3 w-3 rounded bg-emerald-400" />
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#30d158]" />
             Offers
-          </div>
+          </span>
         </div>
       </div>
 
-      {/* Stacked Horizontal Bar Chart List */}
-      <div className="space-y-4">
+      <div className="iv-activity-list iv-scroll">
+        {analytics.length === 0 && (
+          <p className="iv-row-meta">
+            Sync Calendar to pull role titles from invite names, descriptions, and interviewer email
+            domains.
+          </p>
+        )}
         {analytics.map((item) => {
-          const totalRounds = item.recruiterCount + item.technicalCount + item.finalCount + item.offerCount;
-          if (totalRounds === 0) return null;
+          const { totalRounds } = item;
 
           return (
             <div
-              key={item.category}
-              onMouseEnter={() => setHoveredCategory(item)}
-              onMouseLeave={() => setHoveredCategory(null)}
-              className="p-4 rounded-xl bg-[#0e131d] border border-slate-800/70 hover:border-cyan-500/40 transition-all duration-200"
+              key={`${item.company || ""}::${item.category}`}
+              className="iv-row"
+              style={{ cursor: "default", alignItems: "stretch", flexDirection: "column", gap: 10 }}
             >
-              <div className="flex items-center justify-between text-xs mb-2">
-                <span className="font-bold text-sm text-slate-100 flex items-center gap-2">
-                  {item.category}
-                  {item.offerCount > 0 && (
-                    <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      {item.offerCount} Offer
-                    </span>
+              <div className="flex items-center justify-between w-full gap-3">
+                <span className="iv-row-title flex flex-col items-start gap-0.5 min-w-0">
+                  <span className="truncate">{item.category}</span>
+                  {item.company && (
+                    <span className="iv-row-meta font-normal normal-case tracking-normal">{item.company}</span>
                   )}
                 </span>
-                <span className="text-slate-400 font-semibold text-xs">
-                  {totalRounds} total interview rounds
+                <span className="iv-row-meta shrink-0">
+                  {totalRounds} {totalRounds === 1 ? "round" : "rounds"}
+                  {item.offerCount > 0 ? ` · ${item.offerCount} offer` : ""}
                 </span>
               </div>
 
-              {/* Multi-segment Bar for Actual Interview Stages */}
-              <div className="h-7 w-full bg-slate-900 rounded-lg overflow-hidden flex p-1 gap-1">
+              <div className="h-6 w-full rounded-full overflow-hidden flex gap-1 bg-[var(--bg3)] p-0.5">
                 {item.recruiterCount > 0 && (
                   <div
-                    style={{ width: `${(item.recruiterCount / maxTotal) * 100}%` }}
-                    className="h-full bg-cyan-400 rounded flex items-center justify-center text-[11px] font-extrabold text-slate-950 shadow-inner"
+                    style={{ width: `${(item.recruiterCount / maxTotal) * 100}%`, background: "#2997ff" }}
+                    className="h-full rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
                     title={`Recruiter Screens: ${item.recruiterCount}`}
                   >
                     {item.recruiterCount}
                   </div>
                 )}
-
                 {item.technicalCount > 0 && (
                   <div
-                    style={{ width: `${(item.technicalCount / maxTotal) * 100}%` }}
-                    className="h-full bg-purple-500 rounded flex items-center justify-center text-[11px] font-extrabold text-white shadow-inner"
+                    style={{ width: `${(item.technicalCount / maxTotal) * 100}%`, background: "#bf5af2" }}
+                    className="h-full rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
                     title={`Technical Rounds: ${item.technicalCount}`}
                   >
                     {item.technicalCount}
                   </div>
                 )}
-
                 {item.finalCount > 0 && (
                   <div
-                    style={{ width: `${(item.finalCount / maxTotal) * 100}%` }}
-                    className="h-full bg-amber-400 rounded flex items-center justify-center text-[11px] font-extrabold text-slate-950 shadow-inner"
+                    style={{ width: `${(item.finalCount / maxTotal) * 100}%`, background: "#ff9f0a" }}
+                    className="h-full rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
                     title={`Final / Onsite: ${item.finalCount}`}
                   >
                     {item.finalCount}
                   </div>
                 )}
-
                 {item.offerCount > 0 && (
                   <div
-                    style={{ width: `${(item.offerCount / maxTotal) * 100}%` }}
-                    className="h-full bg-emerald-400 rounded flex items-center justify-center text-[11px] font-extrabold text-slate-950 shadow-inner"
+                    style={{ width: `${(item.offerCount / maxTotal) * 100}%`, background: "#30d158" }}
+                    className="h-full rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
                     title={`Offers: ${item.offerCount}`}
                   >
                     {item.offerCount}
@@ -124,16 +119,15 @@ export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
                 )}
               </div>
 
-              {/* Clean Conversion Statistics Row */}
-              <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex flex-wrap items-center justify-between text-xs text-slate-400">
+              <div className="flex flex-wrap items-center justify-between text-xs text-[var(--text3)] w-full">
                 <span>
-                  Screen → Tech: <strong className="text-cyan-400">{item.screenToTechRate}%</strong>
+                  Screen → Tech: <strong className="text-[var(--accent)] font-medium">{item.screenToTechRate}%</strong>
                 </span>
                 <span>
-                  Tech → Final: <strong className="text-purple-400">{item.techToFinalRate}%</strong>
+                  Tech → Final: <strong className="text-[var(--purple)] font-medium">{item.techToFinalRate}%</strong>
                 </span>
                 <span>
-                  Final → Offer: <strong className="text-emerald-400">{item.finalToOfferRate}%</strong>
+                  Final → Offer: <strong className="text-[var(--green)] font-medium">{item.finalToOfferRate}%</strong>
                 </span>
               </div>
             </div>
@@ -141,10 +135,9 @@ export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
         })}
       </div>
 
-      {/* Footer hint */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center gap-1.5">
-        <Info className="h-3.5 w-3.5 text-cyan-400" />
-        <span>Stage activity automatically derived from your Google Calendar events.</span>
+      <div className="mt-2 pt-3 border-t border-[var(--border)] text-xs text-[var(--text3)] flex items-center gap-1.5">
+        <Info className="h-3.5 w-3.5 text-[var(--accent)]" />
+        Stage activity and role titles extracted from Google Calendar invites.
       </div>
     </div>
   );

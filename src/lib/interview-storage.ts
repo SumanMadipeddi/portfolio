@@ -1,6 +1,6 @@
 import { InterviewEvent, Company, FilterOptions, OverallMetrics } from "@/types/interview";
 
-const STORAGE_KEY = "interview_intelligence_events_live_v3";
+const STORAGE_KEY = "interview_intelligence_events_live_v4";
 
 // Set initial dataset to empty so only real live synced Google Calendar events are rendered
 const INITIAL_MOCK_EVENTS: InterviewEvent[] = [];

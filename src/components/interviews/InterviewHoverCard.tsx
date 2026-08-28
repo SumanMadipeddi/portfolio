@@ -1,5 +1,6 @@
 import { InterviewEvent } from "@/types/interview";
-import { Calendar, Clock, Video, User, Building, ChevronRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { Calendar, Clock, Video, User, Building, ChevronRight, ArrowUpRight, MapPin } from "lucide-react";
+import { getInterviewDisplayLocation } from "@/lib/google-calendar/location";
 
 interface InterviewHoverCardProps {
   event: InterviewEvent;
@@ -23,7 +24,6 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
     minute: "2-digit",
   })} – ${endDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
-  // Filter out candidate email from interviewer list
   const validInterviewers = event.interviewers.filter(
     (i) => !i.email?.toLowerCase().includes("madipeddisuman") && !i.name?.toLowerCase().includes("madipeddisuman")
   );
@@ -32,12 +32,12 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
     name: `${event.company} Hiring Team`,
     title: "Interview Panel",
   };
+  const location = getInterviewDisplayLocation(event);
 
   return (
-    <div className="w-[340px] bg-[#0c1017]/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-5 shadow-2xl text-slate-100 font-sans z-50 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto">
-      {/* Header: Logo, Company & Role */}
-      <div className="flex items-start gap-3.5 mb-4">
-        <div className="h-11 w-11 rounded-xl bg-slate-800 border border-slate-700/70 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner">
+    <div className="w-[340px] iv-card iv-card-sm z-50 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="h-11 w-11 rounded-xl border border-[var(--border)] bg-[var(--bg3)] flex items-center justify-center overflow-hidden shrink-0">
           {event.companyLogo ? (
             <img
               src={event.companyLogo}
@@ -48,101 +48,91 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
               }}
             />
           ) : (
-            <Building className="h-5 w-5 text-cyan-400" />
+            <Building className="h-5 w-5 text-[var(--accent)]" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-1">
-            <h4 className="font-bold text-base text-white truncate tracking-tight">
-              {event.company}
-            </h4>
-            <span className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              {event.totalStages > 1
-                ? `Round ${event.stage} of ${event.totalStages}`
-                : `Round ${event.stage}`}
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="iv-row-title truncate">{event.company}</h4>
+            <span className="iv-badge">
+              {event.totalStages > 1 ? `Round ${event.stage} of ${event.totalStages}` : `Round ${event.stage}`}
             </span>
           </div>
-          <p className="text-xs font-medium text-slate-400 truncate">
-            {event.role}
-          </p>
+          <p className="iv-row-meta truncate">{event.role}</p>
         </div>
       </div>
 
-      {/* Round Category Badge */}
-      <div className="mb-4 pb-3 border-b border-slate-800/80 flex items-center justify-between">
-        <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-          {event.interviewType.toUpperCase()} STAGE
-        </div>
-        {event.daysSincePreviousRound !== null && event.daysSincePreviousRound !== undefined && (
-          <span className="text-[11px] text-slate-400">
+      <div className="mb-4 pb-3 border-b border-[var(--border)] flex items-center justify-between">
+        <span className="text-xs font-medium text-[var(--text2)] uppercase tracking-wide">
+          {event.interviewType.replace(/_/g, " ")} stage
+        </span>
+        {event.daysSincePreviousRound != null && (
+          <span className="text-[11px] text-[var(--text3)]">
             {event.daysSincePreviousRound} days since last round
           </span>
         )}
       </div>
 
-      {/* Date & Time */}
-      <div className="space-y-2 text-xs text-slate-300 mb-4">
+      <div className="space-y-2 text-xs text-[var(--text2)] mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
+          <Calendar className="h-3.5 w-3.5 text-[var(--accent)] shrink-0" />
           <span>{formattedDate}</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
+            <Clock className="h-3.5 w-3.5 text-[var(--accent)] shrink-0" />
             <span>{formattedTime}</span>
           </div>
-          <span className="text-slate-400 font-medium">
-            {event.durationMinutes} min
-          </span>
+          <span className="text-[var(--text3)]">{event.durationMinutes} min</span>
         </div>
+        {location && (
+          <div className="flex items-start gap-2">
+            <MapPin className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-px" />
+            <span className="leading-relaxed">{location}</span>
+          </div>
+        )}
       </div>
 
-      {/* Interviewer Info (Excludes Candidate's own email) */}
-      <div className="bg-[#141b29] p-3 rounded-xl border border-slate-800 mb-4 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0">
+      <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg3)] mb-4 flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-[var(--bg1)] border border-[var(--border)] overflow-hidden flex items-center justify-center shrink-0">
           {interviewer.avatar ? (
             <img src={interviewer.avatar} alt={interviewer.name} className="h-full w-full object-cover" />
           ) : (
-            <User className="h-4 w-4 text-slate-300" />
+            <User className="h-4 w-4 text-[var(--text3)]" />
           )}
         </div>
         <div className="min-w-0 flex-1 text-xs">
-          <div className="font-semibold text-slate-200 truncate">
-            {interviewer.name}
-          </div>
-          <div className="text-[11px] text-slate-400 truncate">
+          <div className="font-medium text-[var(--text)] truncate">{interviewer.name}</div>
+          <div className="text-[11px] text-[var(--text3)] truncate">
             {interviewer.title || `${event.company} Panelist`}
           </div>
         </div>
       </div>
 
-      {/* Status & Result Pill */}
       <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-        <div className="bg-[#141b29] p-2.5 rounded-xl border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block mb-0.5">
+        <div className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg3)]">
+          <span className="card-tag" style={{ marginBottom: 4 }}>
             Status
           </span>
           <span
-            className={`font-semibold capitalize ${
-              event.status === "completed" ? "text-emerald-400" : "text-cyan-400"
+            className={`font-medium capitalize ${
+              event.status === "completed" ? "text-[var(--green)]" : "text-[var(--accent)]"
             }`}
           >
             {event.status}
           </span>
         </div>
-
-        <div className="bg-[#141b29] p-2.5 rounded-xl border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block mb-0.5">
+        <div className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg3)]">
+          <span className="card-tag" style={{ marginBottom: 4 }}>
             Result
           </span>
           <span
-            className={`font-semibold capitalize ${
+            className={`font-medium capitalize ${
               event.outcome === "advanced" || event.outcome === "offer"
-                ? "text-emerald-400"
+                ? "text-[var(--green)]"
                 : event.outcome === "rejected"
-                ? "text-rose-400"
-                : "text-amber-400"
+                ? "text-[#ff453a]"
+                : "text-[#ff9f0a]"
             }`}
           >
             {event.outcome}
@@ -150,14 +140,13 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-2 text-xs">
         {event.meetingUrl ? (
           <a
             href={event.meetingUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2 px-3 rounded-xl transition-all shadow-md shadow-cyan-500/20"
+            className="btn-primary justify-center py-2"
             onClick={(e) => e.stopPropagation()}
           >
             <Video className="h-3.5 w-3.5" />
@@ -165,12 +154,9 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
             <ArrowUpRight className="h-3 w-3" />
           </a>
         ) : (
-          <button
-            disabled
-            className="flex items-center justify-center gap-1.5 bg-slate-800 text-slate-500 font-bold py-2 px-3 rounded-xl"
-          >
+          <button disabled className="btn-secondary justify-center py-2 opacity-50 cursor-not-allowed">
             <Video className="h-3.5 w-3.5" />
-            No Meeting Link
+            No Link
           </button>
         )}
 
@@ -179,7 +165,7 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
             e.stopPropagation();
             if (onOpenDrawer) onOpenDrawer(event);
           }}
-          className="flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 px-3 rounded-xl border border-slate-700/80 transition-all"
+          className="btn-secondary justify-center py-2"
         >
           View Details
           <ChevronRight className="h-3.5 w-3.5" />

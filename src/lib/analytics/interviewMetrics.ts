@@ -1,5 +1,6 @@
 import { InterviewEvent, OverallMetrics, FilterOptions } from "@/types/interview";
 import { getCompaniesFromEvents } from "@/lib/interview-storage";
+import { getFilterRangeStart } from "@/lib/interview-window";
 
 export function filterInterviewEvents(events: InterviewEvent[], filters: FilterOptions): InterviewEvent[] {
   let result = [...events];
@@ -16,17 +17,8 @@ export function filterInterviewEvents(events: InterviewEvent[], filters: FilterO
     );
   }
 
-  // Date Range Filter
-  if (filters.dateRange !== "all") {
-    const now = new Date();
-    const pastLimit = new Date();
-    if (filters.dateRange === "7d") pastLimit.setDate(now.getDate() - 7);
-    else if (filters.dateRange === "30d") pastLimit.setDate(now.getDate() - 30);
-    else if (filters.dateRange === "90d") pastLimit.setDate(now.getDate() - 90);
-    else if (filters.dateRange === "6m") pastLimit.setMonth(now.getMonth() - 6);
-
-    result = result.filter((e) => new Date(e.start) >= pastLimit);
-  }
+  const pastLimit = getFilterRangeStart(filters.dateRange);
+  result = result.filter((e) => new Date(e.start) >= pastLimit);
 
   // Company Filter
   if (filters.companyId && filters.companyId !== "all") {
@@ -40,7 +32,7 @@ export function filterInterviewEvents(events: InterviewEvent[], filters: FilterO
 
   // Category Filter
   if (filters.category && filters.category !== "all") {
-    result = result.filter((e) => e.roleCategory === filters.category);
+    result = result.filter((e) => e.role === filters.category);
   }
 
   // Status Filter
@@ -61,14 +53,8 @@ export function computeOverallMetrics(events: InterviewEvent[]): OverallMetrics 
   const oneMonthAgo = new Date();
   oneMonthAgo.setDate(now.getDate() - 30);
 
-  const activeCompaniesCount = companies.filter((c) =>
-    c.roles.some((r) => r.status === "active" || r.status === "offer")
-  ).length;
-
-  let activeRolesCount = 0;
-  companies.forEach((c) => {
-    activeRolesCount += c.roles.filter((r) => r.status === "active" || r.status === "offer").length;
-  });
+  const activeCompaniesCount = new Set(events.map((e) => e.companyId)).size;
+  const activeRolesCount = new Set(events.map((e) => e.roleId)).size;
 
   const interviewsThisWeek = events.filter((e) => new Date(e.start) >= oneWeekAgo).length;
   const interviewsThisMonth = events.filter((e) => new Date(e.start) >= oneMonthAgo).length;
@@ -81,7 +67,7 @@ export function computeOverallMetrics(events: InterviewEvent[]): OverallMetrics 
 
   // Average duration
   const totalDuration = events.reduce((acc, e) => acc + (e.durationMinutes || 0), 0);
-  const avgDurationMinutes = events.length > 0 ? Math.round(totalDuration / events.length) : 45;
+  const avgDurationMinutes = events.length > 0 ? Math.round(totalDuration / events.length) : 0;
 
   // Days between rounds calculation
   const gaps: number[] = events
@@ -90,7 +76,7 @@ export function computeOverallMetrics(events: InterviewEvent[]): OverallMetrics 
   const avgDaysBetweenRounds =
     gaps.length > 0
       ? Number((gaps.reduce((a, b) => a + b, 0) / gaps.length).toFixed(1))
-      : 4.8;
+      : 0;
 
   // Stalled companies (>7 days without activity and no upcoming interview)
   const sevenDaysAgo = new Date();
@@ -117,7 +103,14 @@ export function computeOverallMetrics(events: InterviewEvent[]): OverallMetrics 
   const interviewConversionRate =
     completedEvents.length > 0
       ? Math.round((successfulEvents.length / completedEvents.length) * 100)
-      : 44;
+      : 0;
+
+  const lastPast = events
+    .map((e) => new Date(e.start).getTime())
+    .filter((t) => t <= now.getTime())
+    .sort((a, b) => b - a)[0];
+  const daysSinceLastInterview =
+    lastPast != null ? Math.max(0, Math.round((now.getTime() - lastPast) / (1000 * 60 * 60 * 24))) : 0;
 
   return {
     activeCompanies: activeCompaniesCount,
@@ -130,6 +123,6 @@ export function computeOverallMetrics(events: InterviewEvent[]): OverallMetrics 
     avgDaysBetweenRounds,
     interviewsThisMonth,
     stalledCompaniesCount,
-    daysSinceLastInterview: 2,
+    daysSinceLastInterview,
   };
 }

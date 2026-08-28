@@ -102,6 +102,7 @@ export interface FilterOptions {
 
 export interface RoleCategoryAnalytics {
   category: string;
+  company?: string;
   applicationsCount: number;
   recruiterCount: number;
   technicalCount: number;
