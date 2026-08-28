@@ -30,9 +30,13 @@ export function computeRoleCategoryAnalytics(events: InterviewEvent[]): RoleCate
         screenToTechRate: 0,
         techToFinalRate: 0,
         finalToOfferRate: 0,
+        lastInterviewAt: 0,
       };
       roleMap.set(key, stat);
     }
+
+    const ts = new Date(e.start).getTime();
+    if (ts > stat.lastInterviewAt) stat.lastInterviewAt = ts;
 
     const bucket = bucketType(e.interviewType);
     if (bucket === "recruiter") stat.recruiterCount++;
@@ -56,5 +60,5 @@ export function computeRoleCategoryAnalytics(events: InterviewEvent[]): RoleCate
     if (totalInterviews > 0) result.push(stat);
   });
 
-  return result.sort((a, b) => b.applicationsCount - a.applicationsCount);
+  return result.sort((a, b) => b.lastInterviewAt - a.lastInterviewAt || b.applicationsCount - a.applicationsCount);
 }

@@ -2273,7 +2273,6 @@ html:not(.dark) .dither-btn__label {
 .v2 .iv-activity-list {
   max-height: calc(4 * 130px);
   overflow-y: auto;
-  overscroll-behavior: contain;
   padding-right: 4px;
 }
 

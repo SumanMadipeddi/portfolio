@@ -112,6 +112,7 @@ export interface RoleCategoryAnalytics {
   screenToTechRate: number;
   techToFinalRate: number;
   finalToOfferRate: number;
+  lastInterviewAt: number;
 }
 
 export interface OverallMetrics {

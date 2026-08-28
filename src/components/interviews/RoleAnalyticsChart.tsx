@@ -15,7 +15,7 @@ export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
         totalRounds: item.recruiterCount + item.technicalCount + item.finalCount + item.offerCount,
       }))
       .filter((item) => item.totalRounds > 0)
-      .sort((a, b) => b.totalRounds - a.totalRounds);
+      .sort((a, b) => b.lastInterviewAt - a.lastInterviewAt || b.totalRounds - a.totalRounds);
   }, [events]);
 
   const maxTotal = Math.max(...analytics.map((a) => a.totalRounds), 1);
