@@ -54,23 +54,6 @@ export function DashboardFilters({ filters, onChange, companies }: DashboardFilt
           ))}
         </div>
 
-        {/* Company Dropdown */}
-        <div className="flex items-center gap-2">
-          <Building className="h-4 w-4 text-slate-400 hidden sm:inline" />
-          <select
-            value={filters.companyId}
-            onChange={(e) => onChange({ ...filters, companyId: e.target.value })}
-            className="bg-[#0a0e17] text-slate-200 text-xs py-2 px-3 rounded-xl border border-slate-800 focus:border-cyan-500 focus:outline-none"
-          >
-            <option value="all">All Companies</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.roles.length} roles)
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Category Dropdown */}
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4 text-slate-400 hidden sm:inline" />

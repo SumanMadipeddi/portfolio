@@ -66,6 +66,10 @@ export default function Interviews() {
   });
 
   useEffect(() => {
+    // Purge old mock data keys
+    localStorage.removeItem("interview_intelligence_events_aug2024_v2");
+    localStorage.removeItem("interview_intelligence_events_v1");
+
     // Check if session is authenticated
     const authed = sessionStorage.getItem("interviews_auth_token");
     if (authed === "true") {
@@ -116,6 +120,24 @@ export default function Interviews() {
   // Google OAuth Authorization & Calendar Fetch
   const handleConnectGoogleCalendar = async () => {
     setIsSyncing(true);
+
+    // 1. Check if secret iCal URL is set in .env
+    const envIcalUrl = import.meta.env.VITE_GOOGLE_ICAL_URL;
+    if (envIcalUrl) {
+      try {
+        setSyncStatusText("Syncing live Google Calendar via secret iCal link...");
+        const eventsFromICal = await fetchGoogleCalendarICalEvents(envIcalUrl);
+        setEvents(eventsFromICal);
+        setSyncStatusText("Synced latest live Google Calendar events!");
+        setTimeout(() => setSyncStatusText(""), 3500);
+        setIsSyncing(false);
+        return;
+      } catch (e: any) {
+        console.warn("iCal sync error:", e);
+      }
+    }
+
+    // 2. OAuth Flow
     setSyncStatusText("Connecting to Google OAuth 2.0 Identity Services...");
 
     try {
@@ -133,31 +155,32 @@ export default function Interviews() {
       setTimeout(() => setSyncStatusText(""), 3500);
     } catch (err: any) {
       console.warn("Google OAuth popup error:", err);
-      const isAccessDenied = String(err?.message || "").includes("access_denied") || String(err?.message || "").includes("403");
-
-      if (isAccessDenied) {
-        setSyncStatusText(
-          "Google OAuth 403 Error: App is in 'Testing' mode in Google Cloud Console. Add madipeddisuman@gmail.com under 'Test Users' in OAuth consent screen!"
-        );
-      } else {
-        setSyncStatusText(`Google Auth: ${err?.message || "Popup closed or unverified"}`);
-      }
-
-      // Prompt optional Google Access Token or API Key fallback
-      const manualToken = prompt(
-        "Google OAuth Setup Helper:\n\n1. Go to Google Cloud Console -> OAuth consent screen -> Test users -> Add 'madipeddisuman@gmail.com'\nOR\n2. Paste a Google Calendar Access Token to sync immediately:"
+      
+      const userChoice = prompt(
+        "Google Calendar Sync Options:\n\n1. Paste your Google Secret iCal Link (From Google Calendar Settings -> Integrate Calendar -> Secret address in iCal format)\nOR\n2. Paste a Google OAuth Access Token:"
       );
 
-      if (manualToken && manualToken.trim()) {
+      if (userChoice && userChoice.trim()) {
+        const inputStr = userChoice.trim();
         try {
-          setSyncStatusText("Fetching events via Google API...");
-          const fresh = await fetchLiveGoogleCalendarEvents(manualToken.trim());
-          setEvents(fresh);
-          setSyncStatusText("Synced Google Calendar events!");
+          if (inputStr.startsWith("http")) {
+            setSyncStatusText("Fetching events via Secret iCal URL...");
+            const fresh = await fetchGoogleCalendarICalEvents(inputStr);
+            setEvents(fresh);
+            setSyncStatusText("Synced Google Calendar events!");
+          } else {
+            setSyncStatusText("Fetching events via Google Access Token...");
+            const fresh = await fetchLiveGoogleCalendarEvents(inputStr);
+            setEvents(fresh);
+            setSyncStatusText("Synced Google Calendar events!");
+          }
           setTimeout(() => setSyncStatusText(""), 3500);
         } catch (e: any) {
-          setSyncStatusText(`Sync error: ${e.message || "Failed to fetch events"}`);
+          setSyncStatusText(`Sync error: ${e.message || "Failed to sync calendar"}`);
         }
+      } else {
+        setSyncStatusText("Calendar data ready.");
+        setTimeout(() => setSyncStatusText(""), 3000);
       }
     } finally {
       setIsSyncing(false);
@@ -292,13 +315,7 @@ export default function Interviews() {
             <div>
               <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
                 Job Search & Interview Intelligence
-                <span className="text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
-                  Google Calendar OAuth 2.0
-                </span>
               </h1>
-              <p className="text-xs text-slate-400">
-                Automated event normalization, multi-role journey tracking, and funnel analytics
-              </p>
             </div>
           </div>
 

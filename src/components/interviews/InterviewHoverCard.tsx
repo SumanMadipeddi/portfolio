@@ -1,5 +1,5 @@
 import { InterviewEvent } from "@/types/interview";
-import { Calendar, Clock, Video, User, Building, CheckCircle2, ChevronRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { Calendar, Clock, Video, User, Building, ChevronRight, ArrowUpRight, Sparkles } from "lucide-react";
 
 interface InterviewHoverCardProps {
   event: InterviewEvent;
@@ -23,9 +23,14 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
     minute: "2-digit",
   })} – ${endDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
-  const interviewer = event.interviewers[0] || {
-    name: event.interviewerNames[0] || "Interviewer",
-    title: "Lead Interviewer",
+  // Filter out candidate email from interviewer list
+  const validInterviewers = event.interviewers.filter(
+    (i) => !i.email?.toLowerCase().includes("madipeddisuman") && !i.name?.toLowerCase().includes("madipeddisuman")
+  );
+
+  const interviewer = validInterviewers[0] || {
+    name: `${event.company} Hiring Team`,
+    title: "Interview Panel",
   };
 
   return (
@@ -51,8 +56,10 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
             <h4 className="font-bold text-base text-white truncate tracking-tight">
               {event.company}
             </h4>
-            <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              Round {event.stage} of {event.totalStages}
+            <span className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              {event.totalStages > 1
+                ? `Round ${event.stage} of ${event.totalStages}`
+                : `Round ${event.stage}`}
             </span>
           </div>
           <p className="text-xs font-medium text-slate-400 truncate">
@@ -91,7 +98,7 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
         </div>
       </div>
 
-      {/* Interviewer Info */}
+      {/* Interviewer Info (Excludes Candidate's own email) */}
       <div className="bg-[#141b29] p-3 rounded-xl border border-slate-800 mb-4 flex items-center gap-3">
         <div className="h-9 w-9 rounded-full bg-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0">
           {interviewer.avatar ? (
@@ -105,7 +112,7 @@ export function InterviewHoverCard({ event, onOpenDrawer, onViewRole }: Intervie
             {interviewer.name}
           </div>
           <div className="text-[11px] text-slate-400 truncate">
-            {interviewer.title || "Interviewer"}
+            {interviewer.title || `${event.company} Panelist`}
           </div>
         </div>
       </div>

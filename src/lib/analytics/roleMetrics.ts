@@ -1,39 +1,14 @@
 import { InterviewEvent, RoleCategoryAnalytics } from "@/types/interview";
 
 export function computeRoleCategoryAnalytics(events: InterviewEvent[]): RoleCategoryAnalytics[] {
-  const categories = [
-    "AI Engineer",
-    "Applied AI Engineer",
-    "Software Engineer - AI",
-    "Founding Engineer",
-    "Solutions Engineer",
-    "Backend / Infrastructure",
-    "Applied Scientist",
-    "Full-Stack Engineer",
-  ];
-
   const categoryMap = new Map<string, RoleCategoryAnalytics>();
 
-  categories.forEach((cat) => {
-    categoryMap.set(cat, {
-      category: cat,
-      applicationsCount: 0,
-      recruiterCount: 0,
-      technicalCount: 0,
-      finalCount: 0,
-      offerCount: 0,
-      appToScreenRate: 0,
-      screenToTechRate: 0,
-      techToFinalRate: 0,
-      finalToOfferRate: 0,
-    });
-  });
-
   events.forEach((e) => {
-    let stat = categoryMap.get(e.roleCategory);
+    const roleCat = e.roleCategory || "Software Engineer - AI";
+    let stat = categoryMap.get(roleCat);
     if (!stat) {
       stat = {
-        category: e.roleCategory,
+        category: roleCat,
         applicationsCount: 0,
         recruiterCount: 0,
         technicalCount: 0,
@@ -44,7 +19,7 @@ export function computeRoleCategoryAnalytics(events: InterviewEvent[]): RoleCate
         techToFinalRate: 0,
         finalToOfferRate: 0,
       };
-      categoryMap.set(e.roleCategory, stat);
+      categoryMap.set(roleCat, stat);
     }
 
     if (e.interviewType === "recruiter") stat.recruiterCount++;
@@ -53,27 +28,31 @@ export function computeRoleCategoryAnalytics(events: InterviewEvent[]): RoleCate
     if (e.outcome === "offer") stat.offerCount++;
   });
 
-  // Base applications estimate & calculate conversion rates
   const result: RoleCategoryAnalytics[] = [];
   categoryMap.forEach((stat) => {
-    // Fill realistic baseline application count
-    stat.applicationsCount = Math.max(
-      stat.recruiterCount + 10,
-      Math.round(stat.recruiterCount * 1.6)
-    );
+    // Total interviews count across stages
+    const totalInterviews = stat.recruiterCount + stat.technicalCount + stat.finalCount + stat.offerCount;
+    stat.applicationsCount = totalInterviews;
 
     if (stat.recruiterCount > 0) {
-      stat.appToScreenRate = Math.round((stat.recruiterCount / stat.applicationsCount) * 100);
-      stat.screenToTechRate = Math.round((stat.technicalCount / stat.recruiterCount) * 100);
-    }
-    if (stat.technicalCount > 0) {
-      stat.techToFinalRate = Math.round((stat.finalCount / stat.technicalCount) * 100);
-    }
-    if (stat.finalCount > 0) {
-      stat.finalToOfferRate = Math.round((stat.offerCount / stat.finalCount) * 100);
+      stat.screenToTechRate = Math.min(100, Math.round((stat.technicalCount / stat.recruiterCount) * 100));
+    } else {
+      stat.screenToTechRate = 0;
     }
 
-    if (stat.recruiterCount > 0 || stat.technicalCount > 0 || stat.finalCount > 0) {
+    if (stat.technicalCount > 0) {
+      stat.techToFinalRate = Math.min(100, Math.round((stat.finalCount / stat.technicalCount) * 100));
+    } else {
+      stat.techToFinalRate = 0;
+    }
+
+    if (stat.finalCount > 0) {
+      stat.finalToOfferRate = Math.min(100, Math.round((stat.offerCount / stat.finalCount) * 100));
+    } else {
+      stat.finalToOfferRate = 0;
+    }
+
+    if (totalInterviews > 0) {
       result.push(stat);
     }
   });

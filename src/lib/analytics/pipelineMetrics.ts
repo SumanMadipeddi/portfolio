@@ -22,16 +22,71 @@ export interface JourneyChartPoint {
   clusterEvents?: InterviewEvent[];
 }
 
+export function recalculateStagesForEvents(events: InterviewEvent[]): InterviewEvent[] {
+  const grouped = new Map<string, InterviewEvent[]>();
+
+  events.forEach((evt) => {
+    const key = `${evt.companyId}__${evt.roleId}`;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(evt);
+  });
+
+  const updatedEvents: InterviewEvent[] = [];
+
+  grouped.forEach((series) => {
+    series.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    const total = series.length;
+
+    series.forEach((evt, idx) => {
+      const prevEvt = idx > 0 ? series[idx - 1] : null;
+      let daysSincePrev: number | null = null;
+      if (prevEvt) {
+        const ms = new Date(evt.start).getTime() - new Date(prevEvt.start).getTime();
+        daysSincePrev = Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
+      }
+
+      updatedEvents.push({
+        ...evt,
+        stage: idx + 1,
+        totalStages: total,
+        daysSincePreviousRound: daysSincePrev,
+      });
+    });
+  });
+
+  return updatedEvents;
+}
+
 export function mapStageToLevel(interviewType: string, outcome?: string): { level: number; name: string } {
   if (outcome === "offer") return { level: 5, name: "Offer" };
-  if (interviewType === "final" || interviewType === "onsite" || interviewType === "reference") return { level: 4, name: "Final / Onsite" };
-  if (interviewType === "technical" || interviewType === "coding" || interviewType === "system_design" || interviewType === "take_home") return { level: 3, name: "Technical" };
-  if (interviewType === "recruiter" || interviewType === "hiring_manager") return { level: 2, name: "Recruiter" };
+  if (
+    interviewType === "final" ||
+    interviewType === "onsite" ||
+    interviewType === "reference"
+  ) {
+    return { level: 4, name: "Final / Onsite" };
+  }
+  if (
+    interviewType === "technical" ||
+    interviewType === "coding" ||
+    interviewType === "system_design" ||
+    interviewType === "take_home"
+  ) {
+    return { level: 3, name: "Technical" };
+  }
+  if (
+    interviewType === "recruiter" ||
+    interviewType === "hiring_manager" ||
+    interviewType === "other"
+  ) {
+    return { level: 2, name: "Recruiter" };
+  }
   return { level: 1, name: "Applied" };
 }
 
 export function buildJourneyChartData(events: InterviewEvent[]): JourneyChartPoint[] {
-  const sorted = [...events].sort(
+  const recalculated = recalculateStagesForEvents(events);
+  const sorted = recalculated.sort(
     (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
   );
 

@@ -15,6 +15,14 @@ export interface RawGoogleCalendarEvent {
   status?: string;
 }
 
+const CANDIDATE_EMAILS = [
+  "madipeddisuman@gmail.com",
+  "madipeddisuman",
+  "suman.madipeddi",
+  "sumanmadipeddi",
+  "suman"
+];
+
 export function normalizeGoogleCalendarEvent(
   raw: RawGoogleCalendarEvent,
   stageIndex = 1,
@@ -31,7 +39,7 @@ export function normalizeGoogleCalendarEvent(
   });
 
   if (!detection.isInterview) {
-    return null; // Ignore non-interview calendar events
+    return null;
   }
 
   const startTimeStr = raw.start?.dateTime || raw.start?.date || new Date().toISOString();
@@ -41,16 +49,35 @@ export function normalizeGoogleCalendarEvent(
 
   const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60)) || 45;
 
-  const interviewers: InterviewerInfo[] = (raw.attendees || [])
-    .filter((a) => a.email && !a.email.includes("calendar.google.com"))
-    .map((a) => ({
-      name: a.displayName || a.email.split("@")[0],
-      email: a.email,
-      title: "Interviewer",
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.displayName || a.email)}`,
-    }));
-
   const company = detection.company || "Target Company";
+
+  // Filter out candidate's own email to extract real external interviewers
+  const externalAttendees = (raw.attendees || []).filter((a) => {
+    if (!a.email) return false;
+    const emailLower = a.email.toLowerCase();
+    if (emailLower.includes("calendar.google.com")) return false;
+    return !CANDIDATE_EMAILS.some((cand) => emailLower.includes(cand));
+  });
+
+  let interviewers: InterviewerInfo[] = externalAttendees.map((a) => ({
+    name: a.displayName || a.email.split("@")[0],
+    email: a.email,
+    title: `${company} Panelist`,
+    avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.displayName || a.email)}`,
+  }));
+
+  // Fallback if no external attendee email is present
+  if (interviewers.length === 0) {
+    interviewers = [
+      {
+        name: `${company} Interview Team`,
+        email: `careers@${company.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+        title: "Hiring Panel",
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company)}`,
+      },
+    ];
+  }
+
   const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "-");
   const role = detection.role || "Full-Stack AI Engineer";
   const roleSlug = role.toLowerCase().replace(/[^a-z0-9]/g, "-");

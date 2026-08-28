@@ -11,26 +11,16 @@ export interface DetectionResult {
 
 const INTERVIEW_KEYWORDS = [
   "interview", "technical", "recruiter", "hiring manager", "coding",
-  "onsite", "on-site", "final round", "screen", "intro call", "candidate",
-  "assessment", "system design", "behavioral", "pair programming",
-  "take home", "debrief", "reference", "debrief", "culture fit"
+  "onsite", "on-site", "final round", "screen", "intro call", "intro",
+  "candidate", "assessment", "system design", "behavioral", "pair programming",
+  "take home", "debrief", "reference", "culture fit", "chat", "sync", "meet",
+  "conversation", "discussion", "call", "connect", "mts", "staff"
 ];
 
 const KNOWN_DOMAINS_TO_IGNORE = [
   "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "google.com",
   "calendar.google.com", "zoom.us", "meet.google.com"
 ];
-
-const ROLE_CATEGORIES_KEYWORDS: Record<string, string[]> = {
-  "AI Engineer": ["ai engineer", "generative ai", "llm", "ai agent", "ai developer"],
-  "Applied AI Engineer": ["applied ai", "applied ml", "ai solutions"],
-  "Applied Scientist": ["applied scientist", "research scientist", "ml scientist"],
-  "Founding Engineer": ["founding engineer", "founding developer", "lead engineer"],
-  "Software Engineer - AI": ["software engineer", "swe - ai", "ai fullstack"],
-  "Solutions Engineer": ["solutions engineer", "sales engineer", "forward deployed"],
-  "Backend / Infrastructure": ["backend", "infrastructure", "distributed systems", "platform engineer", "site reliability"],
-  "Full-Stack Engineer": ["fullstack", "full stack", "frontend", "react", "next.js"],
-};
 
 export function detectInterview(event: {
   summary?: string;
@@ -70,40 +60,64 @@ export function detectInterview(event: {
     (matchedKeywordCount * 0.3) + (companyFromDomain ? 0.4 : 0.0)
   );
 
-  // Classify interview type
-  let interviewType: InterviewType = "other";
-  if (fullText.includes("recruiter") || fullText.includes("screen") || fullText.includes("intro call")) {
-    interviewType = "recruiter";
-  } else if (fullText.includes("hiring manager") || fullText.includes("hm round")) {
-    interviewType = "hiring_manager";
-  } else if (fullText.includes("coding") || fullText.includes("pair programming")) {
-    interviewType = "coding";
-  } else if (fullText.includes("system design") || fullText.includes("architecture")) {
-    interviewType = "system_design";
-  } else if (fullText.includes("behavioral") || fullText.includes("culture")) {
-    interviewType = "behavioral";
-  } else if (fullText.includes("take home") || fullText.includes("assessment")) {
-    interviewType = "take_home";
-  } else if (fullText.includes("onsite") || fullText.includes("on-site")) {
-    interviewType = "onsite";
-  } else if (fullText.includes("final round") || fullText.includes("final")) {
+  // Smart stage classification
+  let interviewType: InterviewType = "recruiter";
+  if (
+    fullText.includes("final") ||
+    fullText.includes("onsite") ||
+    fullText.includes("on-site") ||
+    fullText.includes("loop") ||
+    fullText.includes("debrief")
+  ) {
     interviewType = "final";
-  } else if (fullText.includes("reference")) {
-    interviewType = "reference";
-  } else if (fullText.includes("technical")) {
+  } else if (
+    fullText.includes("technical") ||
+    fullText.includes("coding") ||
+    fullText.includes("system design") ||
+    fullText.includes("pair") ||
+    fullText.includes("take home") ||
+    fullText.includes("assessment") ||
+    fullText.includes("architecture")
+  ) {
     interviewType = "technical";
+  } else if (fullText.includes("hiring manager") || fullText.includes("hm")) {
+    interviewType = "hiring_manager";
+  } else if (
+    fullText.includes("recruiter") ||
+    fullText.includes("screen") ||
+    fullText.includes("intro") ||
+    fullText.includes("chat") ||
+    fullText.includes("sync") ||
+    fullText.includes("call")
+  ) {
+    interviewType = "recruiter";
   }
 
-  // Classify role category
+  // Extract authentic Role Title & Category directly from calendar event text
   let roleCategory = "Software Engineer - AI";
-  for (const [cat, keywords] of Object.entries(ROLE_CATEGORIES_KEYWORDS)) {
-    if (keywords.some((kw) => fullText.includes(kw))) {
-      roleCategory = cat;
-      break;
-    }
+  if (fullText.includes("founding")) {
+    roleCategory = "Founding AI Engineer";
+  } else if (fullText.includes("mts") || fullText.includes("member of technical staff")) {
+    roleCategory = "MTS (Member of Technical Staff)";
+  } else if (fullText.includes("applied scientist") || fullText.includes("research scientist")) {
+    roleCategory = "Applied Scientist";
+  } else if (fullText.includes("applied ai") || fullText.includes("applied ml")) {
+    roleCategory = "Applied AI Engineer";
+  } else if (fullText.includes("solutions") || fullText.includes("forward deployed")) {
+    roleCategory = "Solutions Engineer";
+  } else if (fullText.includes("backend") || fullText.includes("infrastructure") || fullText.includes("infra")) {
+    roleCategory = "Backend / Infrastructure";
+  } else if (fullText.includes("fullstack") || fullText.includes("full stack") || fullText.includes("full-stack")) {
+    roleCategory = "Full-Stack Engineer";
+  } else if (fullText.includes("ai engineer") || fullText.includes("llm")) {
+    roleCategory = "AI Engineer";
+  } else if (fullText.includes("software engineer") || fullText.includes("swe")) {
+    roleCategory = "Software Engineer - AI";
+  } else if (fullText.includes("product") || fullText.includes("pm")) {
+    roleCategory = "Product Lead";
   }
 
-  // Extract Company Name from summary if present (e.g. "Amazon - Technical Interview")
+  // Clean company name extraction
   let company = companyFromDomain;
   if (summary.includes(" - ")) {
     const parts = summary.split(" - ");
@@ -111,19 +125,22 @@ export function detectInterview(event: {
   } else if (summary.includes(" with ")) {
     const parts = summary.split(" with ");
     if (parts[1]) company = parts[1].trim();
+  } else if (summary.includes(" <> ")) {
+    const parts = summary.split(" <> ");
+    if (parts[0]) company = parts[0].trim();
+  } else if (!company) {
+    company = summary.split(" ")[0] || "Target Company";
   }
 
-  // Extract Role Title
-  let role = `${roleCategory}`;
-  if (summary.toLowerCase().includes("engineer")) {
-    role = summary.split("interview")[0].trim();
+  if (company) {
+    company = company.charAt(0).toUpperCase() + company.slice(1);
   }
 
   return {
     isInterview,
     confidenceScore: Number(confidenceScore.toFixed(2)),
     company: company || "Target Company",
-    role: role || "Senior AI Engineer",
+    role: roleCategory,
     interviewType,
     roleCategory,
   };

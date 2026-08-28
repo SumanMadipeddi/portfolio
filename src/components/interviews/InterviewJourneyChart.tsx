@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { InterviewEvent } from "@/types/interview";
 import { buildJourneyChartData, groupPointsByCompanyAndRole, JourneyChartPoint } from "@/lib/analytics/pipelineMetrics";
 import { InterviewHoverCard } from "./InterviewHoverCard";
-import { Sparkles, Calendar, HelpCircle, Info } from "lucide-react";
+import { Sparkles, Calendar, Info, Layers } from "lucide-react";
 
 interface InterviewJourneyChartProps {
   events: InterviewEvent[];
@@ -11,7 +11,7 @@ interface InterviewJourneyChartProps {
 }
 
 const COMPANY_COLORS = [
-  { stroke: "#38bdf8", fill: "#0284c7" }, // Cyan / Sky
+  { stroke: "#38bdf8", fill: "#0284c7" }, // Cyan
   { stroke: "#10b981", fill: "#059669" }, // Emerald
   { stroke: "#f59e0b", fill: "#d97706" }, // Amber
   { stroke: "#a855f7", fill: "#7e22ce" }, // Purple
@@ -37,53 +37,64 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
   const points = useMemo(() => buildJourneyChartData(events), [events]);
   const groupedSeries = useMemo(() => groupPointsByCompanyAndRole(points), [points]);
 
+  const minTime = useMemo(() => (points.length > 0 ? Math.min(...points.map((p) => p.timestamp)) : Date.now()), [points]);
+  const maxTime = useMemo(() => (points.length > 0 ? Math.max(...points.map((p) => p.timestamp)) : Date.now()), [points]);
+  const timeSpan = Math.max(maxTime - minTime, 86400000 * 14);
+
+  // SVG Canvas dimensions
+  const paddingLeft = 110;
+  const paddingRight = 60;
+  const paddingTop = 40;
+  const paddingBottom = 60;
+  const svgWidth = 900;
+  const svgHeight = 400;
+
+  const chartWidth = svgWidth - paddingLeft - paddingRight;
+  const chartHeight = svgHeight - paddingTop - paddingBottom;
+
+  const getX = (timestamp: number) => {
+    const ratio = timeSpan > 0 ? (timestamp - minTime) / timeSpan : 0.5;
+    return paddingLeft + ratio * chartWidth;
+  };
+
+  const getY = (level: number) => {
+    const ratio = (5 - level) / 4;
+    return paddingTop + ratio * chartHeight;
+  };
+
+  // Generate 7 crisp date ticks for the X-axis timeline
+  const timeTicks = useMemo(() => {
+    if (points.length === 0) return [];
+    const tickCount = 7;
+    const step = (maxTime - minTime) / Math.max(tickCount - 1, 1);
+    const ticks = [];
+    for (let i = 0; i < tickCount; i++) {
+      const t = minTime + i * step;
+      const d = new Date(t);
+      ticks.push({
+        timestamp: t,
+        label: d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+      });
+    }
+    return ticks;
+  }, [minTime, maxTime, points]);
+
   if (events.length === 0) {
     return (
       <div className="bg-[#111622]/90 border border-slate-800/80 rounded-2xl p-12 text-center text-slate-400">
         <Calendar className="h-10 w-10 text-cyan-400 mx-auto mb-3 animate-pulse" />
         <h4 className="text-lg font-bold text-white mb-1">No interviews detected yet</h4>
         <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
-          Connect Google Calendar or adjust your search filters to display candidate interview journey paths.
+          Connect Google Calendar or sync calendar to display candidate interview journey paths.
         </p>
       </div>
     );
   }
 
-  // Calculate SVG timeline canvas bounds
-  const minTime = Math.min(...points.map((p) => p.timestamp));
-  const maxTime = Math.max(...points.map((p) => p.timestamp));
-  const timeSpan = Math.max(maxTime - minTime, 86400000 * 14); // Min 14 days span
-
-  const paddingLeft = 110;
-  const paddingRight = 60;
-  const paddingTop = 40;
-  const paddingBottom = 50;
-  const svgWidth = 850;
-  const svgHeight = 360;
-
-  const chartWidth = svgWidth - paddingLeft - paddingRight;
-  const chartHeight = svgHeight - paddingTop - paddingBottom;
-
-  const getX = (timestamp: number) => {
-    const ratio = (timestamp - minTime) / timeSpan;
-    return paddingLeft + ratio * chartWidth;
-  };
-
-  const getY = (level: number) => {
-    // level 5 top, level 1 bottom
-    const ratio = (5 - level) / 4;
-    return paddingTop + ratio * chartHeight;
-  };
-
-  // Unique companies map for legend
-  const uniqueCompanies = Array.from(
-    new Set(points.map((p) => p.company))
-  );
-
   return (
     <div className="relative bg-[#111622]/90 border border-slate-800/80 rounded-2xl p-6 shadow-2xl overflow-visible transition-all">
-      {/* Header & Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      {/* Clean Header without Messy Legend Blob */}
+      <div className="flex items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-cyan-400" />
@@ -92,24 +103,13 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
             </h3>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Interactive timeline tracking individual company & role progression stages over time
+            Interactive timeline tracking company & role progression stages across time
           </p>
         </div>
 
-        {/* Legend Pills */}
-        <div className="flex flex-wrap items-center gap-3">
-          {uniqueCompanies.map((company, idx) => {
-            const color = COMPANY_COLORS[idx % COMPANY_COLORS.length];
-            return (
-              <div key={company} className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
-                <span
-                  className="h-2.5 w-2.5 rounded-full shadow-sm"
-                  style={{ backgroundColor: color.stroke }}
-                />
-                {company}
-              </div>
-            );
-          })}
+        <div className="flex items-center gap-2 bg-[#0a0e17] px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-semibold text-cyan-400">
+          <Layers className="h-3.5 w-3.5" />
+          <span>{points.length} Normalized Events</span>
         </div>
       </div>
 
@@ -117,9 +117,9 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
       <div className="relative overflow-x-auto custom-scrollbar">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-full h-auto min-w-[700px] select-none"
+          className="w-full h-auto min-w-[750px] select-none"
         >
-          {/* Y Axis Grid Lines & Labels */}
+          {/* Y Axis Grid Lines & Stage Labels */}
           {Y_STAGES.map((stage) => {
             const y = getY(stage.level);
             return (
@@ -146,12 +146,49 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
             );
           })}
 
+          {/* X Axis Timeline Grid Lines & Date Ticks */}
+          {timeTicks.map((tick, idx) => {
+            const x = getX(tick.timestamp);
+            return (
+              <g key={idx}>
+                <line
+                  x1={x}
+                  y1={paddingTop - 10}
+                  x2={x}
+                  y2={svgHeight - paddingBottom + 5}
+                  stroke="#1e293b"
+                  strokeDasharray="3 3"
+                  strokeOpacity="0.5"
+                />
+                <text
+                  x={x}
+                  y={svgHeight - paddingBottom + 24}
+                  fill="#64748b"
+                  fontSize="10"
+                  fontWeight="700"
+                  textAnchor="middle"
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* X Axis Main Baseline */}
+          <line
+            x1={paddingLeft}
+            y1={svgHeight - paddingBottom}
+            x2={svgWidth - paddingRight}
+            y2={svgHeight - paddingBottom}
+            stroke="#334155"
+            strokeWidth="1.5"
+          />
+
           {/* Connect points belonging to the SAME Company + Role */}
           {Object.entries(groupedSeries).map(([seriesKey, seriesPoints], seriesIdx) => {
             const color = COMPANY_COLORS[seriesIdx % COMPANY_COLORS.length];
             if (seriesPoints.length < 2) return null;
 
-            // Construct smooth line path
             const pathD = seriesPoints.reduce((acc, point, idx) => {
               const x = getX(point.timestamp);
               const y = getY(point.stageLevel);
@@ -160,20 +197,20 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
 
             return (
               <g key={seriesKey}>
-                {/* Glowing Outer Path */}
+                {/* Outer Glow */}
                 <path
                   d={pathD}
                   fill="none"
                   stroke={color.stroke}
-                  strokeWidth="6"
-                  strokeOpacity="0.2"
+                  strokeWidth="5"
+                  strokeOpacity="0.25"
                 />
-                {/* Main Sharp Path */}
+                {/* Main Path */}
                 <path
                   d={pathD}
                   fill="none"
                   stroke={color.stroke}
-                  strokeWidth="3"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -183,7 +220,6 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
 
           {/* Interactive Graph Points */}
           {points.map((point) => {
-            // Check series color index
             const seriesKeys = Object.keys(groupedSeries);
             const seriesIdx = seriesKeys.findIndex(
               (k) => k === `${point.companyId}__${point.roleId}`
@@ -198,44 +234,57 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
             return (
               <g
                 key={point.id}
-                className="cursor-pointer transition-transform duration-200"
+                className="cursor-pointer transition-all duration-200"
                 onClick={() => onSelectEvent(point.event)}
                 onMouseEnter={() => setHoveredPoint({ point, x: cx, y: cy })}
                 onMouseLeave={() => setHoveredPoint(null)}
               >
-                {/* Outer Glow Halo on Hover */}
+                {/* Outer Halo */}
                 <circle
                   cx={cx}
                   cy={cy}
-                  r={isHovered ? 16 : 10}
+                  r={isHovered ? 14 : 7}
                   fill={color.stroke}
-                  fillOpacity={isHovered ? 0.35 : 0.15}
+                  fillOpacity={isHovered ? 0.4 : 0.2}
                   className="transition-all duration-200"
                 />
-                {/* Main Interactive Circle */}
+                {/* Main Point Circle */}
                 <circle
                   cx={cx}
                   cy={cy}
-                  r={isHovered ? 8 : 6}
+                  r={isHovered ? 7 : 4.5}
                   fill={isUpcoming ? "#0f172a" : color.stroke}
                   stroke={color.stroke}
-                  strokeWidth={isUpcoming ? "3" : "2"}
+                  strokeWidth={isUpcoming ? "2" : "1.5"}
                   className="transition-all duration-200"
                 />
-                {/* Center dot */}
-                <circle cx={cx} cy={cy} r="2.5" fill="#ffffff" />
-                
-                {/* Company Label tag on top */}
-                <text
-                  x={cx}
-                  y={cy - 12}
-                  fill="#cbd5e1"
-                  fontSize="10"
-                  fontWeight="700"
-                  textAnchor="middle"
-                >
-                  {point.company}
-                </text>
+                <circle cx={cx} cy={cy} r="1.5" fill="#ffffff" />
+
+                {/* Show text label ONLY when hovered to prevent text collision blobs */}
+                {isHovered && (
+                  <g pointerEvents="none">
+                    <rect
+                      x={cx - 50}
+                      y={cy - 28}
+                      width="100"
+                      height="20"
+                      rx="6"
+                      fill="#0f172a"
+                      stroke={color.stroke}
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={cx}
+                      y={cy - 14}
+                      fill="#ffffff"
+                      fontSize="10"
+                      fontWeight="700"
+                      textAnchor="middle"
+                    >
+                      {point.company}
+                    </text>
+                  </g>
+                )}
               </g>
             );
           })}
@@ -247,8 +296,8 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
         <div
           className="absolute z-50 pointer-events-auto"
           style={{
-            left: `${Math.min(hoveredPoint.x, 500)}px`,
-            top: `${Math.max(hoveredPoint.y - 120, 20)}px`,
+            left: `${Math.min(hoveredPoint.x, 520)}px`,
+            top: `${Math.max(hoveredPoint.y - 130, 20)}px`,
           }}
           onMouseEnter={() => setHoveredPoint(hoveredPoint)}
           onMouseLeave={() => setHoveredPoint(null)}
@@ -263,12 +312,8 @@ export function InterviewJourneyChart({ events, onSelectEvent, onViewRole }: Int
 
       {/* Footer Info Banner */}
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-1.5">
-          <Info className="h-3.5 w-3.5 text-cyan-400" />
-          <span>Hover over any point to preview full interview details. Click to open side drawer.</span>
-        </div>
         <div className="font-medium text-slate-400">
-          Showing {points.length} normalized interview events
+          X-Axis: Timeline • Y-Axis: Interview Stage Depth
         </div>
       </div>
     </div>
