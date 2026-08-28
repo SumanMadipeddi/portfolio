@@ -62,12 +62,18 @@ export function normalizeGoogleCalendarEvent(raw: RawGoogleCalendarEvent): Inter
   const attendeeEmails = (raw.attendees || []).map((a) => a.email);
   const meetingUrl = extractMeetingUrl(raw);
 
+  const location = resolveCalendarLocation({
+    location: raw.location,
+    description: raw.description,
+  });
+
   const detection = detectInterview({
     summary: raw.summary,
     description: raw.description,
     organizerEmail,
     attendeeEmails,
     hasVideoMeeting: Boolean(meetingUrl),
+    location: location || raw.location || null,
   });
 
   if (!detection.isInterview) return null;
@@ -125,10 +131,7 @@ export function normalizeGoogleCalendarEvent(raw: RawGoogleCalendarEvent): Inter
     durationMinutes,
 
     meetingUrl,
-    location: resolveCalendarLocation({
-      location: raw.location,
-      description: raw.description,
-    }),
+    location,
 
     status: start > new Date() ? "upcoming" : "completed",
     outcome: start > new Date() ? "waiting" : "unknown",

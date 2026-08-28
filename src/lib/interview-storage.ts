@@ -1,16 +1,13 @@
-import { InterviewEvent, Company, FilterOptions, OverallMetrics } from "@/types/interview";
+import { InterviewEvent, Company } from "@/types/interview";
 
 const STORAGE_KEY = "interview_intelligence_events_live_v4";
-
-// Set initial dataset to empty so only real live synced Google Calendar events are rendered
-const INITIAL_MOCK_EVENTS: InterviewEvent[] = [];
 
 export function getInterviewEvents(): InterviewEvent[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return parsed.map((e: any) => ({
+      return parsed.map((e: InterviewEvent) => ({
         ...e,
         start: new Date(e.start),
         end: new Date(e.end),
@@ -20,8 +17,7 @@ export function getInterviewEvents(): InterviewEvent[] {
     console.error("Failed to read stored interviews:", err);
   }
 
-  saveInterviewEvents(INITIAL_MOCK_EVENTS);
-  return INITIAL_MOCK_EVENTS;
+  return [];
 }
 
 export function saveInterviewEvents(events: InterviewEvent[]): void {
@@ -46,6 +42,7 @@ export function updateInterviewEvent(updated: InterviewEvent): InterviewEvent[] 
 
 export function clearInterviewEvents(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("interview_intelligence_events_live_v3");
   localStorage.removeItem("interview_intelligence_events_aug2024_v2");
   localStorage.removeItem("interview_intelligence_events_v1");
 }
@@ -59,9 +56,9 @@ export function getCompaniesFromEvents(events: InterviewEvent[]): Company[] {
       company = {
         id: evt.companyId,
         name: evt.company,
-        domain: evt.companyDomain || `${evt.company.toLowerCase()}.com`,
-        website: evt.companyWebsite || `https://${evt.company.toLowerCase()}.com`,
-        logo: evt.companyLogo || `https://logo.clearbit.com/${evt.company.toLowerCase()}.com`,
+        domain: evt.companyDomain || undefined,
+        website: evt.companyWebsite || undefined,
+        logo: evt.companyLogo || undefined,
         roles: [],
       };
       companyMap.set(evt.companyId, company);
@@ -86,5 +83,9 @@ export function getCompaniesFromEvents(events: InterviewEvent[]): Company[] {
     role.interviews.push(evt);
   });
 
-  return Array.from(companyMap.values());
+  return Array.from(companyMap.values()).sort((a, b) => {
+    const aCount = a.roles.reduce((sum, role) => sum + role.interviews.length, 0);
+    const bCount = b.roles.reduce((sum, role) => sum + role.interviews.length, 0);
+    return bCount - aCount || a.name.localeCompare(b.name);
+  });
 }

@@ -3,8 +3,9 @@ import { InterviewEvent } from "@/types/interview";
 import { computeRoleCategoryAnalytics } from "@/lib/analytics/roleMetrics";
 import { Info } from "lucide-react";
 
-interface RoleAnalyticsChartProps {
-  events: InterviewEvent[];
+function formatRate(fromCount: number, toCount: number, rate: number) {
+  if (fromCount === 0 || toCount === 0) return "—";
+  return `${rate}%`;
 }
 
 export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
@@ -24,11 +25,7 @@ export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
     <div className="iv-card">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div>
-          <div className="card-tag" style={{ marginBottom: 4 }}>Roles</div>
-          <h3 className="card-title">Interview Activity</h3>
-          <p className="card-body" style={{ marginTop: 2 }}>
-            Stage volume across extracted roles
-          </p>
+          <div className="card-title">Interview Activity</div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text2)]">
@@ -121,23 +118,27 @@ export function RoleAnalyticsChart({ events }: RoleAnalyticsChartProps) {
 
               <div className="flex flex-wrap items-center justify-between text-xs text-[var(--text3)] w-full">
                 <span>
-                  Screen → Tech: <strong className="text-[var(--accent)] font-medium">{item.screenToTechRate}%</strong>
+                  Screen → Tech:{" "}
+                  <strong className="text-[var(--accent)] font-medium">
+                    {formatRate(item.recruiterCount, item.technicalCount, item.screenToTechRate)}
+                  </strong>
                 </span>
                 <span>
-                  Tech → Final: <strong className="text-[var(--purple)] font-medium">{item.techToFinalRate}%</strong>
+                  Tech → Final:{" "}
+                  <strong className="text-[var(--purple)] font-medium">
+                    {formatRate(item.technicalCount, item.finalCount, item.techToFinalRate)}
+                  </strong>
                 </span>
                 <span>
-                  Final → Offer: <strong className="text-[var(--green)] font-medium">{item.finalToOfferRate}%</strong>
+                  Final → Offer:{" "}
+                  <strong className="text-[var(--green)] font-medium">
+                    {formatRate(item.finalCount, item.offerCount, item.finalToOfferRate)}
+                  </strong>
                 </span>
               </div>
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-2 pt-3 border-t border-[var(--border)] text-xs text-[var(--text3)] flex items-center gap-1.5">
-        <Info className="h-3.5 w-3.5 text-[var(--accent)]" />
-        Stage activity and role titles extracted from Google Calendar invites.
       </div>
     </div>
   );

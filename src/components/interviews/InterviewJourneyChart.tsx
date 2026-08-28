@@ -57,10 +57,10 @@ export function InterviewJourneyChart({
 
   const paddingLeft = 110;
   const paddingRight = 48;
-  const paddingTop = 20;
+  const paddingTop = 32;
   const paddingBottom = 40;
   const svgWidth = 900;
-  const svgHeight = 300;
+  const svgHeight = 312;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
@@ -115,8 +115,7 @@ export function InterviewJourneyChart({
     <div className="relative iv-card overflow-visible">
       <div className="flex items-center justify-between gap-4 mb-3">
         <div>
-          <div className="card-tag" style={{ marginBottom: 4 }}>Timeline</div>
-          <h3 className="card-title">Interview Journey</h3>
+          <div className="card-title">Interview Journey Timeline</div>
           <p className="card-body" style={{ marginTop: 2 }}>
             Company and role progression across stages over time
           </p>
@@ -199,7 +198,7 @@ export function InterviewJourneyChart({
             <g>
               <line
                 x1={nowX}
-                y1={paddingTop - 8}
+                y1={paddingTop}
                 x2={nowX}
                 y2={svgHeight - paddingBottom}
                 stroke="var(--accent)"
@@ -209,7 +208,7 @@ export function InterviewJourneyChart({
               />
               <text
                 x={nowX}
-                y={paddingTop - 14}
+                y={14}
                 fill="var(--accent)"
                 fontSize="10"
                 fontWeight="600"

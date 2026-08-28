@@ -296,16 +296,28 @@ export function detectInterview(event: {
   organizerEmail?: string;
   attendeeEmails?: string[];
   hasVideoMeeting?: boolean;
+  location?: string | null;
 }): DetectionResult {
   const summary = decodeCalendarText(event.summary || "");
   const description = decodeCalendarText(event.description || "");
-  const fullText = `${summary} ${description}`.toLowerCase();
+  const fullText = `${summary} ${description} ${event.location || ""}`.toLowerCase();
 
   const emails = [...(event.attendeeEmails || []), event.organizerEmail || ""].filter(Boolean);
   const fromEmail = pickCompanyFromEmails(emails);
   const fromTitle = extractCompanyFromTitle(summary);
   const company = fromEmail?.name || fromTitle || "Unknown company";
   const companyDomain = fromEmail?.domain || null;
+
+  const hasVideoLink =
+    Boolean(event.hasVideoMeeting) ||
+    /meet\.google\.com|zoom\.us|teams\.microsoft|webex\.com/.test(fullText);
+  const locationText = (event.location || "").trim();
+  const hasPhysicalLocation = Boolean(
+    locationText &&
+      !/^(https?:\/\/|www\.)|meet\.google|zoom\.us|teams\.microsoft|webex\.com/i.test(locationText) &&
+      !/^remote(\s*\((?:video|virtual|online)\))?$/i.test(locationText)
+  );
+  const hasMeetingPlace = hasVideoLink || hasPhysicalLocation;
 
   const strongHits = STRONG_INTERVIEW_SIGNALS.filter((signal) => fullText.includes(signal)).length;
   const rejected = NOT_INTERVIEW_SIGNALS.some((signal) => fullText.includes(signal));
@@ -314,7 +326,7 @@ export function detectInterview(event: {
     (strongHits > 0 ||
       Boolean(
         fromEmail &&
-          (event.hasVideoMeeting ||
+          (hasMeetingPlace ||
             /\b(screen|round|loop|hm|recruiter|intro|interview)\b/.test(fullText))
       ));
 
@@ -325,7 +337,7 @@ export function detectInterview(event: {
 
   const confidenceScore = Math.min(
     1,
-    strongHits * 0.25 + (fromEmail ? 0.35 : 0) + (extractedRole ? 0.3 : 0) + (event.hasVideoMeeting ? 0.1 : 0)
+    strongHits * 0.25 + (fromEmail ? 0.35 : 0) + (extractedRole ? 0.3 : 0) + (hasMeetingPlace ? 0.1 : 0)
   );
 
   return {

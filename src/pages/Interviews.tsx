@@ -1,7 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { InterviewEvent, FilterOptions } from "@/types/interview";
-import { getInterviewEvents, updateInterviewEvent, getCompaniesFromEvents } from "@/lib/interview-storage";
+import {
+  requestGoogleCalendarAccessToken,
+  disconnectGoogleCalendar,
+  isGoogleCalendarConnected,
+  setGoogleCalendarConnected,
+} from "@/lib/google-calendar/client";
+import { fetchLiveGoogleCalendarEvents } from "@/lib/google-calendar/fetch-events";
+import { getInterviewEvents, updateInterviewEvent, getCompaniesFromEvents, clearInterviewEvents } from "@/lib/interview-storage";
 import { computeOverallMetrics, filterInterviewEvents } from "@/lib/analytics/interviewMetrics";
 import { getFilterRangeStart, isInInterviewWindow } from "@/lib/interview-window";
 import { MetricCard } from "@/components/interviews/MetricCard";
@@ -12,8 +19,6 @@ import { NeedsAttention } from "@/components/interviews/NeedsAttention";
 import { UpcomingInterviews } from "@/components/interviews/UpcomingInterviews";
 import { InterviewDetailDrawer } from "@/components/interviews/InterviewDetailDrawer";
 import { verifyPasscode } from "@/lib/resume-api";
-import { requestGoogleCalendarAccessToken } from "@/lib/google-calendar/client";
-import { fetchLiveGoogleCalendarEvents, fetchGoogleCalendarICalEvents } from "@/lib/google-calendar/fetch-events";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +30,7 @@ import {
   Trophy,
   Zap,
   RefreshCw,
+  Unplug,
   Lock,
   ArrowLeft,
   Eye,
@@ -47,7 +53,7 @@ export default function Interviews() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatusText, setSyncStatusText] = useState("");
-  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
   const [filters, setFilters] = useState<FilterOptions>({
     dateRange: "30d",
@@ -69,8 +75,8 @@ export default function Interviews() {
       setIsAuthenticated(true);
     }
 
-    const loaded = getInterviewEvents().filter((event) => isInInterviewWindow(event.start));
-    setEvents(loaded);
+    setIsGoogleConnected(isGoogleCalendarConnected());
+    setEvents(getInterviewEvents().filter((event) => isInInterviewWindow(event.start)));
   }, []);
 
   const handlePasscodeVerification = async () => {
@@ -110,50 +116,76 @@ export default function Interviews() {
     setAuthMessage("");
   };
 
+  const refreshLiveCalendar = useCallback(async (interactive: boolean) => {
+    const token = await requestGoogleCalendarAccessToken({ silent: !interactive });
+    const freshEvents = await fetchLiveGoogleCalendarEvents(token);
+    setEvents(freshEvents);
+    setGoogleCalendarConnected(true);
+    setIsGoogleConnected(true);
+    return freshEvents;
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isGoogleConnected) return;
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      try {
+        await refreshLiveCalendar(false);
+      } catch {
+        // Keep the last snapshot if a silent refresh is blocked.
+      }
+    };
+
+    refresh();
+    const intervalId = window.setInterval(refresh, 5 * 60 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !cancelled) refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [isAuthenticated, isGoogleConnected, refreshLiveCalendar]);
+
   const handleConnectGoogleCalendar = async () => {
     setIsSyncing(true);
-
-    const envIcalUrl = import.meta.env.VITE_GOOGLE_ICAL_URL;
-    if (envIcalUrl) {
-      try {
-        setSyncStatusText("Syncing live Google Calendar via secret iCal link...");
-        const eventsFromICal = await fetchGoogleCalendarICalEvents(envIcalUrl);
-        setEvents(eventsFromICal);
-        setSyncStatusText("Synced latest live Google Calendar events!");
-        setTimeout(() => setSyncStatusText(""), 3500);
-        setIsSyncing(false);
-        return;
-      } catch (e: unknown) {
-        console.warn("iCal sync error:", e);
-      }
-    }
-
-    setSyncStatusText("Connecting to Google OAuth 2.0 Identity Services...");
+    setSyncStatusText("Connecting Google Calendar...");
 
     try {
-      const clientId =
-        import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-        "932745157899-87093h8a9bboh0rs9m8donjap3716qrk.apps.googleusercontent.com";
-
-      const token = await requestGoogleCalendarAccessToken(clientId);
-      setGoogleAccessToken(token);
-      setSyncStatusText("Fetching live calendar events from Google API...");
-
-      const freshEvents = await fetchLiveGoogleCalendarEvents(token);
-      setEvents(freshEvents);
+      const freshEvents = await refreshLiveCalendar(true);
       const upcomingCount = freshEvents.filter((e) => new Date(e.start) > new Date()).length;
       setSyncStatusText(
         upcomingCount > 0
-          ? `Synced ${freshEvents.length} interview events (${upcomingCount} upcoming).`
-          : `Synced ${freshEvents.length} interview events. No upcoming meetings found on the primary calendar.`
+          ? `Live · ${freshEvents.length} interviews (${upcomingCount} upcoming)`
+          : `Live · ${freshEvents.length} interviews from Aug 2024`
       );
-      setTimeout(() => setSyncStatusText(""), 5000);
+      setTimeout(() => setSyncStatusText(""), 4000);
     } catch (err: unknown) {
-      console.warn("Google OAuth popup error:", err);
       const message = err instanceof Error ? err.message : "Google Calendar sign-in failed";
       setSyncStatusText(
-        `${message}. In Google Cloud Console enable Calendar API, use a Web OAuth client, and add this site (http://localhost:3000) under Authorized JavaScript origins.`
+        `${message}. In Google Cloud Console enable Calendar API, use a Web client, and add ${window.location.origin} under Authorized JavaScript origins.`
       );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDisconnectGoogleCalendar = async () => {
+    setIsSyncing(true);
+    try {
+      await disconnectGoogleCalendar();
+      clearInterviewEvents();
+      setEvents([]);
+      setIsGoogleConnected(false);
+      setSelectedEvent(null);
+      setIsDrawerOpen(false);
+      setSyncStatusText("Google Calendar disconnected.");
+      setTimeout(() => setSyncStatusText(""), 2500);
     } finally {
       setIsSyncing(false);
     }
@@ -178,14 +210,7 @@ export default function Interviews() {
     [events, filters]
   );
   const metrics = useMemo(() => computeOverallMetrics(allTimeEvents), [allTimeEvents]);
-  const companies = useMemo(() => {
-    const list = getCompaniesFromEvents(allTimeEvents);
-    return [...list].sort((a, b) => {
-      const aCount = a.roles.reduce((sum, role) => sum + role.interviews.length, 0);
-      const bCount = b.roles.reduce((sum, role) => sum + role.interviews.length, 0);
-      return bCount - aCount || a.name.localeCompare(b.name);
-    });
-  }, [allTimeEvents]);
+  const companies = useMemo(() => getCompaniesFromEvents(events), [events]);
   const timelineStart = useMemo(() => getFilterRangeStart(filters.dateRange), [filters.dateRange]);
 
   const handleSelectEvent = (evt: InterviewEvent) => {
@@ -307,14 +332,26 @@ export default function Interviews() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={handleConnectGoogleCalendar}
-              disabled={isSyncing}
-              className="btn-primary text-xs sm:text-sm"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-              {isSyncing ? "Syncing..." : "Sync Calendar"}
-            </button>
+            {isGoogleConnected ? (
+              <button
+                onClick={handleDisconnectGoogleCalendar}
+                disabled={isSyncing}
+                className="btn-logout text-xs sm:text-sm"
+                title="Disconnect Google Calendar"
+              >
+                <Unplug className="h-3.5 w-3.5" />
+                Disconnect
+              </button>
+            ) : (
+              <button
+                onClick={handleConnectGoogleCalendar}
+                disabled={isSyncing}
+                className="btn-primary text-xs sm:text-sm"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                {isSyncing ? "Connecting..." : "Sync Calendar"}
+              </button>
+            )}
             <button onClick={handleLogout} className="btn-logout" title="Lock Dashboard">
               <LogOut className="h-3.5 w-3.5 mr-1.5" />
               Logout
@@ -326,7 +363,7 @@ export default function Interviews() {
       <main className="max-w-[1300px] mx-auto px-6 pt-4 space-y-3">
         {syncStatusText && (
           <div className="iv-card iv-card-sm flex items-center gap-2 text-sm text-[var(--accent)]">
-            <RefreshCw className="h-4 w-4 animate-spin" />
+            {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
             {syncStatusText}
           </div>
         )}
