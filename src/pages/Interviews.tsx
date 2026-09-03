@@ -8,7 +8,7 @@ import {
   setGoogleCalendarConnected,
 } from "@/lib/google-calendar/client";
 import { fetchLiveGoogleCalendarEvents } from "@/lib/google-calendar/fetch-events";
-import { getInterviewEvents, updateInterviewEvent, getCompaniesFromEvents, clearInterviewEvents } from "@/lib/interview-storage";
+import { getInterviewEvents, updateInterviewEvent, clearInterviewEvents } from "@/lib/interview-storage";
 import { computeOverallMetrics, filterInterviewEvents } from "@/lib/analytics/interviewMetrics";
 import { getFilterRangeStart, isInInterviewWindow } from "@/lib/interview-window";
 import { MetricCard } from "@/components/interviews/MetricCard";
@@ -210,7 +210,6 @@ export default function Interviews() {
     [events, filters]
   );
   const metrics = useMemo(() => computeOverallMetrics(allTimeEvents), [allTimeEvents]);
-  const companies = useMemo(() => getCompaniesFromEvents(events), [events]);
   const timelineStart = useMemo(() => getFilterRangeStart(filters.dateRange), [filters.dateRange]);
 
   const handleSelectEvent = (evt: InterviewEvent) => {
@@ -332,6 +331,7 @@ export default function Interviews() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <DashboardFilters filters={filters} onChange={setFilters} />
             {isGoogleConnected ? (
               <button
                 onClick={handleDisconnectGoogleCalendar}
@@ -402,13 +402,6 @@ export default function Interviews() {
             accent="green"
           />
         </section>
-
-        <DashboardFilters
-          filters={filters}
-          onChange={setFilters}
-          companies={companies}
-          onSelectEvent={handleSelectEvent}
-        />
 
         <InterviewJourneyChart
           events={filteredEvents}
