@@ -2146,6 +2146,7 @@ html:not(.dark) .dither-btn__label {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+  overflow-x: clip;
 }
 
 .v2.iv-app section {
@@ -2181,7 +2182,7 @@ html:not(.dark) .dither-btn__label {
 .v2 .iv-topbar {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 50;
   border-bottom: 1px solid var(--border);
   background: var(--nav-bg-scrolled);
   backdrop-filter: blur(16px) saturate(180%);
@@ -2271,7 +2272,8 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .iv-activity-list {
-  max-height: calc(4 * 102px);
+  --iv-activity-row: 120px;
+  max-height: calc(3 * var(--iv-activity-row));
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 6px;
@@ -2283,7 +2285,11 @@ html:not(.dark) .dither-btn__label {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  justify-content: center;
   gap: 8px;
+  height: var(--iv-activity-row);
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
 }

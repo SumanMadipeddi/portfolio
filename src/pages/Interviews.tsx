@@ -191,26 +191,22 @@ export default function Interviews() {
     }
   };
 
-  const allTimeFilters = useMemo(
-    () => ({
-      ...filters,
-      searchQuery: "",
-      companyId: "all" as const,
-      roleId: "all",
-      dateRange: "all" as const,
-    }),
-    [filters.category, filters.stage, filters.status]
-  );
-  const allTimeEvents = useMemo(
-    () => filterInterviewEvents(events, allTimeFilters),
-    [events, allTimeFilters]
-  );
   const filteredEvents = useMemo(
     () => filterInterviewEvents(events, { ...filters, searchQuery: "" }),
     [events, filters]
   );
-  const metrics = useMemo(() => computeOverallMetrics(allTimeEvents), [allTimeEvents]);
+  const metrics = useMemo(() => computeOverallMetrics(filteredEvents), [filteredEvents]);
   const timelineStart = useMemo(() => getFilterRangeStart(filters.dateRange), [filters.dateRange]);
+  const rangeLabel =
+    filters.dateRange === "7d"
+      ? "Last 7 days"
+      : filters.dateRange === "30d"
+        ? "Last 30 days"
+        : filters.dateRange === "90d"
+          ? "Last 90 days"
+          : filters.dateRange === "6m"
+            ? "Last 6 months"
+            : "Since Aug 2024";
 
   const handleSelectEvent = (evt: InterviewEvent) => {
     setSelectedEvent(evt);
@@ -372,13 +368,13 @@ export default function Interviews() {
           <MetricCard
             title="Active Companies"
             value={metrics.activeCompanies}
-            subtext="Since Aug 2024 · unique companies"
+            subtext={`${rangeLabel} · unique companies`}
             icon={<Building2 className="h-4 w-4" />}
           />
           <MetricCard
             title="Active Roles"
             value={metrics.activeRoles}
-            subtext="Since Aug 2024 · unique roles"
+            subtext={`${rangeLabel} · unique roles`}
             icon={<Briefcase className="h-4 w-4" />}
           />
           <MetricCard
@@ -413,8 +409,8 @@ export default function Interviews() {
         <RoleAnalyticsChart events={filteredEvents} />
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          <NeedsAttention events={events} onSelectEvent={handleSelectEvent} />
-          <UpcomingInterviews events={events} onSelectEvent={handleSelectEvent} />
+          <NeedsAttention events={filteredEvents} onSelectEvent={handleSelectEvent} />
+          <UpcomingInterviews events={filteredEvents} onSelectEvent={handleSelectEvent} />
         </section>
       </main>
 
