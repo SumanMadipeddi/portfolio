@@ -2271,9 +2271,105 @@ html:not(.dark) .dither-btn__label {
 }
 
 .v2 .iv-activity-list {
-  max-height: calc(4 * 130px);
+  max-height: calc(4 * 102px);
   overflow-y: auto;
-  padding-right: 4px;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.v2 .iv-activity-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.v2 .iv-activity-item:last-child {
+  border-bottom: none;
+}
+
+.v2 .iv-activity-bar {
+  height: 12px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  background: var(--bg3);
+  padding: 1px;
+}
+
+.v2 .iv-activity-bar-seg {
+  height: 100%;
+  min-width: 8px;
+  flex-basis: 0;
+  flex-shrink: 1;
+  border-radius: 999px;
+  cursor: default;
+  transition: filter 0.2s ease;
+}
+
+.v2 .iv-activity-bar-seg:hover {
+  filter: brightness(1.12);
+}
+
+.v2 .iv-activity-rates {
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 0 1px;
+}
+
+.v2 .iv-activity-rate {
+  min-width: 8px;
+  flex-basis: 0;
+  flex-shrink: 1;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iv-activity-tip {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(10, 15, 30, 0.12);
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  color: #121521;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+.dark .iv-activity-tip {
+  background: #111111;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+.iv-activity-tip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  flex-shrink: 0;
 }
 
 .v2 .iv-row {
