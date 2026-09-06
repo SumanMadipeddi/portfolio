@@ -2106,10 +2106,14 @@ html:not(.dark) .dither-btn__label {
   animation: v2-fade-up 0.3s both;
 }
 
+.v2 #contact {
+  padding-bottom: 26px;
+}
+
 .v2 footer {
   position: relative;
   z-index: 1;
-  padding: 26px 48px;
+  padding: 16px 48px 36px;
   border-top: 1px solid var(--border);
   max-width: 1200px;
   margin: 0 auto;
@@ -2952,10 +2956,15 @@ html:not(.dark) .dither-btn__label {
     max-height: calc(100vh - 140px);
   }
 
+  .v2 #contact {
+    padding-bottom: 12px;
+  }
+
   .v2 footer {
     flex-direction: column;
     gap: 20px;
     text-align: center;
+    padding: 10px 24px 20px;
   }
 }
 
