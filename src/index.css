@@ -2113,7 +2113,7 @@ html:not(.dark) .dither-btn__label {
 .v2 footer {
   position: relative;
   z-index: 1;
-  padding: 16px 48px 36px;
+  padding: 24px 48px;
   border-top: 1px solid var(--border);
   max-width: 1200px;
   margin: 0 auto;
@@ -2962,9 +2962,9 @@ html:not(.dark) .dither-btn__label {
 
   .v2 footer {
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     text-align: center;
-    padding: 10px 24px 20px;
+    padding: 16px 24px;
   }
 }
 
