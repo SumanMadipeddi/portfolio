@@ -272,6 +272,8 @@ const Index = () => {
   const lastScrollY = useRef(0);
   const isCollapsedRef = useRef(false);
   const isScrolledRef = useRef(false);
+  const navLockRef = useRef<string | null>(null);
+  const navUnlockTimerRef = useRef<number>(0);
   const navProgressRef = useRef<HTMLDivElement | null>(null);
   const navLinksRef = useRef<HTMLUListElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -492,7 +494,11 @@ const Index = () => {
           break;
         }
       }
-      setActiveNavSection(currentSection);
+      if (!navLockRef.current) {
+        setActiveNavSection(currentSection);
+      } else if (currentSection === navLockRef.current) {
+        navLockRef.current = null;
+      }
 
       setScrolled(currentScrollY > COLLAPSE_OFFSET);
 
@@ -513,8 +519,23 @@ const Index = () => {
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(navUnlockTimerRef.current);
+    };
   }, []);
+
+  const handleNavClick = (event: React.MouseEvent<HTMLElement>) => {
+    const href = (event.target as HTMLElement).closest("a")?.getAttribute("href");
+    if (!href?.startsWith("#")) return;
+    const id = href.slice(1);
+    navLockRef.current = id;
+    setActiveNavSection(id);
+    window.clearTimeout(navUnlockTimerRef.current);
+    navUnlockTimerRef.current = window.setTimeout(() => {
+      navLockRef.current = null;
+    }, 1400);
+  };
 
   useEffect(() => {
     if (!isBrowser) return;
@@ -1610,7 +1631,7 @@ const getSmartFallbackResponse = (userQuery: string): string => {
         <div className="nav-scroll-progress" ref={navProgressRef} />
 
         <div className="nav-logo">
-          <a href="#hero" className="hero-photo-wrap nav-photo-wrap cursor-pointer" aria-label="Go to top">
+          <a href="#hero" className="hero-photo-wrap nav-photo-wrap cursor-pointer" aria-label="Go to top" onClick={handleNavClick}>
             {avatarImageError ? (
               <div className="hero-photo-fallback nav-photo-fallback">SM</div>
             ) : (
@@ -1623,7 +1644,7 @@ const getSmartFallbackResponse = (userQuery: string): string => {
             )}
           </a>
         </div>
-        <ul className="nav-links" ref={navLinksRef}>
+        <ul className="nav-links" ref={navLinksRef} onClick={handleNavClick}>
           <li
             className="nav-active-line"
             style={{
